@@ -3,7 +3,7 @@ interface AutomataNode {
     x: number;
     y: number;
     transitions: string[];
-    radius: number;
+    diameter: number;
     color: any;
 }
 
@@ -18,7 +18,7 @@ const transitions: Transition[] = [];
 const stateColor = "#000000";
 
 export const addNode = (id: string, x: number, y: number, color: string) => {
-    const newNode: AutomataNode = { id, x, y, transitions: [], radius: 25, color };
+    const newNode: AutomataNode = { id, x, y, transitions: [], diameter: 80, color };
     automataNodes.push(newNode);
 };
 

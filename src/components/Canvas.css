@@ -3,11 +3,24 @@
     margin: 5px;
 }
 
+.navbar-button.selected{
+    background-color: #004e98;
+    color: #fff
+}
+.navbar-button.selected:hover{
+    background-color: #0067c7;
+}
+
 .navbar-button{
-    width: 50px;
-    height: 50px;
+    width: 75px;
+    height: 75px;
     margin: 5px;
-    border-radius: 15px;
+    border-radius: 7px;
     border: 0px solid;
-    background-color: #999;
+    background-color: #bbbbbb;
+    vertical-align: top;
+}
+
+.navbar-button:hover{
+    background-color: #d3d3d3;
 }
