@@ -1,13 +1,46 @@
 html{
     background-color: #ebebeb;
+    font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif !important;
 
     /* Remove scrollbars */
     overflow: hidden;
 }
 
-#navbar-button-div{
+
+#navbar-div{
     position: absolute;
+    width: 100vw;
+    margin: 5px; 
+    display: inline-block;
+    box-sizing: border-box;
+}
+
+#toolbox{
+    float: left;
+}
+#automata-input-div{
+    float: right;
+    margin-right: 10px; /* Não entedi pq precisa disso, mas precisa  */
+}
+
+.automata-input:focus{
+    border: 0px solid;
+    outline: 0px solid;
+    background-color: #ccc;
+}
+
+.automata-input{
+    height: 75px;
+    width: 325px;
     margin: 5px;
+    border-radius: 5px;
+    border: 0px solid;
+    background-color: #ccc;
+    font-size: 40px;
+    padding-left: 20px;
+    padding-right: 20px;
+    box-shadow: 0px 5px 7px 0px #00000010;
+    box-sizing: border-box;
 }
 
 .navbar-button.selected{
@@ -27,17 +60,34 @@ html{
     width: 75px;
     height: 75px;
     margin: 5px;
-    border-radius: 7px;
+    border-radius: 5px;
     border: 0px solid;
-    background-color: #bbbbbb;
+    background-color: #ccc;
+    box-shadow: 0px 5px 7px 0px #00000010;
     vertical-align: top;
+
+    transition: border-radius 1s;
+    transition-timing-function: cubic-bezier(0.68, 0.01, 0.37, 0.98);
     
 }
 
 .navbar-button > svg{
     width: 80%;
     height: 80%;
+    filter: drop-shadow(2px 2px 4px rgba(0, 0, 0, 0));
+    transition: .2s;
 }
+
+.navbar-button.selected:hover > svg{
+    filter: drop-shadow(2px 2px 4px rgba(0, 0, 0, 0.575));
+}
+
+.navbar-button:hover > svg{
+    width: 84%;
+    height: 84%;
+    filter: drop-shadow(2px 2px 4px rgba(0, 0, 0, 0.288));
+}
+
 
 .navbar-button:hover{
     background-color: #d3d3d3;

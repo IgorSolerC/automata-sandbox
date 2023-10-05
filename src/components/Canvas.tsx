@@ -1,6 +1,10 @@
 import './Canvas.css';
+
+// Google Material Icons
 import CursorIcon from '../symbols/cursor_icon';
 import TrashIcon from '../symbols/trash_icon';
+import UndoIcon from '../symbols/undo_icon';
+import RedoIcon from '../symbols/redo_icon';
 
 // Canvas.tsx
 import React, { useRef, useEffect, useState, } from "react";
@@ -150,7 +154,7 @@ const Canvas: React.FC = () => {
               // Criando estado
               if (p.keyIsDown(p.SHIFT)) {
                 if (!clickedNode) {
-                  const id = `q${allNodes.length}`;
+                  // Check se o novo estado criado estaria overlaping com um estágo exstente
                   nearNode =
                     allNodes.find((node) => {
                       return (
@@ -160,6 +164,18 @@ const Canvas: React.FC = () => {
                     }) || null;
 
                   if (!nearNode)
+                    // Gera ID do novo estado
+                    var id: string;
+                    if (!allNodes.length){
+                      id = 'q0'
+                    }
+                    else {
+                      let lastest_id = allNodes[allNodes.length-1].id
+                      let id_number_string = lastest_id.slice(1);
+                      let id_number = parseInt(id_number_string) + 1
+                      id = `q${id_number}`;
+                    }
+                    // Cria novo estado
                     AutomataModule.addNode(
                       id,
                       p.mouseX,
@@ -222,23 +238,48 @@ const Canvas: React.FC = () => {
 
   return (
     <div>
-      <div id='navbar-button-div'>
-        <button
-          id='pointer'
-          className={'navbar-button ' + (selectedOption === OPTIONS.pointer ? 'selected' : '')}
-          onClick={() => (setSelectedOption(OPTIONS.pointer))}
-          title='Pointer'
-        >
-          <CursorIcon/>
-        </button>
-        <button
-          id='eraser'
-          className={'navbar-button ' + (selectedOption === OPTIONS.eraser ? 'selected' : '')}
-          onClick={() => (setSelectedOption(OPTIONS.eraser))}
-          title='Eraser'
-        >
-          <TrashIcon/>
-        </button>
+      <div id='navbar-div'>
+        <div id='toolbox'>
+        	<button
+            id='pointer'
+            className={'navbar-button ' + (selectedOption === OPTIONS.pointer ? 'selected' : '')}
+            onClick={() => (setSelectedOption(OPTIONS.pointer))}
+            title='Pointer'
+          >
+            <CursorIcon/>
+          </button>
+          <button
+            id='eraser'
+            className={'navbar-button ' + (selectedOption === OPTIONS.eraser ? 'selected' : '')}
+            onClick={() => (setSelectedOption(OPTIONS.eraser))}
+            title='Eraser'
+          >
+            <TrashIcon/>
+          </button>
+          <button
+            id='undo'
+            className='navbar-button'
+            onClick={() => (console.log('undo!'))}
+            title='Undo'
+          >
+            <UndoIcon/>
+          </button>
+          <button
+            id='redo'
+            className='navbar-button'
+            onClick={() => (console.log('redo!'))}
+            title='Redo'
+          >
+            <RedoIcon/>
+          </button>
+        </div>
+        <div id='automata-input-div'>
+          <input
+					placeholder='Input automato'
+            className='automata-input'
+          >
+          </input>
+        </div>
       </div>
       <div ref={canvasRef}></div>
     </div>
