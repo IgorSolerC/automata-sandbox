@@ -1,4 +1,6 @@
 import './Canvas.css';
+import CursorIcon from '../symbols/cursor_icon';
+import TrashIcon from '../symbols/trash_icon';
 
 // Canvas.tsx
 import React, { useRef, useEffect, useState, } from "react";
@@ -13,10 +15,10 @@ const Canvas: React.FC = () => {
   let nearNode: any;
   let currentState: any = null
 
-  const DEFAULT_BACKGROUND_COLOR: string = "#ebebeb";
-  const DEFAULT_STATE_COLOR: string = "#004e98";
-  const DEFAULT_CLICKED_COLOR: string = "#ff6700";
-  const DEFAULT_TRANSITION_COLOR: string = "#d0d0d0"
+  const DEFAULT_BACKGROUND_COLOR: string = "#eee";
+  const DEFAULT_STATE_COLOR: string = "#7b2cbf";
+  const DEFAULT_CLICKED_COLOR: string = "#9d4edd";
+  const DEFAULT_TRANSITION_COLOR: string = "#ccc"
 
   const STATES: any = {
     none: 0,
@@ -29,7 +31,7 @@ const Canvas: React.FC = () => {
     pointer: 1,
     eraser: 2
   }
-  const [selectedOption, setSelectedOption] = useState(OPTIONS.eraser)
+  const [selectedOption, setSelectedOption] = useState(OPTIONS.pointer)
 
   useEffect(() => {
     if (canvasRef.current) {
@@ -88,8 +90,9 @@ const Canvas: React.FC = () => {
               p.push(); // Start another new drawing state for the tilted text
               p.translate(midX, midY);
 
-              // Correct the angle for backward lines
-              const correctedAngle = (end.y < start.y) ? angle + Math.PI : angle;
+              // Corrige textos de cabeça para baico
+              // angle + Math.PI == angle + 180º
+              const correctedAngle = (end.x < start.x) ? angle + Math.PI : angle;
 
               p.strokeWeight(1)
               p.rotate(correctedAngle);
@@ -132,7 +135,7 @@ const Canvas: React.FC = () => {
           // Encontra estado que foi clicado
           clickedNode =
             allNodes.find((node) => {
-              return p.dist(node.x, node.y, p.mouseX, p.mouseY) < node.diameter;
+              return p.dist(node.x, node.y, p.mouseX, p.mouseY) < node.diameter/2;
             }) || null;
 
           // New clicked node
@@ -152,7 +155,7 @@ const Canvas: React.FC = () => {
                     allNodes.find((node) => {
                       return (
                         p.dist(node.x, node.y, p.mouseX, p.mouseY) <
-                        node.diameter * 2
+                        node.diameter // Note que este não é "/2", isso é proposital
                       );
                     }) || null;
 
@@ -196,7 +199,7 @@ const Canvas: React.FC = () => {
 
           if (clickedNode) {
             const endNode = AutomataModule.getNodes().find((node) => {
-              return p.dist(node.x, node.y, p.mouseX, p.mouseY) < node.diameter;
+              return p.dist(node.x, node.y, p.mouseX, p.mouseY) < node.diameter/2;
             });
             if (endNode && currentState === STATES.creating_transition) {
               currentState = STATES.none;
@@ -224,15 +227,17 @@ const Canvas: React.FC = () => {
           id='pointer'
           className={'navbar-button ' + (selectedOption === OPTIONS.pointer ? 'selected' : '')}
           onClick={() => (setSelectedOption(OPTIONS.pointer))}
+          title='Pointer'
         >
-          Pointer  
+          <CursorIcon/>
         </button>
         <button
           id='eraser'
           className={'navbar-button ' + (selectedOption === OPTIONS.eraser ? 'selected' : '')}
           onClick={() => (setSelectedOption(OPTIONS.eraser))}
+          title='Eraser'
         >
-          Eraser
+          <TrashIcon/>
         </button>
       </div>
       <div ref={canvasRef}></div>
