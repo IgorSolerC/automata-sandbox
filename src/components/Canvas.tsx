@@ -19,10 +19,21 @@ const Canvas: React.FC = () => {
   let nearNode: any;
   let currentState: any = null
 
+  // Selection box variables
+  let selectionX: number = 0
+  let selectionY: number = 0
+
   const DEFAULT_BACKGROUND_COLOR: string = "#eee";
   const DEFAULT_STATE_COLOR: string = "#7b2cbf";
   const DEFAULT_CLICKED_COLOR: string = "#9d4edd";
   const DEFAULT_TRANSITION_COLOR: string = "#ccc"
+
+  // const DEFAULT_SELECTIONBOX_COLOR: string = "#55ccff44"
+  // const DEFAULT_SELECTIONBOX_BORDER_COLOR: string = "#55ccffcc"
+  const DEFAULT_SELECTIONBOX_COLOR: string = "#DDDDDD55"
+  const DEFAULT_SELECTIONBOX_BORDER_COLOR: string = "#DDDDDDAA"
+  // const DEFAULT_SELECTIONBOX_COLOR: string = "#0000"
+  // const DEFAULT_SELECTIONBOX_BORDER_COLOR: string = "#000F"
 
   const STATES: any = {
     none: 0,
@@ -56,6 +67,7 @@ const Canvas: React.FC = () => {
         p.draw = () => {
           p.background(DEFAULT_BACKGROUND_COLOR);
 
+          // Desenha transições
           AutomataModule.getTransitions().forEach((transition) => {
             const start = AutomataModule.findNode(transition.from);
             const end = AutomataModule.findNode(transition.to);
@@ -107,16 +119,29 @@ const Canvas: React.FC = () => {
             }
           });
 
+          // Desenha estados
           AutomataModule.getNodes().forEach((node, index) => {
-            p.noStroke();
-            p.fill(node.color);
-            p.ellipse(node.x, node.y, node.diameter);
+            p.noStroke(); 
+            p.fill(node.color); 
+            p.ellipse(node.x, node.y, node.diameter); 
             p.fill(255);
             p.text(node.id, node.x - 5, node.y + 5);
             p.fill(0);
             p.stroke(0);
             p.strokeWeight(2);
           });
+
+          // Desenha caixa de seleção
+          if (currentState === STATES.creating_selection){
+            p.push(); // Start a new drawing state
+            p.fill(DEFAULT_SELECTIONBOX_COLOR);
+            p.stroke(DEFAULT_SELECTIONBOX_BORDER_COLOR);
+            let distanceX: number = selectionX - p.mouseX
+            let distanceY: number = selectionY - p.mouseY
+            p.rect(selectionX, selectionY, -distanceX, -distanceY);
+            p.pop();
+          }
+
         };
         
         p.mouseDragged = () => {
@@ -191,6 +216,8 @@ const Canvas: React.FC = () => {
               // Criando caixa de seleção
               else {
                 currentState = STATES.creating_selection;
+                selectionX = p.mouseX
+                selectionY = p.mouseY
               }
             }
 
@@ -218,7 +245,6 @@ const Canvas: React.FC = () => {
               return p.dist(node.x, node.y, p.mouseX, p.mouseY) < node.diameter/2;
             });
             if (endNode && currentState === STATES.creating_transition) {
-              currentState = STATES.none;
               const label = prompt("Digite o símbolo de transição:");
               if (label !== null) {
                 AutomataModule.addTransition(
@@ -230,6 +256,7 @@ const Canvas: React.FC = () => {
             }
             clickedNode.color = DEFAULT_STATE_COLOR;
           }
+          currentState = STATES.none;
         };
         clickedNode = null;
       }, canvasRef.current);
