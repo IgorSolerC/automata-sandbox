@@ -10,6 +10,7 @@ import RedoIcon from '../symbols/redo_icon';
 import React, { useRef, useEffect, useState, } from "react";
 import p5 from "p5";
 import * as AutomataModule from "../modules/AutomataModule";
+import { forEachChild } from 'typescript';
 
 let canvasObject: p5 | null = null; // Variável para armazenar o sketch
 
@@ -17,15 +18,21 @@ const Canvas: React.FC = () => {
   const canvasRef = useRef<HTMLDivElement | null>(null);
   let clickedNode: any;
   let nearNode: any;
+  let selectedNodes: any[] = [];
+  let selectedNodeMouseOffset: any = {}
   let currentState: any = null
 
   // Selection box variables
+  let selectionStarterY: number = 0;
+  let selectionStarterX: number = 0;
   let selectionX: number = 0
   let selectionY: number = 0
+  let selectionDistanceX: number = 0
+  let selectionDistanceY: number = 0
 
   const DEFAULT_BACKGROUND_COLOR: string = "#eee";
   const DEFAULT_STATE_COLOR: string = "#7b2cbf";
-  const DEFAULT_CLICKED_COLOR: string = "#9d4edd";
+  const DEFAULT_CLICKED_COLOR: string = "#fdbefd";
   const DEFAULT_TRANSITION_COLOR: string = "#ccc"
 
   // const DEFAULT_SELECTIONBOX_COLOR: string = "#55ccff44"
@@ -101,7 +108,7 @@ const Canvas: React.FC = () => {
 
               const midX = (start.x + end.x - offsetX) / 2;
               const midY = (start.y + end.y - offsetY) / 2;
-              const textOffsetY = -10; // Vertical offset for the text label
+              const textOffsetY = -15; // Vertical offset for the text label
 
               p.push(); // Start another new drawing state for the tilted text
               p.translate(midX, midY);
@@ -114,13 +121,18 @@ const Canvas: React.FC = () => {
               p.rotate(correctedAngle);
               p.textAlign(p.CENTER, p.CENTER); // Center the text relative to the point
               p.textSize(20)
-              p.text(transition.label, 0, textOffsetY);
+              let text: string = transition.label
+              if (text === '')
+                text = 'λ'
+              p.text(text, 0, textOffsetY);
               p.pop(); // Restore original state
             }
           });
 
-          // Desenha estados
-          AutomataModule.getNodes().forEach((node, index) => {
+          // ----Desenha estados
+          // .slice() cria uma copia shallow
+          // .reverse() desenhar mostrando o primeiro como acima, visto que é o primeiro a ser selecionado quando clica-se em estados stackados
+          AutomataModule.getNodes().slice().reverse().forEach((node, index) => {
             p.noStroke(); 
             p.fill(node.color); 
             p.ellipse(node.x, node.y, node.diameter); 
@@ -136,19 +148,55 @@ const Canvas: React.FC = () => {
             p.push(); // Start a new drawing state
             p.fill(DEFAULT_SELECTIONBOX_COLOR);
             p.stroke(DEFAULT_SELECTIONBOX_BORDER_COLOR);
-            let distanceX: number = selectionX - p.mouseX
-            let distanceY: number = selectionY - p.mouseY
-            p.rect(selectionX, selectionY, -distanceX, -distanceY);
+            p.rect(selectionX, selectionY, selectionDistanceX, selectionDistanceY);
             p.pop();
           }
 
         };
         
         p.mouseDragged = () => {
-          p.frameRate(144);
-          if(clickedNode && p.mouseButton === p.RIGHT && currentState === STATES.moving_node){
-            clickedNode.x = p.mouseX
-            clickedNode.y = p.mouseY
+          const allNodes = AutomataModule.getNodes();
+
+          if(currentState === STATES.moving_node){
+            if(p.mouseButton === p.RIGHT){
+              // selectedNodes.forEach((auxNode: AutomataModule.AutomataNode) => { // <--- deu errado o type
+              selectedNodes.forEach((node: any) => {
+                node.x = p.mouseX + selectedNodeMouseOffset[node.id]['x']
+                node.y = p.mouseY + selectedNodeMouseOffset[node.id]['y']
+              })
+            }
+          }
+          else if (currentState === STATES.creating_selection){
+            // --- Update valor da seleção ---
+            // Isso é necessario para evitar tamanhos negativos ao criar
+            // seleções onde o ponto de inicio é maior que o de fim
+            selectionDistanceX = p.mouseX - selectionStarterX
+            selectionDistanceY = p.mouseY - selectionStarterY
+            selectionX = selectionStarterX
+            selectionY = selectionStarterY
+            if (selectionDistanceX < 0){
+              selectionX = p.mouseX
+              selectionDistanceX = -1 * selectionDistanceX
+            }
+            if (selectionDistanceY < 0){
+              selectionY = p.mouseY
+              selectionDistanceY = -1 * selectionDistanceY
+            }
+
+            selectedNodes = allNodes.filter((node) => {
+              return (
+                (selectionX <= node.x) && (node.x <= selectionX + selectionDistanceX) &&
+                (selectionY <= node.y) && (node.y <= selectionY + selectionDistanceY)
+              );
+            })
+
+            // Default color
+            allNodes.forEach((node) => {
+              node.color = DEFAULT_STATE_COLOR
+            })
+            selectedNodes.forEach((node) => {
+              node.color = DEFAULT_CLICKED_COLOR
+            })
           }
         }
 
@@ -158,7 +206,6 @@ const Canvas: React.FC = () => {
 
           // Previous clicked node
           if (clickedNode)
-            // Reseta cor do estado anterior clicado
             clickedNode.color = DEFAULT_STATE_COLOR;
 
           // Encontra estado que foi clicado
@@ -166,11 +213,29 @@ const Canvas: React.FC = () => {
             allNodes.find((node) => {
               return p.dist(node.x, node.y, p.mouseX, p.mouseY) < node.diameter/2;
             }) || null;
-
+            
           // New clicked node
-          if (clickedNode)
-          // Highlight cor do estado clicado atual
+          if (clickedNode){
+            let clickedNodeIsSelected = selectedNodes.find(node => node.id === clickedNode.id)
+            if(!clickedNodeIsSelected){
+              // Previous clicked node
+              selectedNodes.forEach((node: any) => {
+                // Reseta cor do estado anterior clicado
+                node.color = DEFAULT_STATE_COLOR;
+              })
+              selectedNodes = [clickedNode]
+            }
+            // Highlight cor do estado clicado atual
             clickedNode.color = DEFAULT_CLICKED_COLOR;
+          }
+          else {
+            // Previous clicked node
+            selectedNodes.forEach((node: any) => {
+              // Reseta cor do estado anterior clicado
+              node.color = DEFAULT_STATE_COLOR;
+            })
+            selectedNodes = []
+          }
 
           if (selectedOption === OPTIONS.pointer){
             // Botão esquerdo: Cria transições / Cria estados
@@ -188,7 +253,7 @@ const Canvas: React.FC = () => {
                       );
                     }) || null;
 
-                  if (!nearNode)
+                  if (!nearNode){
                     // Gera ID do novo estado
                     var id: string;
                     if (!allNodes.length){
@@ -207,6 +272,7 @@ const Canvas: React.FC = () => {
                       p.mouseY,
                       DEFAULT_STATE_COLOR
                     );
+                  }
                 }
               }
               // Criando transição
@@ -215,16 +281,33 @@ const Canvas: React.FC = () => {
               }
               // Criando caixa de seleção
               else {
+                // Set state
                 currentState = STATES.creating_selection;
-                selectionX = p.mouseX
-                selectionY = p.mouseY
+                // Set dados da selecao
+                selectionStarterX = p.mouseX
+                selectionStarterY = p.mouseY
+                selectionX = selectionStarterX
+                selectionY = selectionStarterY
+                selectionDistanceX = 0
+                selectionDistanceY = 0
               }
             }
 
             // Botão direito: Move estados
             if (p.mouseButton === p.RIGHT) {
               if (clickedNode) {
+                // Set offset, usado para não centralizar com o mouse os estados movidos
+                selectedNodeMouseOffset = {}
+                selectedNodes.forEach(node => {
+                  selectedNodeMouseOffset[node.id] = {}
+                  selectedNodeMouseOffset[node.id]['x'] = node.x - p.mouseX
+                  selectedNodeMouseOffset[node.id]['y'] = node.y - p.mouseY
+                })
+                
+                // Set estado atual como "Movendo estado"
                 currentState = STATES.moving_node
+
+                // Muda cursor para "grap" cursor
                 p.cursor("grab")
               }
             }
@@ -254,7 +337,9 @@ const Canvas: React.FC = () => {
                 );
               }
             }
-            clickedNode.color = DEFAULT_STATE_COLOR;
+            let clickedNodeIsSelected = selectedNodes.find(node => node.id === clickedNode.id)
+            if (!clickedNodeIsSelected)
+              clickedNode.color = DEFAULT_STATE_COLOR;
           }
           currentState = STATES.none;
         };

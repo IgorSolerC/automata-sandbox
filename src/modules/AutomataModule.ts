@@ -5,7 +5,7 @@ interface AutomataNode {
     transitions: string[];
     diameter: number;
     color: any;
-}
+} 
 
 interface Transition {
     from: string;
