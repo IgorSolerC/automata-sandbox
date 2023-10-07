@@ -10,18 +10,28 @@ import MoveIcon from '../symbols/move_icon';
 // Canvas.tsx
 import React, { useRef, useEffect, useState, } from "react";
 import p5 from "p5";
-import * as AutomataModule from "../modules/AutomataModule";
-import { forEachChild } from 'typescript';
+import { Automata } from '../models/Automata';
+import { State } from '../models/State';
+import { CanvasActions } from '../enums/CanvasActionsEnum';
+import { CanvasTools } from '../enums/CanvasToolsEnum';
+import { CanvasColors } from '../Constants/CanvasConstants';
 
 let canvasObject: p5 | null = null; // Variável para armazenar o sketch
+let automata : Automata = new Automata();
 
 const Canvas: React.FC = () => {
   const canvasRef = useRef<HTMLDivElement | null>(null);
-  let clickedState: any;
-  let nearState: any;
-  let selectedStates: any[] = [];
-  let selectedStateMouseOffset: any = {}
-  let currentState: any = null
+
+  // Arrays de States
+  let clickedState: State | null;
+  let selectedStates: State[] = [];
+  let nearState: State | null;
+
+  // Enums
+  let currentCanvasAction: CanvasActions = CanvasActions.NONE;
+  const [currentCanvasTool, setcurrentCanvasTool] = useState(CanvasTools.POINTER)
+  
+  let selectedStateMouseOffset: any; // {'q1': {'x': 10, 'y': -10}, 'q2': {'x': 10, 'y': -10}}
 
   // Selection box variables
   let selectionStarterY: number = 0;
@@ -30,32 +40,6 @@ const Canvas: React.FC = () => {
   let selectionY: number = 0
   let selectionDistanceX: number = 0
   let selectionDistanceY: number = 0
-
-  const DEFAULT_BACKGROUND_COLOR: string = "#eee";
-  const DEFAULT_STATE_COLOR: string = "#7b2cbf";
-  const DEFAULT_CLICKED_COLOR: string = "#fdbeff";
-  const DEFAULT_TRANSITION_COLOR: string = "#ccc"
-
-  // const DEFAULT_SELECTIONBOX_COLOR: string = "#55ccff44"
-  // const DEFAULT_SELECTIONBOX_BORDER_COLOR: string = "#55ccffcc"
-  const DEFAULT_SELECTIONBOX_COLOR: string = "#DDDDDD55"
-  const DEFAULT_SELECTIONBOX_BORDER_COLOR: string = "#DDDDDDAA"
-  // const DEFAULT_SELECTIONBOX_COLOR: string = "#0000"
-  // const DEFAULT_SELECTIONBOX_BORDER_COLOR: string = "#000F"
-
-  const STATES: any = {
-    none: 0,
-    moving_state: 1,
-    creating_transition: 2,
-    creating_selection: 3
-  }
-
-  const OPTIONS: any = {
-    pointer: 1,
-    eraser: 2,
-    move: 3
-  }
-  const [selectedOption, setSelectedOption] = useState(OPTIONS.pointer)
 
   useEffect(() => {
     if (canvasRef.current) {
@@ -74,14 +58,14 @@ const Canvas: React.FC = () => {
         };
 
         p.draw = () => {
-          p.background(DEFAULT_BACKGROUND_COLOR);
+          p.background(CanvasColors.BACKGROUND);
 
           // Desenha transições
-          AutomataModule.getTransitions().forEach((transition) => {
-            const start = AutomataModule.findState(transition.from.id);
-            const end = AutomataModule.findState(transition.to.id);
+          automata.getTransitions().forEach((transition) => {
+            const start = automata.findState(transition.from.id);
+            const end = automata.findState(transition.to.id);
             if (start && end) {
-              p.stroke(DEFAULT_TRANSITION_COLOR);
+              p.stroke(CanvasColors.DEFAULT_TRANSITION);
               p.line(start.x, start.y, end.x, end.y);
 
               const angle = Math.atan2(end.y - start.y, end.x - start.x); // angle of line
@@ -134,7 +118,7 @@ const Canvas: React.FC = () => {
           // ----Desenha estados
           // .slice() cria uma copia shallow
           // .reverse() desenhar mostrando o primeiro como acima, visto que é o primeiro a ser selecionado quando clica-se em estados stackados
-          AutomataModule.getStates().slice().reverse().forEach((state, index) => {
+          automata.getStates().slice().reverse().forEach((state, index) => {
             p.noStroke(); 
             p.fill(state.color); 
             p.ellipse(state.x, state.y, state.diameter); 
@@ -146,10 +130,10 @@ const Canvas: React.FC = () => {
           });
 
           // Desenha caixa de seleção
-          if (currentState === STATES.creating_selection){
+          if (currentCanvasAction === CanvasActions.CREATING_SELECTION){
             p.push(); // Start a new drawing state
-            p.fill(DEFAULT_SELECTIONBOX_COLOR);
-            p.stroke(DEFAULT_SELECTIONBOX_BORDER_COLOR);
+            p.fill(CanvasColors.SELECTION);
+            p.stroke(CanvasColors.SELECTION_BORDER);
             p.rect(selectionX, selectionY, selectionDistanceX, selectionDistanceY);
             p.pop();
           }
@@ -157,16 +141,16 @@ const Canvas: React.FC = () => {
         };
         
         p.mouseDragged = () => {
-          const allStates = AutomataModule.getStates();
+          const allStates = automata.getStates();
 
-          if(currentState === STATES.moving_state){
-              // selectedStates.forEach((auxState: AutomataModule.State) => { // <--- deu errado o type
-              selectedStates.forEach((state: any) => {
+          if(currentCanvasAction === CanvasActions.MOVING_STATE){
+              // selectedStates.forEach((auxState: automata.State) => { // <--- deu errado o type
+              selectedStates.forEach((state: State) => {
                 state.x = p.mouseX + selectedStateMouseOffset[state.id]['x']
                 state.y = p.mouseY + selectedStateMouseOffset[state.id]['y']
               })
           }
-          else if (currentState === STATES.creating_selection){
+          else if (currentCanvasAction === CanvasActions.CREATING_SELECTION){
             // --- Update valor da seleção ---
             // Isso é necessario para evitar tamanhos negativos ao criar
             // seleções onde o ponto de inicio é maior que o de fim
@@ -192,21 +176,21 @@ const Canvas: React.FC = () => {
 
             // Default color
             allStates.forEach((state) => {
-              state.color = DEFAULT_STATE_COLOR
+              state.color = CanvasColors.DEFAULT_STATE
             })
             selectedStates.forEach((state) => {
-              state.color = DEFAULT_CLICKED_COLOR
+              state.color = CanvasColors.CLICKED_STATE
             })
           }
         }
 
         // Left click
         p.mousePressed = () => {
-          const allStates = AutomataModule.getStates();
+          const allStates = automata.getStates();
 
           // Previous clicked state
           // if (clickedState)
-          //   clickedState.color = DEFAULT_STATE_COLOR;
+          //   clickedState.color = CanvasColors.DEFAULT_STATE;
 
           // Encontra estado que foi clicado
           clickedState =
@@ -216,30 +200,30 @@ const Canvas: React.FC = () => {
             
           // New clicked state
           if (clickedState){
-            let clickedStateIsSelected = selectedStates.find(state => state.id === clickedState.id)
+            let clickedStateIsSelected = selectedStates.find(state => state.id === clickedState!.id)
             if(!clickedStateIsSelected){
               // Previous clicked state
-              selectedStates.forEach((state: any) => {
+              selectedStates.forEach((state: State) => {
                 // Reseta cor do estado anterior clicado
-                state.color = DEFAULT_STATE_COLOR;
+                state.color = CanvasColors.DEFAULT_STATE;
               })
               selectedStates = [clickedState]
             }
             // Highlight cor do estado clicado atual
-            clickedState.color = DEFAULT_CLICKED_COLOR;
+            clickedState.color = CanvasColors.CLICKED_STATE;
           }
           else {
             // Previous clicked state
-            selectedStates.forEach((state: any) => {
+            selectedStates.forEach((state: State) => {
               // Reseta cor do estado anterior clicado
-              state.color = DEFAULT_STATE_COLOR;
+              state.color = CanvasColors.DEFAULT_STATE;
             })
             selectedStates = []
           }
 
-          if (selectedOption === OPTIONS.pointer){
+          if (currentCanvasTool === CanvasTools.POINTER){
             // Botão esquerdo: Cria transições / Cria estados
-            currentState = STATES.none;
+            currentCanvasAction = CanvasActions.NONE;
             if (p.mouseButton === p.LEFT) {
               // Criando estado
               if (p.keyIsDown(p.SHIFT)) {
@@ -266,23 +250,23 @@ const Canvas: React.FC = () => {
                       id = `q${id_number}`;
                     }
                     // Cria novo estado
-                    AutomataModule.addState(
+                    automata.addState(
                       id,
                       p.mouseX,
                       p.mouseY,
-                      DEFAULT_STATE_COLOR
+                      CanvasColors.DEFAULT_STATE
                     );
                   }
                 }
               }
               // Criando transição
               else if(clickedState) {
-                currentState = STATES.creating_transition;
+                currentCanvasAction = CanvasActions.CREATING_TRANSITION;
               }
               // Criando caixa de seleção
               else {
                 // Set state
-                currentState = STATES.creating_selection;
+                currentCanvasAction = CanvasActions.CREATING_SELECTION;
                 // Set dados da selecao
                 selectionStarterX = p.mouseX
                 selectionStarterY = p.mouseY
@@ -305,19 +289,19 @@ const Canvas: React.FC = () => {
                 })
                 
                 // Set estado atual como "Movendo estado"
-                currentState = STATES.moving_state
+                currentCanvasAction = CanvasActions.MOVING_STATE
 
                 // Muda cursor para "grap" cursor
                 p.cursor("grab")
               }
             }
           }
-          else if(selectedOption === OPTIONS.eraser){
+          else if(currentCanvasTool === CanvasTools.ERASER){
             if (clickedState){
-              AutomataModule.deleteState(clickedState)
+              automata.deleteState(clickedState)
             }
           }
-          else if (selectedOption === OPTIONS.move){
+          else if (currentCanvasTool === CanvasTools.MOVE){
             if (clickedState) {
               // Set offset, usado para não centralizar com o mouse os estados movidos
               selectedStateMouseOffset = {}
@@ -328,7 +312,7 @@ const Canvas: React.FC = () => {
               })
               
               // Set estado atual como "Movendo estado"
-              currentState = STATES.moving_state
+              currentCanvasAction = CanvasActions.MOVING_STATE
 
               // Muda cursor para "grap" cursor
               p.cursor("grab")
@@ -341,39 +325,39 @@ const Canvas: React.FC = () => {
           p.cursor("default");
 
           if (clickedState) {
-            const endState = AutomataModule.getStates().find((state) => {
+            const endState = automata.getStates().find((state) => {
               return p.dist(state.x, state.y, p.mouseX, p.mouseY) < state.diameter/2;
             });
-            if (endState && currentState === STATES.creating_transition) {
+            if (endState && currentCanvasAction === CanvasActions.CREATING_TRANSITION) {
               const label = prompt("Digite o símbolo de transição:");
               if (label !== null) {
-                AutomataModule.addTransition(
+                automata.addTransition(
                   clickedState,
                   endState,
                   label
                 );
               }
             }
-            let clickedStateIsSelected = selectedStates.find(state => state.id === clickedState.id)
+            let clickedStateIsSelected = selectedStates.find(state => state.id === clickedState!.id)
             if (!clickedStateIsSelected)
-              clickedState.color = DEFAULT_STATE_COLOR;
+              clickedState.color = CanvasColors.DEFAULT_STATE;
           }
-          currentState = STATES.none;
+          currentCanvasAction = CanvasActions.NONE;
           clickedState = null;
         };
         
         p.keyPressed = () => {
-          const allStates = AutomataModule.getStates()
+          const allStates = automata.getStates()
           clickedState =
           allStates.find((state) => {
               return p.dist(state.x, state.y, p.mouseX, p.mouseY) < state.diameter/2;
             }) || null;
             if (p.key === 'Delete') {
               if(selectedStates.length === 0)
-                selectedStates = [clickedState]
+                selectedStates = [clickedState!]
 
               selectedStates.forEach(state => {
-                AutomataModule.deleteState(state)
+                automata.deleteState(state)
               })
               selectedStates = []
           }
@@ -381,7 +365,7 @@ const Canvas: React.FC = () => {
         
       }, canvasRef.current);
     } 
-  }, [selectedOption]);
+  }, [currentCanvasTool]);
 
   return (
     <div>
@@ -389,24 +373,24 @@ const Canvas: React.FC = () => {
         <div id='toolbox'>
         	<button
             id='pointer'
-            className={'navbar-button ' + (selectedOption === OPTIONS.pointer ? 'selected' : '')}
-            onClick={() => (setSelectedOption(OPTIONS.pointer))}
+            className={'navbar-button ' + (currentCanvasTool === CanvasTools.POINTER ? 'selected' : '')}
+            onClick={() => (setcurrentCanvasTool(CanvasTools.POINTER))}
             title='Pointer'
           >
             <CursorIcon/>
           </button>
           <button
             id='eraser'
-            className={'navbar-button ' + (selectedOption === OPTIONS.eraser ? 'selected' : '')}
-            onClick={() => (setSelectedOption(OPTIONS.eraser))}
+            className={'navbar-button ' + (currentCanvasTool === CanvasTools.ERASER ? 'selected' : '')}
+            onClick={() => (setcurrentCanvasTool(CanvasTools.ERASER))}
             title='Eraser'
           >
             <TrashIcon/>
           </button>
           <button
             id='move'
-            className={'navbar-button ' + (selectedOption === OPTIONS.move ? 'selected' : '')}
-            onClick={() => (setSelectedOption(OPTIONS.move))}
+            className={'navbar-button ' + (currentCanvasTool === CanvasTools.MOVE ? 'selected' : '')}
+            onClick={() => (setcurrentCanvasTool(CanvasTools.MOVE))}
             title='Move'
           >
             <MoveIcon/>
