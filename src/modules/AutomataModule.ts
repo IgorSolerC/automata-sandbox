@@ -1,43 +1,56 @@
-interface AutomataNode {
+
+interface State {
     id: string;
+    // label: string;
+
+    // Rendering
     x: number;
     y: number;
-    transitions: string[];
     diameter: number;
     color: any;
+
+    // Definição automato
+    isInitial: boolean;
+    isFinal: boolean;
+    transitions: string[];
 } 
 
 interface Transition {
-    from: string;
-    to: string;
+    from: State;
+    to: State;
     label: string;
 }
 
-const automataNodes: AutomataNode[] = [];
+interface Automata {
+    states: State[];
+    transitions: Transition[];
+}
+
+const automataStates: State[] = [];
 const transitions: Transition[] = [];
 const stateColor = "#000000";
 
-export const addNode = (id: string, x: number, y: number, color: string) => {
-    const newNode: AutomataNode = { id, x, y, transitions: [], diameter: 80, color };
-    automataNodes.push(newNode);
+export const addState = (id: string, x: number, y: number, color: string) => {
+    const newState: State = { id, x, y, transitions: [], diameter: 80, color, isInitial: false, isFinal: false };
+    automataStates.push(newState);
 };
 
-export const deleteNode = (id: string) => {
-  const index = automataNodes.findIndex(node => node.id === id);
+export const deleteState = (state: State) => {
+  const index = automataStates.findIndex(s => s.id === state.id);
   if (index !== -1) {
-    automataNodes.splice(index, 1);
+    automataStates.splice(index, 1);
   }
 };
 
-export const findNode = (id: string) => {
-  return automataNodes.find(node => node.id === id);
+export const findState = (id: string) => {
+  return automataStates.find(state => state.id === id);
 };
 
-export const getNodes = () => {
-  return automataNodes;
+export const getStates = () => {
+  return automataStates;
 };
 
-export const addTransition = (from: string, to: string, label: string) => {
+export const addTransition = (from: State, to: State, label: string) => {
   const newTransition: Transition = { from, to, label };
   transitions.push(newTransition);
 };
@@ -45,3 +58,7 @@ export const addTransition = (from: string, to: string, label: string) => {
 export const getTransitions = () => {
   return transitions;
 };
+
+export const deleteTransition = (referenceState: State) => {
+  return;  
+}
