@@ -248,7 +248,7 @@ const Canvas: React.FC = () => {
 
         p.mousePressed = () => {
           if(contextMenuIsOpen){
-            console.log('ptinrasdfas')
+            console.log('ContextMenu is open, nothing happend')
           }
           else{
             const allStates = automata.getStates();
@@ -273,6 +273,7 @@ const Canvas: React.FC = () => {
               selectedStates = [];
             }
 
+            /* Pointer */
             if (currentCanvasTool === CanvasTools.POINTER) {
               // Botão esquerdo: Cria transições / Cria estados
               currentCanvasAction = CanvasActions.NONE;
@@ -281,7 +282,8 @@ const Canvas: React.FC = () => {
                 //Esconde o menu de contexto
                 // hideContextMenu();
 
-                // Criando estado
+                /* Shift apertado */
+                // Cria estado
                 if (p.keyIsDown(p.SHIFT)) {
                   if (!clickedState) {
                     // Check se o novo estado criado estaria overlaping com um estágo exstente
@@ -314,9 +316,22 @@ const Canvas: React.FC = () => {
                     }
                   }
                 }
-                // Criando transição
+                /* Shift NÃO apertado, clicou em um estado */
+                // Move estado
                 else if (clickedState) {
-                  currentCanvasAction = CanvasActions.CREATING_TRANSITION;
+                  // Set offset, usado para não centralizar com o mouse os estados movidos
+                  selectedStateMouseOffset = {};
+                  selectedStates.forEach((state) => {
+                    selectedStateMouseOffset[state.id] = {};
+                    selectedStateMouseOffset[state.id]["x"] = state.x - p.mouseX;
+                    selectedStateMouseOffset[state.id]["y"] = state.y - p.mouseY;
+                  });
+
+                  // Set estado atual como "Movendo estado"
+                  currentCanvasAction = CanvasActions.MOVING_STATE;
+
+                  // Muda cursor para "grap" cursor
+                  p.cursor("grab");
                 }
                 // Criando caixa de seleção
                 else {
@@ -340,26 +355,21 @@ const Canvas: React.FC = () => {
                   hideContextMenu();
                 }
               }
+
+            /* Eraser */
             } else if (currentCanvasTool === CanvasTools.ERASER) {
               if (clickedState) {
                 automata.deleteState(clickedState);
               }
+
+            /* Mover */
             } else if (currentCanvasTool === CanvasTools.MOVE) {
-              if (clickedState) {
-                // Set offset, usado para não centralizar com o mouse os estados movidos
-                selectedStateMouseOffset = {};
-                selectedStates.forEach((state) => {
-                  selectedStateMouseOffset[state.id] = {};
-                  selectedStateMouseOffset[state.id]["x"] = state.x - p.mouseX;
-                  selectedStateMouseOffset[state.id]["y"] = state.y - p.mouseY;
-                });
+              // Move a CAMERA, não o estado
+              console.log('Não implementado ainda')
 
-                // Set estado atual como "Movendo estado"
-                currentCanvasAction = CanvasActions.MOVING_STATE;
-
-                // Muda cursor para "grap" cursor
-                p.cursor("grab");
-              }
+            /* Transition */
+            } else if (currentCanvasTool === CanvasTools.TRANSITION){
+              currentCanvasAction = CanvasActions.CREATING_TRANSITION;
             }
           }
         };
@@ -461,7 +471,9 @@ const Canvas: React.FC = () => {
           >
             <TrashIcon />
           </button>
-          <button
+          {
+          /* Acho q da pra usar esse pra mover a camera, não os estados */
+          /* <button
             id="move"
             className={
               "canvas-button navbar-button " +
@@ -471,8 +483,9 @@ const Canvas: React.FC = () => {
             title="Move"
           >
             <MoveIcon />
-          </button>
-          {/* <button
+          </button> */
+          }
+          <button
             id="transition"
             className={
               "canvas-button navbar-button " +
@@ -482,7 +495,7 @@ const Canvas: React.FC = () => {
             title="Transition"
           >
             <TransitionIcon />
-          </button> */}
+          </button>
           <button
             id="undo"
             className="canvas-button navbar-button undo"
