@@ -399,7 +399,11 @@ const Canvas: React.FC = () => {
         };
 
         p.keyPressed = () => {
+          // Está bugado!
+          // Não reconhe numero, a não ser q alt ou cntrl estejam apertados
+
           const allStates = automata.getStates();
+
           clickedState =
             allStates.find((state) => {
               return (
@@ -407,13 +411,35 @@ const Canvas: React.FC = () => {
                 state.diameter / 2
               );
             }) || null;
+
+          // console.log(p.keyCode, 'test')
+          // console.log(p.key, 'test')
+
+          /* Deleta estado(s) */
           if (p.key === "Delete") {
-            if (selectedStates.length === 0) selectedStates = [clickedState!];
+            if (selectedStates.length === 0)
+              selectedStates = [clickedState!];
 
             selectedStates.forEach((state) => {
               automata.deleteState(state);
             });
             selectedStates = [];
+          }
+
+          /* Seleciona tool */
+          if (p.key === "1") {
+            setcurrentCanvasTool(CanvasTools.POINTER)
+          }
+          if (p.key === "2") {
+            setcurrentCanvasTool(CanvasTools.TRANSITION)
+          }
+          if (p.key === "3") {
+            setcurrentCanvasTool(CanvasTools.ERASER)
+          }
+
+          /* Debug */
+          if (p.key === "!") {
+            automata.printInfo()
           }
         };
       }, canvasRef.current);
@@ -432,15 +458,37 @@ const Canvas: React.FC = () => {
   }
 
   function toggleInitial(p: p5) {
-    selectedStates.forEach((state) => {
-      state.isInitial = !state.isInitial //TRATAR EXCEÇÃO, NAO PODE TER MAIS DE UM INICIAL
-    })
+    
+    // O primeiro NÃO é o correto, mas fiz assim para que nunca haja mais de 1 estado inicial
+    // Arrumar depois!
+    let state: State = selectedStates[0]
+    state.isInitial = !state.isInitial
+    
+    // Remove estado inicial anterior, caso não seja o mesmo estado que o atual
+    let prevInitialState: State | null = automata.getInitialState()
+    if(
+      prevInitialState && // Estado inicial anterios não é null
+      state.isInitial && // Estado inicial atual foi toggle apara TRUE, não FALSE
+      (state.id !== prevInitialState.id) // O estad inicial anterios não é o mesmo estado que o atual
+    ){
+      prevInitialState.isInitial = false
+    }
+
+    // Set novo estado inicial
+    if (state.isInitial){
+      automata.setInitialState(state)
+    } else {
+      automata.setInitialState(null)
+    }
   }
 
   function toggleFinal(p: p5) {
     selectedStates.forEach((state) => {
       state.isFinal = !state.isFinal
     })
+
+    let finalStates = automata.getStates().filter(state => state.isFinal)
+    automata.setFinalState(finalStates)
   }
   
   return (
@@ -461,15 +509,15 @@ const Canvas: React.FC = () => {
             <CursorIcon />
           </button>
           <button
-            id="eraser"
+            id="transition"
             className={
               "canvas-button navbar-button " +
-              (currentCanvasTool === CanvasTools.ERASER ? "selected" : "")
+              (currentCanvasTool === CanvasTools.TRANSITION ? "selected" : "")
             }
-            onClick={() => setcurrentCanvasTool(CanvasTools.ERASER)}
-            title="Eraser"
+            onClick={() => setcurrentCanvasTool(CanvasTools.TRANSITION)}
+            title="Transition"
           >
-            <TrashIcon />
+            <TransitionIcon />
           </button>
           {
           /* Acho q da pra usar esse pra mover a camera, não os estados */
@@ -486,15 +534,15 @@ const Canvas: React.FC = () => {
           </button> */
           }
           <button
-            id="transition"
+            id="eraser"
             className={
               "canvas-button navbar-button " +
-              (currentCanvasTool === CanvasTools.TRANSITION ? "selected" : "")
+              (currentCanvasTool === CanvasTools.ERASER ? "selected" : "")
             }
-            onClick={() => setcurrentCanvasTool(CanvasTools.TRANSITION)}
-            title="Transition"
+            onClick={() => setcurrentCanvasTool(CanvasTools.ERASER)}
+            title="Eraser"
           >
-            <TransitionIcon />
+            <TrashIcon />
           </button>
           <button
             id="undo"
