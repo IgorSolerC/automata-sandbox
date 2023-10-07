@@ -120,6 +120,11 @@ const Canvas: React.FC = () => {
           // .reverse() desenhar mostrando o primeiro como acima, visto que é o primeiro a ser selecionado quando clica-se em estados stackados
           automata.getStates().slice().reverse().forEach((state, index) => {
             p.noStroke(); 
+            
+            const allNodes = automata.getStates()
+            allNodes.forEach(state => state.color = CanvasColors.DEFAULT_STATE)
+            selectedStates.forEach(state => state.color = CanvasColors.CLICKED_STATE)
+
             p.fill(state.color); 
             p.ellipse(state.x, state.y, state.diameter); 
             p.fill(255);
@@ -137,7 +142,6 @@ const Canvas: React.FC = () => {
             p.rect(selectionX, selectionY, selectionDistanceX, selectionDistanceY);
             p.pop();
           }
-
         };
         
         p.mouseDragged = () => {
@@ -173,24 +177,12 @@ const Canvas: React.FC = () => {
                 (selectionY <= state.y) && (state.y <= selectionY + selectionDistanceY)
               );
             })
-
-            // Default color
-            allStates.forEach((state) => {
-              state.color = CanvasColors.DEFAULT_STATE
-            })
-            selectedStates.forEach((state) => {
-              state.color = CanvasColors.CLICKED_STATE
-            })
           }
         }
 
         // Left click
         p.mousePressed = () => {
           const allStates = automata.getStates();
-
-          // Previous clicked state
-          // if (clickedState)
-          //   clickedState.color = CanvasColors.DEFAULT_STATE;
 
           // Encontra estado que foi clicado
           clickedState =
@@ -202,22 +194,10 @@ const Canvas: React.FC = () => {
           if (clickedState){
             let clickedStateIsSelected = selectedStates.find(state => state.id === clickedState!.id)
             if(!clickedStateIsSelected){
-              // Previous clicked state
-              selectedStates.forEach((state: State) => {
-                // Reseta cor do estado anterior clicado
-                state.color = CanvasColors.DEFAULT_STATE;
-              })
               selectedStates = [clickedState]
             }
-            // Highlight cor do estado clicado atual
-            clickedState.color = CanvasColors.CLICKED_STATE;
           }
           else {
-            // Previous clicked state
-            selectedStates.forEach((state: State) => {
-              // Reseta cor do estado anterior clicado
-              state.color = CanvasColors.DEFAULT_STATE;
-            })
             selectedStates = []
           }
 
@@ -338,9 +318,6 @@ const Canvas: React.FC = () => {
                 );
               }
             }
-            let clickedStateIsSelected = selectedStates.find(state => state.id === clickedState!.id)
-            if (!clickedStateIsSelected)
-              clickedState.color = CanvasColors.DEFAULT_STATE;
           }
           currentCanvasAction = CanvasActions.NONE;
           clickedState = null;
