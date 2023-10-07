@@ -6,6 +6,8 @@ import TrashIcon from "../symbols/trash_icon";
 import UndoIcon from "../symbols/undo_icon";
 import RedoIcon from "../symbols/redo_icon";
 import MoveIcon from "../symbols/move_icon";
+import TransitionIcon from "../symbols/transition_icon";
+import CheckIcon from "../symbols/check_icon";
 
 // Canvas.tsx
 import React, { useRef, useEffect, useState } from "react";
@@ -156,12 +158,13 @@ const Canvas: React.FC = () => {
                 (state) => (state.color = CanvasColors.CLICKED_STATE)
               );
 
+              // Marcador de "IsInitial"
               if(state.isInitial){
                 p.push()
                 const triangleSize = 0.6
                 let triangleOffsetX: number = (state.diameter/2) + ((state.diameter / 2) * triangleSize)
                 let triangleOffsetY: number = (state.diameter / 2) * triangleSize
-                p.fill("#ababab");
+                p.fill(CanvasColors.DEFAULT_INITIAL_MARKER);
                 p.triangle(
                   state.x - triangleOffsetX, state.y + triangleOffsetY,
                   state.x - triangleOffsetX, state.y - triangleOffsetY,
@@ -170,15 +173,17 @@ const Canvas: React.FC = () => {
                 p.pop()
               }
 
+              // Circulo do estado (Estado em si)
               p.fill(state.color);
               p.ellipse(state.x, state.y, state.diameter);
               p.fill(255);
               p.text(state.id, state.x - 5, state.y + 5);
               
+              // Marcador de "IsFinal"
               if(state.isFinal){
                 // Draw an inner circle with only its outline
                 p.noFill(); // Disable filling
-                p.stroke(0); // Set outline color to white (or any color you prefer)
+                p.stroke(CanvasColors.DEFAULT_FINAL_MARKER); // Set outline color to white (or any color you prefer)
                 p.strokeWeight(2); // Set outline thickness
                 const innerDiameter = state.diameter / 1.5; // Set the diameter of the inner circle
                 p.ellipse(state.x, state.y, innerDiameter);
@@ -431,6 +436,8 @@ const Canvas: React.FC = () => {
   return (
     <div>
       <div id="navbar-div">
+
+        {/* Lado Esquerdo */}
         <div id="toolbox">
           <button
             id="pointer"
@@ -465,9 +472,20 @@ const Canvas: React.FC = () => {
           >
             <MoveIcon />
           </button>
+          {/* <button
+            id="transition"
+            className={
+              "canvas-button navbar-button " +
+              (currentCanvasTool === CanvasTools.TRANSITION ? "selected" : "")
+            }
+            onClick={() => setcurrentCanvasTool(CanvasTools.TRANSITION)}
+            title="Transition"
+          >
+            <TransitionIcon />
+          </button> */}
           <button
             id="undo"
-            className="canvas-button navbar-button"
+            className="canvas-button navbar-button undo"
             onClick={() => console.log("undo!")}
             title="Undo"
           >
@@ -475,13 +493,15 @@ const Canvas: React.FC = () => {
           </button>
           <button
             id="redo"
-            className="canvas-button navbar-button"
+            className="canvas-button navbar-button redo"
             onClick={() => console.log("redo!")}
             title="Redo"
           >
             <RedoIcon />
           </button>
         </div>
+
+        {/* Lado Direito */}
         <div id="automata-input-div">
           <input
             placeholder="Input automato"
@@ -493,8 +513,9 @@ const Canvas: React.FC = () => {
             onClick={() => console.log("redo!")}
             title="Redo"
           >
-            {/* <RedoIcon/> */}
+            <CheckIcon/>
           </button>
+
         </div>
       </div>
       <div ref={canvasRef}></div>

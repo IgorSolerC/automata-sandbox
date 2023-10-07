@@ -26,15 +26,17 @@ html{
 .input-button.accepted{
     background-color: #3dc521;
 }
+.input-button.accepted > svg{
+    fill: #fff
+}
 
 .canvas-button{
-    width: 75px;
-    height: 75px;
+    width: 60px;
+    height: 60px;
     margin: 5px;
     border-radius: 5px;
     border: 0px solid;
     background-color: #ccc;
-    box-shadow: 0px 5px 7px 0px #00000010;
     vertical-align: top;
 
     transition: border-radius 1s;
@@ -48,17 +50,25 @@ html{
 }
 
 .automata-input{
-    height: 75px;
+    height: 60px;
     width: 325px;
     margin: 5px;
     border-radius: 5px;
     border: 0px solid;
     background-color: #ccc;
-    font-size: 40px;
+    font-size: 26px;
     padding-left: 20px;
     padding-right: 20px;
-    box-shadow: 0px 5px 7px 0px #00000010;
     box-sizing: border-box;
+}
+
+.navbar-button.redo{
+    border-radius: 0% 5px 5px 0%;
+    margin-left: 0px;
+}
+.navbar-button.undo{
+    border-radius: 5px 0% 0% 5px;
+    margin-right: 0px;
 }
 
 .navbar-button.selected{
@@ -75,20 +85,15 @@ html{
 }
 
 .navbar-button > svg{
-    width: 80%;
-    height: 80%;
     filter: drop-shadow(2px 2px 4px rgba(0, 0, 0, 0));
     transition: .2s;
 }
 
 .navbar-button.selected:hover > svg{
-    filter: drop-shadow(2px 2px 4px rgba(0, 0, 0, 0.575));
-}
 
+}
 .navbar-button:hover > svg{
-    width: 84%;
-    height: 84%;
-    filter: drop-shadow(2px 2px 4px rgba(0, 0, 0, 0.288));
+
 }
 
 
