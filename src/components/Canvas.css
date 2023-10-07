@@ -23,6 +23,22 @@ html{
     margin-right: 10px; /* Não entedi pq precisa disso, mas precisa  */
 }
 
+.canvas-button
+
+.canvas-button{
+    width: 75px;
+    height: 75px;
+    margin: 5px;
+    border-radius: 5px;
+    border: 0px solid;
+    background-color: #ccc;
+    box-shadow: 0px 5px 7px 0px #00000010;
+    vertical-align: top;
+
+    transition: border-radius 1s;
+    transition-timing-function: cubic-bezier(0.68, 0.01, 0.37, 0.98);
+}
+
 .automata-input:focus{
     border: 0px solid;
     outline: 0px solid;
@@ -54,21 +70,6 @@ html{
 }
 .navbar-button.selected:hover{
     background-color: #9d4edd;
-}
-
-.navbar-button{
-    width: 75px;
-    height: 75px;
-    margin: 5px;
-    border-radius: 5px;
-    border: 0px solid;
-    background-color: #ccc;
-    box-shadow: 0px 5px 7px 0px #00000010;
-    vertical-align: top;
-
-    transition: border-radius 1s;
-    transition-timing-function: cubic-bezier(0.68, 0.01, 0.37, 0.98);
-    
 }
 
 .navbar-button > svg{

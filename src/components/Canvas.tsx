@@ -298,7 +298,6 @@ const Canvas: React.FC = () => {
               p.cursor("grab")
             }
           }
-          
         };
 
         p.mouseReleased = () => {
@@ -350,7 +349,7 @@ const Canvas: React.FC = () => {
         <div id='toolbox'>
         	<button
             id='pointer'
-            className={'navbar-button ' + (currentCanvasTool === CanvasTools.POINTER ? 'selected' : '')}
+            className={'canvas-button navbar-button ' + (currentCanvasTool === CanvasTools.POINTER ? 'selected' : '')}
             onClick={() => (setcurrentCanvasTool(CanvasTools.POINTER))}
             title='Pointer'
           >
@@ -358,7 +357,7 @@ const Canvas: React.FC = () => {
           </button>
           <button
             id='eraser'
-            className={'navbar-button ' + (currentCanvasTool === CanvasTools.ERASER ? 'selected' : '')}
+            className={'canvas-button navbar-button ' + (currentCanvasTool === CanvasTools.ERASER ? 'selected' : '')}
             onClick={() => (setcurrentCanvasTool(CanvasTools.ERASER))}
             title='Eraser'
           >
@@ -366,7 +365,7 @@ const Canvas: React.FC = () => {
           </button>
           <button
             id='move'
-            className={'navbar-button ' + (currentCanvasTool === CanvasTools.MOVE ? 'selected' : '')}
+            className={'canvas-button navbar-button ' + (currentCanvasTool === CanvasTools.MOVE ? 'selected' : '')}
             onClick={() => (setcurrentCanvasTool(CanvasTools.MOVE))}
             title='Move'
           >
@@ -374,7 +373,7 @@ const Canvas: React.FC = () => {
           </button>
           <button
             id='undo'
-            className='navbar-button'
+            className='canvas-button navbar-button'
             onClick={() => (console.log('undo!'))}
             title='Undo'
           >
@@ -382,7 +381,7 @@ const Canvas: React.FC = () => {
           </button>
           <button
             id='redo'
-            className='navbar-button'
+            className='canvas-button navbar-button'
             onClick={() => (console.log('redo!'))}
             title='Redo'
           >
@@ -395,6 +394,14 @@ const Canvas: React.FC = () => {
             className='automata-input'
           >
           </input>
+          <button 
+            id='redo'
+            className={'canvas-button navbar-button ' + (true ? 'accepted' : '')}
+            onClick={() => (console.log('redo!'))}
+            title='Redo'
+          >
+            {/* <RedoIcon/> */}
+          </button>
         </div>
       </div>
       <div ref={canvasRef}></div>
