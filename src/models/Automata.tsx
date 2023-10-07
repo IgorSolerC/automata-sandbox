@@ -11,7 +11,7 @@ export class Automata {
   }
 
   addState(id: string, x: number, y: number, color: string): void {
-    const newState: State = { id, x, y, transitions: [], diameter: 80, color, isInitial: false, isFinal: false };
+    const newState: State = { id, x, y, transitions: [], diameter: 80, color, isInitial: true, isFinal: true }; // Mudar pra false
     this.states.push(newState);
   }
 
