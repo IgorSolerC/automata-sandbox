@@ -9,6 +9,11 @@ import MoveIcon from "../symbols/move_icon";
 import TransitionIcon from "../symbols/transition_icon";
 import CheckIcon from "../symbols/check_icon";
 import WarningIcon from "../symbols/warning_icon";
+import NextIcon from "../symbols/next_icon";
+import PrevIcon from "../symbols/prev_icon";
+import FastforwardIcon from "../symbols/fastforward_icon";
+import PauseIcon from "../symbols/pause_icon";
+import PlayIcon from "../symbols/play_icon";
 
 // Canvas.tsx
 import React, { useRef, useEffect, useState } from "react";
@@ -27,18 +32,24 @@ let automata: Automata = new Automata();
 const Canvas: React.FC = () => {
   const canvasRef = useRef<HTMLDivElement | null>(null);
   let contextMenu: p5.Element;
+  // let slider: p5.Element;
+  
   let contextMenuIsOpen: boolean = false;
+  let testeArrow = 1;
 
   //Validacao
   const [isValid, setIsValid] = useState<boolean>(false);
   const [inputFocused, setInputFocused] = useState<boolean>(false);
   const [inputValue, setInputValue] = useState("");
-  const [errorMessage, setErrorMessage] = useState<string | null>('Nenhum estado inicial foi definido!');
+  const [errorMessage, setErrorMessage] = useState<string | null>(
+    "Nenhum estado inicial foi definido!"
+  );
 
   // Arrays de States
   let clickedState: State | null;
   let selectedStates: State[] = [];
   let nearState: State | null;
+  let highlightedState: State | null;
 
   // Enums
   let currentCanvasAction: CanvasActions = CanvasActions.NONE;
@@ -70,6 +81,11 @@ const Canvas: React.FC = () => {
         p.setup = () => {
           p.createCanvas(window.innerWidth, window.innerHeight);
           p.frameRate(144);
+
+          
+
+          // slider = p.createSlider(-5, 50, 1);
+          // slider.position(10, 80);
 
           // Create custom context menu
           contextMenu = p.createDiv("");
@@ -105,51 +121,83 @@ const Canvas: React.FC = () => {
           automata.getTransitions().forEach((transition) => {
             const start = automata.findState(transition.from.id);
             const end = automata.findState(transition.to.id);
+            const arrow_weight = 5; 
             if (start && end) {
               p.stroke(CanvasColors.DEFAULT_TRANSITION);
-              p.line(start.x, start.y, end.x, end.y);
+              if (start.id === end.id) {
+                const loopRadius = start.diameter / 2;
+                const angle = Math.PI / 6; 
+                
+                const loopStartX = start.x + loopRadius * Math.cos(angle);
+                const loopStartY = start.y + loopRadius * Math.sin(angle);
+          
+                p.noFill();
+                p.stroke(CanvasColors.DEFAULT_TRANSITION);
+                p.strokeWeight(arrow_weight);
+                p.ellipse(start.x, start.y - start.diameter / 2, loopRadius * 2, loopRadius * 2);
+                
+                p.push();
+                p.translate(loopStartX, loopStartY - loopRadius);
 
-              const angle = Math.atan2(end.y - start.y, end.x - start.x); // angle of line
-              const radius = start.diameter / 2; // diameter of circle
-              const offsetX = radius * Math.cos(angle);
-              const offsetY = radius * Math.sin(angle);
+                p.fill(CanvasColors.DEFAULT_TRANSITION);
+                p.triangle(1,-2,-4,-19,14,-12);
+                p.pop();
 
-              // Draw line from the edge of the start circle to the edge of the end circle
-              const arrow_weight = 5; // length of arrowhead
-              p.strokeWeight(arrow_weight);
-              p.line(start.x, start.y, end.x - offsetX, end.y - offsetY);
+                p.fill("black")
+                p.push();
+                p.textAlign(p.CENTER, p.CENTER);
+                p.strokeWeight(1)
+                p.stroke(1)
+                p.textSize(20);
+                p.text(transition.label, start.x, start.y - start.diameter - 15);
+                p.pop();
 
-              // Draw an arrowhead at the edge of the end circle
-              const length = 15; // length of arrowhead
-              p.push(); // Start a new drawing state
-              p.translate(end.x - offsetX, end.y - offsetY);
-              p.rotate(angle);
-              // Arrow line 1
-              p.strokeWeight(arrow_weight);
-              p.line(0, 0, -length, length);
-              // Arrow line 2
-              p.strokeWeight(arrow_weight);
-              p.line(0, 0, -length, -length);
-              p.pop(); // Restore original state
-              p.stroke(1);
+              } else {
+                p.line(start.x  , start.y, end.x, end.y);
 
-              const midX = (start.x + end.x - offsetX) / 2;
-              const midY = (start.y + end.y - offsetY) / 2;
-              const textOffsetY = -15; // Vertical offset for the text label
+                const angle = Math.atan2(end.y - start.y, end.x - start.x); // angle of line
+                const radius = start.diameter / 2; // diameter of circle
+                const offsetX = radius * Math.cos(angle);
+                const offsetY = radius * Math.sin(angle);
 
-              p.push(); // Start another new drawing state for the tilted text
-              p.translate(midX, midY);
+                // Draw line from the edge of the start circle to the edge of the end circle
+                
+                p.strokeWeight(arrow_weight);
+                p.line(start.x, start.y, end.x - offsetX, end.y - offsetY);
 
-              // Corrige textos de cabeça para baico
-              // angle + Math.PI == angle + 180º
-              const correctedAngle = end.x < start.x ? angle + Math.PI : angle;
+                // Draw an arrowhead at the edge of the end circle
+                const length = 15; // length of arrowhead
+                p.push(); // Start a new drawing state
+                p.translate(end.x - offsetX, end.y - offsetY);
+                p.rotate(angle);
+                // Arrow line 1
+                p.strokeWeight(arrow_weight);
+                p.line(0, 0, -length, length);
+                // Arrow line 2
+                p.strokeWeight(arrow_weight);
+                p.line(0, 0, -length, -length);
+                p.pop(); // Restore original state
+                p.stroke(1);
 
-              p.strokeWeight(1);
-              p.rotate(correctedAngle);
-              p.textAlign(p.CENTER, p.CENTER); // Center the text relative to the point
-              p.textSize(20);
-              p.text(transition.label, 0, textOffsetY);
-              p.pop(); // Restore original state
+                const midX = (start.x + end.x - offsetX) / 2;
+                const midY = (start.y + end.y - offsetY) / 2;
+                const textOffsetY = -15; // Vertical offset for the text label
+
+                p.push(); // Start another new drawing state for the tilted text
+                p.translate(midX, midY);
+
+                // Corrige textos de cabeça para baico
+                // angle + Math.PI == angle + 180º
+                const correctedAngle =
+                  end.x < start.x ? angle + Math.PI : angle;
+
+                p.strokeWeight(1);
+                p.rotate(correctedAngle);
+                p.textAlign(p.CENTER, p.CENTER); // Center the text relative to the point
+                p.textSize(20);
+                p.text(transition.label, 0, textOffsetY);
+                p.pop(); // Restore original state
+              }
             }
           });
 
@@ -299,6 +347,7 @@ const Canvas: React.FC = () => {
               if (p.mouseButton === p.LEFT) {
                 //Esconde o menu de contexto
                 // hideContextMenu();
+                testeArrow += 0.05;
 
                 /* Shift apertado */
                 // Cria estado
@@ -451,7 +500,7 @@ const Canvas: React.FC = () => {
           }
 
           /* Seleciona tool */
-          console.log(inputFocused)
+          console.log(inputFocused);
           if (!inputFocused) {
             if (p.key === "1") {
               setcurrentCanvasTool(CanvasTools.POINTER);
@@ -507,7 +556,6 @@ const Canvas: React.FC = () => {
       automata.setInitialState(null);
     }
   }
-
 
   return (
     <div>
@@ -585,7 +633,10 @@ const Canvas: React.FC = () => {
             onFocus={() => {
               setInputFocused(true);
             }}
-            onBlur={() => {setInputFocused(false); console.log("teste")}}
+            onBlur={() => {
+              setInputFocused(false);
+              console.log("teste");
+            }}
             onChange={(event) => {
               setInputValue(event.target.value);
               const { isValid, errorMessage } = automata.validate(
@@ -601,22 +652,77 @@ const Canvas: React.FC = () => {
               "canvas-button input-button " +
               (isValid ? "accepted" : errorMessage ? "warning" : "rejected")
             }
-            onClick={() => console.log("validation!")}
+            onClick={() => {console.log("validation!")}}
             title="Validation"
           >
-            {isValid ? <CheckIcon /> :  errorMessage ? <WarningIcon/> : <ErrorIcon/>}
+            {isValid ? (
+              <CheckIcon />
+            ) : errorMessage ? (
+              <WarningIcon />
+            ) : (
+              <ErrorIcon />
+            )}
           </button>
-          {
-            errorMessage && 
-            <div
-              placeholder="Input automato"
-              className="automata-input-error"
-            >
+          {errorMessage && (
+            <div placeholder="Input automato" className="automata-input-error">
               <span>{errorMessage}</span>
             </div>
-          }
+          )}
         </div>
       </div>
+
+      {/* Step by Step simulation controlls */}
+      {/* <div id="simulation-controller-div">
+        <div className='simulation-controller-buttons-div'>
+          <button
+              id="begining"
+              className={
+                "canvas-button simulation-controller-button rotateicon180"
+              }
+              title="Begining"
+            >
+              <FastforwardIcon/>
+          </button>
+          <button
+              id="next"
+              className={
+                "canvas-button simulation-controller-button"
+              }
+              title="Next"
+            >
+              <PrevIcon />
+          </button>
+          <button
+              id="play"
+              className={
+                "canvas-button simulation-controller-button"
+              }
+              title="Play"
+            >
+              <PlayIcon />
+          </button>
+          <button
+              id="next"
+              className={
+                "canvas-button simulation-controller-button"
+              }
+              title="Next"
+            >
+              <NextIcon />
+          </button>
+          <button
+              id="fastforward"
+              className={
+                "canvas-button simulation-controller-button"
+              }
+              title="Fastforward"
+            >
+              <FastforwardIcon/>
+          </button>
+        </div>
+      </div> */}
+      
+      {/* Canvas */}
       <div ref={canvasRef}></div>
     </div>
   );

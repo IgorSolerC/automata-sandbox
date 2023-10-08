@@ -4,5 +4,5 @@ function CheckIcon() {
     );
   }
   
-export default CheckIcon;
+  export default CheckIcon;
   

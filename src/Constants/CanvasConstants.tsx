@@ -2,6 +2,8 @@ export const CanvasColors = {
     BACKGROUND: "#eee",
 
     // State
+    // DEFAULT_STATE: "#7b2cbf",
+    // CLICKED_STATE: "#deb8ff",
     DEFAULT_STATE: "#7b2cbf",
     CLICKED_STATE: "#deb8ff",
 
@@ -13,6 +15,6 @@ export const CanvasColors = {
     DEFAULT_TRANSITION: "#ccc",
 
     // Selecion
-    SELECTION: "#DDDDDD55",
-    SELECTION_BORDER: "#DDDDDDAA",
+    SELECTION: "#cccccc55",
+    SELECTION_BORDER: "#ccccccAA",
 };

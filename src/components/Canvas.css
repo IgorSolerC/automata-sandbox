@@ -13,6 +13,9 @@ html{
     margin: 5px; 
     display: inline-block;
     box-sizing: border-box;
+    animation-name: slidedown;
+    animation-duration: 0.7s;
+    animation-timing-function: cubic-bezier();
 }
 
 #toolbox{
@@ -27,11 +30,20 @@ html{
 .input-button.accepted{
     background-color: #3dc521;
 }
+.input-button.accepted:hover{
+    background-color: rgb(98, 216, 75);
+}
 .input-button.rejected{
     background-color: #ff0000;
 }
+.input-button.rejected:hover{
+    background-color: rgb(255, 77, 77);
+}
 .input-button.warning{
-    background-color: rgb(216, 204, 32);
+    background-color: rgb(238, 217, 98);
+}
+.input-button.warning:hover{
+    background-color: #f3e17b;
 }
 .input-button > svg{
     fill: #fff
@@ -52,7 +64,6 @@ html{
     text-align: center;
 
     background-color: #f3e17b;
-    background-color: fff1a0;
 
     box-sizing: border-box;
 }
@@ -125,10 +136,13 @@ html{
 
 }
 
-
-.navbar-button:hover{
-    background-color: #d3d3d3;
+.rotateicon180 > svg{
+    transform: rotate(180deg);
 }
+
+.canvas-button:hover{
+    background-color: #d3d3d3;
+} 
 
 #contextMenu {
     background-color: #fff;
@@ -136,9 +150,35 @@ html{
     padding: 5px;
     position: absolute;
     z-index: 1000;
-  }
+}
+
+#contextMenu.hidden {
+display: none;
+}
   
-  #contextMenu.hidden {
-    display: none;
-  }
-  
+@keyframes slideup {
+    0%   {bottom: -100px;}
+    100% {bottom: 0px;}
+}
+
+@keyframes slidedown {
+    0%   {top: -100px;}
+    100% {top: 0px;}
+}
+
+#simulation-controller-div{
+    position: fixed;
+    width: 100%;
+    bottom: 0px;
+    margin: 5px;
+    display: flex;
+    justify-content: center;
+    animation-name: slideup;
+    animation-duration: 0.7s;
+    animation-timing-function: cubic-bezier();
+}
+
+#simulation-controller-buttons-div{
+    
+}
+

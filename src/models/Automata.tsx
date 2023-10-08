@@ -169,12 +169,12 @@ export class Automata {
     const ACEITO = true;
 
     const characters = input.split("");
-    const tem_char_fora_do_alfabeto = characters.some(
+    const temCharForaDoAlfabeto = characters.some(
       (char) =>
         !this.transitions.some((transition) => transition.label.includes(char))
     );
 
-    if (tem_char_fora_do_alfabeto) {
+    if (temCharForaDoAlfabeto) {
       return {
         isValid: NAO_ACEITO,
         errorMessage: "Simbolo de entrada fora do alfabeto!",
