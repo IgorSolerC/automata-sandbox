@@ -18,6 +18,7 @@ html{
 #toolbox{
     float: left;
 }
+
 #automata-input-div{
     float: right;
     margin-right: 10px; /* Não entedi pq precisa disso, mas precisa  */
@@ -26,8 +27,39 @@ html{
 .input-button.accepted{
     background-color: #3dc521;
 }
-.input-button.accepted > svg{
+.input-button.rejected{
+    background-color: #ff0000;
+}
+.input-button.warning{
+    background-color: rgb(216, 204, 32);
+}
+.input-button > svg{
     fill: #fff
+}
+
+
+
+.automata-input-error{
+    height: 30px;
+    width: calc(100% - 10px);
+    margin: 5px;
+    /* margin-left: -10px; */
+    border-radius: 5px;
+    border: 0px solid;
+    background-color: #ccc;
+    font-size: 17px;
+    
+    text-align: center;
+
+    background-color: #f3e17b;
+    background-color: fff1a0;
+
+    box-sizing: border-box;
+}
+
+.automata-input-error > span {
+    vertical-align: middle;
+    color: #816e00;
 }
 
 .canvas-button{
@@ -38,9 +70,6 @@ html{
     border: 0px solid;
     background-color: #ccc;
     vertical-align: top;
-
-    transition: border-radius 1s;
-    transition-timing-function: cubic-bezier(0.68, 0.01, 0.37, 0.98);
 }
 
 .automata-input:focus{

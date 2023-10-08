@@ -6,66 +6,65 @@ export class Automata {
   transitions: Transition[];
   initialState: State | null;
   finalStates: State[];
-  
+
   constructor() {
     this.states = [];
     this.transitions = [];
     this.initialState = null;
-    this.finalStates = []
+    this.finalStates = [];
   }
-  
+
   /* Misc */
   printInfo() {
     // Estados
-    let states: State[] = this.states.slice()
-    let statesIds:  string[] = states.map(state => state.id);
-    console.log(
-      'states = (' + statesIds + ')'
-      )
-      
+    let states: State[] = this.states.slice();
+    let statesIds: string[] = states.map((state) => state.id);
+    console.log("states = {" + statesIds + "}");
+
     // Transições
-    let transitions: {'from':State, 'to':State, 'label': string}[] = this.transitions.slice()
-    let formatedTransitions: string[] = transitions.map(transition => (
-      `\n(${transition['from'].id}, ${transition['label']} = ${transition['to'].id})`
-    ));
-    console.log(
-      'transicoes = ' + formatedTransitions
-    )
+    let transitions: Transition[] = this.transitions.slice();
+    let formatedTransitions: string[] = transitions.map(
+      (transition) =>
+        `\n(${transition["from"].id}, ${transition["label"]} = ${transition["to"].id})`
+    );
+    console.log("transicoes = " + formatedTransitions);
 
     // Estados finais
-    let finalStates: State[] = this.finalStates.slice()
-    let finalStatesIds:  string[] = finalStates.map(state => state.id);
-    console.log(
-      'final = (' + finalStatesIds + ')'
-    )
-      
+    let finalStates: State[] = this.finalStates.slice();
+    let finalStatesIds: string[] = finalStates.map((state) => state.id);
+    console.log("final = {" + finalStatesIds + "}");
+
     // Estado Inicial
-    let initial: string = this.initialState ? this.initialState.id : 'null'
-    console.log(
-      'initial = ' +  initial
-    )
-        
+    let initial: string = this.initialState ? this.initialState.id : "null";
+    console.log("initial = " + initial);
   }
 
   /* Initial state */
-  setInitialState(state: State | null){
-    this.initialState = state
-  }
-  
-  getInitialState(){
-    return this.initialState
+  setInitialState(state: State | null) {
+    this.initialState = state;
   }
 
+  getInitialState() {
+    return this.initialState;
+  }
 
   /* Final states */
-  setFinalState(finalStates: State[]){
-    this.finalStates = finalStates
+  toggleFinal(states: State[]) {
+    states.forEach((state) => {
+      state.isFinal = !state.isFinal;
+    });
+
+    let finalStates = this.getStates().filter((state) => state.isFinal);
+    this.setFinalStates(finalStates);
   }
 
-  getFinalState(){
-    return this.finalStates
+  setFinalStates(finalStates: State[]) {
+    this.finalStates = finalStates;
   }
 
+  getFinalStates() {
+    return this.finalStates;
+  }
 
   /* States */
   getStates(): State[] {
@@ -73,36 +72,44 @@ export class Automata {
   }
 
   addState(id: string, x: number, y: number, color: string): void {
-    let isInitial: boolean = (this.states.length === 0)
-    const newState: State = { id, x, y, transitions: [], diameter: 80, color, isInitial: isInitial, isFinal: false }; // Mudar pra false
+    let isInitial: boolean = this.states.length === 0;
+    const newState: State = {
+      id,
+      x,
+      y,
+      transitions: [],
+      diameter: 80,
+      color,
+      isInitial: isInitial,
+      isFinal: false,
+    }; // Mudar pra false
 
-    if (isInitial)
-      this.setInitialState(newState)
+    if (isInitial) this.setInitialState(newState);
 
     this.states.push(newState);
   }
 
   deleteState(state: State): void {
-    const index = this.states.findIndex(s => s.id === state.id);
+    const index = this.states.findIndex((s) => s.id === state.id);
     if (index !== -1) {
       this.states.splice(index, 1);
     }
 
     // Att estado inicial
-    if (state.isInitial){
-      this.setInitialState(null)
+    if (state.isInitial) {
+      this.setInitialState(null);
     }
 
     // Att estado final
     if (state.isFinal)
-      this.setFinalState(this.finalStates.filter(s => s.id !== state.id))
+      this.setFinalStates(this.finalStates.filter((s) => s.id !== state.id));
 
+    this.deleteTransitionFromState(state);
   }
 
   findState(id: string): State | undefined {
-    return this.states.find(state => state.id === id);
+    return this.states.find((state) => state.id === id);
   }
-
 
   /* Transition */
   getTransitions(): Transition[] {
@@ -116,5 +123,114 @@ export class Automata {
 
   deleteTransition(referenceState: State): void {
     // Your code for deleting transition can go here
+  }
+
+  deleteTransitionFromState(state: State): void {
+    this.transitions
+      .filter((t) => t.from === state || t.to === state)
+      .forEach((transition) => {
+        const index = this.transitions.findIndex((t) => t === transition);
+        if (index !== -1) {
+          this.transitions.splice(index, 1);
+        }
+      });
+  }
+
+  /* Simulação */
+  testTransition(input: string, estado_atual: State, i: number) {
+    const char = input[i];
+    let possiveis_transicoes = this.transitions.filter(
+      (transition) => transition.from === estado_atual
+    );
+
+    if (
+      !possiveis_transicoes ||
+      !possiveis_transicoes.find((transition) => transition.label === char)
+    ) {
+      return {
+        isValidTransition: false,
+        next_state: null,
+        errorMessage: "Transição inválida!",
+      };
+    } else {
+      estado_atual = possiveis_transicoes.find(
+        (transition) => transition.label === char
+      )!.to;
+      return {
+        isValidTransition: true,
+        nextState: estado_atual,
+        errorMessage: null,
+      };
+    }
+  }
+
+  validate(input: string): { isValid: boolean; errorMessage: string | null } {
+    const NAO_ACEITO = false;
+    const ACEITO = true;
+
+    const characters = input.split("");
+    const tem_char_fora_do_alfabeto = characters.some(
+      (char) =>
+        !this.transitions.some((transition) => transition.label.includes(char))
+    );
+
+    if (tem_char_fora_do_alfabeto) {
+      return {
+        isValid: NAO_ACEITO,
+        errorMessage: "Simbolo de entrada fora do alfabeto!",
+      };
+    }
+
+    if (!this.initialState) {
+      return {
+        isValid: NAO_ACEITO,
+        errorMessage: "Nenhum estado inicial foi definido!",
+      };
+    }
+
+    if (this.finalStates.length === 0) {
+      return {
+        isValid: NAO_ACEITO,
+        errorMessage: "Nenhum estado final foi definido!",
+      };
+    }
+
+    if (
+      this.transitions.some(
+        (t, index, arr) =>
+          arr.filter((x) => x.from === t.from && x.label === t.label).length > 1
+      )
+    ) {
+      return { 
+        isValid: false, 
+        errorMessage: "Não determinismo encontrado!" 
+      };
+    }
+
+    let estado_atual = this.initialState;
+
+    for (let i = 0; i < input.length; i++) {
+      const { isValidTransition, nextState, errorMessage } =
+        this.testTransition(input, estado_atual, i);
+
+      if (!isValidTransition) {
+        return { isValid: NAO_ACEITO, errorMessage };
+      }
+
+      estado_atual = nextState!;
+    }
+
+    if (estado_atual.isFinal) {
+      return {
+        isValid: ACEITO,
+        errorMessage: null,
+      };
+    } else {
+      return {
+        isValid: NAO_ACEITO,
+        errorMessage: null,
+        // errorMessage: "Não finalizou em um estado final!",
+      };
+    }
   }
 }

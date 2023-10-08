@@ -8,6 +8,7 @@ import RedoIcon from "../symbols/redo_icon";
 import MoveIcon from "../symbols/move_icon";
 import TransitionIcon from "../symbols/transition_icon";
 import CheckIcon from "../symbols/check_icon";
+import WarningIcon from "../symbols/warning_icon";
 
 // Canvas.tsx
 import React, { useRef, useEffect, useState } from "react";
@@ -17,6 +18,8 @@ import { State } from "../models/State";
 import { CanvasActions } from "../enums/CanvasActionsEnum";
 import { CanvasTools } from "../enums/CanvasToolsEnum";
 import { CanvasColors } from "../Constants/CanvasConstants";
+import ErrorIcon from "../symbols/error_icon";
+import { error } from "console";
 
 let canvasObject: p5 | null = null; // Variável para armazenar o sketch
 let automata: Automata = new Automata();
@@ -24,7 +27,13 @@ let automata: Automata = new Automata();
 const Canvas: React.FC = () => {
   const canvasRef = useRef<HTMLDivElement | null>(null);
   let contextMenu: p5.Element;
-  let contextMenuIsOpen:  boolean = false;
+  let contextMenuIsOpen: boolean = false;
+
+  //Validacao
+  const [isValid, setIsValid] = useState<boolean>(false);
+  const [inputFocused, setInputFocused] = useState<boolean>(false);
+  const [inputValue, setInputValue] = useState("");
+  const [errorMessage, setErrorMessage] = useState<string | null>('Nenhum estado inicial foi definido!');
 
   // Arrays de States
   let clickedState: State | null;
@@ -71,12 +80,18 @@ const Canvas: React.FC = () => {
           option2.mouseClicked(() => {
             toggleInitial(p);
             hideContextMenu();
+            const { isValid, errorMessage } = automata.validate(inputValue);
+            setIsValid(isValid);
+            setErrorMessage(errorMessage);
           });
 
           let option3 = p.createDiv("Final");
           option3.mouseClicked(() => {
-            toggleFinal(p);
+            automata.toggleFinal(selectedStates);
             hideContextMenu();
+            const { isValid, errorMessage } = automata.validate(inputValue);
+            setIsValid(isValid);
+            setErrorMessage(errorMessage);
           });
 
           contextMenu.child(option2);
@@ -133,9 +148,7 @@ const Canvas: React.FC = () => {
               p.rotate(correctedAngle);
               p.textAlign(p.CENTER, p.CENTER); // Center the text relative to the point
               p.textSize(20);
-              let text: string = transition.label;
-              if (text === "") text = "λ";
-              p.text(text, 0, textOffsetY);
+              p.text(transition.label, 0, textOffsetY);
               p.pop(); // Restore original state
             }
           });
@@ -159,18 +172,23 @@ const Canvas: React.FC = () => {
               );
 
               // Marcador de "IsInitial"
-              if(state.isInitial){
-                p.push()
-                const triangleSize = 0.6
-                let triangleOffsetX: number = (state.diameter/2) + ((state.diameter / 2) * triangleSize)
-                let triangleOffsetY: number = (state.diameter / 2) * triangleSize
+              if (state.isInitial) {
+                p.push();
+                const triangleSize = 0.6;
+                let triangleOffsetX: number =
+                  state.diameter / 2 + (state.diameter / 2) * triangleSize;
+                let triangleOffsetY: number =
+                  (state.diameter / 2) * triangleSize;
                 p.fill(CanvasColors.DEFAULT_INITIAL_MARKER);
                 p.triangle(
-                  state.x - triangleOffsetX, state.y + triangleOffsetY,
-                  state.x - triangleOffsetX, state.y - triangleOffsetY,
-                  state.x - (state.diameter/2), state.y
-                )
-                p.pop()
+                  state.x - triangleOffsetX,
+                  state.y + triangleOffsetY,
+                  state.x - triangleOffsetX,
+                  state.y - triangleOffsetY,
+                  state.x - state.diameter / 2,
+                  state.y
+                );
+                p.pop();
               }
 
               // Circulo do estado (Estado em si)
@@ -178,9 +196,9 @@ const Canvas: React.FC = () => {
               p.ellipse(state.x, state.y, state.diameter);
               p.fill(255);
               p.text(state.id, state.x - 5, state.y + 5);
-              
+
               // Marcador de "IsFinal"
-              if(state.isFinal){
+              if (state.isFinal) {
                 // Draw an inner circle with only its outline
                 p.noFill(); // Disable filling
                 p.stroke(CanvasColors.DEFAULT_FINAL_MARKER); // Set outline color to white (or any color you prefer)
@@ -188,7 +206,7 @@ const Canvas: React.FC = () => {
                 const innerDiameter = state.diameter / 1.5; // Set the diameter of the inner circle
                 p.ellipse(state.x, state.y, innerDiameter);
               }
-              
+
               p.fill(0);
               p.stroke(0);
               p.strokeWeight(2);
@@ -247,10 +265,10 @@ const Canvas: React.FC = () => {
         };
 
         p.mousePressed = () => {
-          if(contextMenuIsOpen){
-            console.log('ContextMenu is open, nothing happend')
-          }
-          else{
+          setInputFocused(false);
+          if (contextMenuIsOpen) {
+            console.log("ContextMenu is open, nothing happend");
+          } else {
             const allStates = automata.getStates();
             // Encontra estado que foi clicado
             clickedState =
@@ -323,8 +341,10 @@ const Canvas: React.FC = () => {
                   selectedStateMouseOffset = {};
                   selectedStates.forEach((state) => {
                     selectedStateMouseOffset[state.id] = {};
-                    selectedStateMouseOffset[state.id]["x"] = state.x - p.mouseX;
-                    selectedStateMouseOffset[state.id]["y"] = state.y - p.mouseY;
+                    selectedStateMouseOffset[state.id]["x"] =
+                      state.x - p.mouseX;
+                    selectedStateMouseOffset[state.id]["y"] =
+                      state.y - p.mouseY;
                   });
 
                   // Set estado atual como "Movendo estado"
@@ -356,19 +376,19 @@ const Canvas: React.FC = () => {
                 }
               }
 
-            /* Eraser */
+              /* Eraser */
             } else if (currentCanvasTool === CanvasTools.ERASER) {
               if (clickedState) {
                 automata.deleteState(clickedState);
               }
 
-            /* Mover */
+              /* Mover */
             } else if (currentCanvasTool === CanvasTools.MOVE) {
               // Move a CAMERA, não o estado
-              console.log('Não implementado ainda')
+              console.log("Não implementado ainda");
 
-            /* Transition */
-            } else if (currentCanvasTool === CanvasTools.TRANSITION){
+              /* Transition */
+            } else if (currentCanvasTool === CanvasTools.TRANSITION) {
               currentCanvasAction = CanvasActions.CREATING_TRANSITION;
             }
           }
@@ -388,19 +408,24 @@ const Canvas: React.FC = () => {
               endState &&
               currentCanvasAction === CanvasActions.CREATING_TRANSITION
             ) {
-              const label = prompt("Digite o símbolo de transição:");
+              let label = prompt("Digite o símbolo de transição:");
               if (label !== null) {
+                if (label === "") label = "λ";
                 automata.addTransition(clickedState, endState, label);
               }
             }
           }
           currentCanvasAction = CanvasActions.NONE;
           clickedState = null;
+
+          const { isValid, errorMessage } = automata.validate(inputValue);
+          setIsValid(isValid);
+          setErrorMessage(errorMessage);
         };
 
         p.keyPressed = () => {
           // Está bugado!
-          // Não reconhe numero, a não ser q alt ou cntrl estejam apertados
+          // Não reconhece numero, a não ser q alt ou cntrl estejam apertados
 
           const allStates = automata.getStates();
 
@@ -417,8 +442,7 @@ const Canvas: React.FC = () => {
 
           /* Deleta estado(s) */
           if (p.key === "Delete") {
-            if (selectedStates.length === 0)
-              selectedStates = [clickedState!];
+            if (selectedStates.length === 0) selectedStates = [clickedState!];
 
             selectedStates.forEach((state) => {
               automata.deleteState(state);
@@ -427,19 +451,22 @@ const Canvas: React.FC = () => {
           }
 
           /* Seleciona tool */
-          if (p.key === "1") {
-            setcurrentCanvasTool(CanvasTools.POINTER)
-          }
-          if (p.key === "2") {
-            setcurrentCanvasTool(CanvasTools.TRANSITION)
-          }
-          if (p.key === "3") {
-            setcurrentCanvasTool(CanvasTools.ERASER)
+          console.log(inputFocused)
+          if (!inputFocused) {
+            if (p.key === "1") {
+              setcurrentCanvasTool(CanvasTools.POINTER);
+            }
+            if (p.key === "2") {
+              setcurrentCanvasTool(CanvasTools.TRANSITION);
+            }
+            if (p.key === "3") {
+              setcurrentCanvasTool(CanvasTools.ERASER);
+            }
           }
 
           /* Debug */
           if (p.key === "!") {
-            automata.printInfo()
+            automata.printInfo();
           }
         };
       }, canvasRef.current);
@@ -458,43 +485,33 @@ const Canvas: React.FC = () => {
   }
 
   function toggleInitial(p: p5) {
-    
     // O primeiro NÃO é o correto, mas fiz assim para que nunca haja mais de 1 estado inicial
     // Arrumar depois!
-    let state: State = selectedStates[0]
-    state.isInitial = !state.isInitial
-    
+    let state: State = selectedStates[0];
+    state.isInitial = !state.isInitial;
+
     // Remove estado inicial anterior, caso não seja o mesmo estado que o atual
-    let prevInitialState: State | null = automata.getInitialState()
-    if(
+    let prevInitialState: State | null = automata.getInitialState();
+    if (
       prevInitialState && // Estado inicial anterios não é null
       state.isInitial && // Estado inicial atual foi toggle apara TRUE, não FALSE
-      (state.id !== prevInitialState.id) // O estad inicial anterios não é o mesmo estado que o atual
-    ){
-      prevInitialState.isInitial = false
+      state.id !== prevInitialState.id // O estad inicial anterios não é o mesmo estado que o atual
+    ) {
+      prevInitialState.isInitial = false;
     }
 
     // Set novo estado inicial
-    if (state.isInitial){
-      automata.setInitialState(state)
+    if (state.isInitial) {
+      automata.setInitialState(state);
     } else {
-      automata.setInitialState(null)
+      automata.setInitialState(null);
     }
   }
 
-  function toggleFinal(p: p5) {
-    selectedStates.forEach((state) => {
-      state.isFinal = !state.isFinal
-    })
 
-    let finalStates = automata.getStates().filter(state => state.isFinal)
-    automata.setFinalState(finalStates)
-  }
-  
   return (
     <div>
       <div id="navbar-div">
-
         {/* Lado Esquerdo */}
         <div id="toolbox">
           <button
@@ -519,8 +536,7 @@ const Canvas: React.FC = () => {
           >
             <TransitionIcon />
           </button>
-          {
-          /* Acho q da pra usar esse pra mover a camera, não os estados */
+          {/* Acho q da pra usar esse pra mover a camera, não os estados */
           /* <button
             id="move"
             className={
@@ -531,8 +547,7 @@ const Canvas: React.FC = () => {
             title="Move"
           >
             <MoveIcon />
-          </button> */
-          }
+          </button> */}
           <button
             id="eraser"
             className={
@@ -567,16 +582,39 @@ const Canvas: React.FC = () => {
           <input
             placeholder="Input automato"
             className="automata-input"
+            onFocus={() => {
+              setInputFocused(true);
+            }}
+            onBlur={() => {setInputFocused(false); console.log("teste")}}
+            onChange={(event) => {
+              setInputValue(event.target.value);
+              const { isValid, errorMessage } = automata.validate(
+                event.target.value
+              );
+              setIsValid(isValid);
+              setErrorMessage(errorMessage);
+            }}
           ></input>
           <button
-            id="redo"
-            className={"canvas-button input-button " + (true ? "accepted" : "")}
-            onClick={() => console.log("redo!")}
-            title="Redo"
+            id="validation"
+            className={
+              "canvas-button input-button " +
+              (isValid ? "accepted" : errorMessage ? "warning" : "rejected")
+            }
+            onClick={() => console.log("validation!")}
+            title="Validation"
           >
-            <CheckIcon/>
+            {isValid ? <CheckIcon /> :  errorMessage ? <WarningIcon/> : <ErrorIcon/>}
           </button>
-
+          {
+            errorMessage && 
+            <div
+              placeholder="Input automato"
+              className="automata-input-error"
+            >
+              <span>{errorMessage}</span>
+            </div>
+          }
         </div>
       </div>
       <div ref={canvasRef}></div>
