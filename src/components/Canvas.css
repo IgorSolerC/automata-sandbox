@@ -27,30 +27,6 @@ html{
     margin-right: 10px; /* Não entedi pq precisa disso, mas precisa  */
 }
 
-.input-button.accepted{
-    background-color: #3dc521;
-}
-.input-button.accepted:hover{
-    background-color: rgb(98, 216, 75);
-}
-.input-button.rejected{
-    background-color: #ff0000;
-}
-.input-button.rejected:hover{
-    background-color: rgb(255, 77, 77);
-}
-.input-button.warning{
-    background-color: rgb(238, 217, 98);
-}
-.input-button.warning:hover{
-    background-color: #f3e17b;
-}
-.input-button > svg{
-    fill: #fff
-}
-
-
-
 .automata-input-error{
     height: 30px;
     width: calc(100% - 10px);
@@ -71,6 +47,35 @@ html{
 .automata-input-error > span {
     vertical-align: middle;
     color: #816e00;
+}
+
+.canvas-button.input-button2{
+    height: 30px !important;
+}
+.canvas-button.input-button2 > svg{
+    height: 30px !important;
+    width: 30px !important;
+}
+.input-button.accepted{
+    background-color: #3dc521;
+}
+.input-button.accepted:hover{
+    background-color: rgb(98, 216, 75);
+}
+.input-button.rejected{
+    background-color: #ff0000;
+}
+.input-button.rejected:hover{
+    background-color: rgb(255, 77, 77);
+}
+.input-button.warning{
+    background-color: rgb(238, 217, 98);
+}
+.input-button.warning:hover{
+    background-color: #f3e17b;
+}
+.input-button > svg{
+    fill: #fff
 }
 
 .canvas-button{
@@ -97,6 +102,18 @@ html{
     border: 0px solid;
     background-color: #ccc;
     font-size: 26px;
+    padding-left: 20px;
+    padding-right: 20px;
+    box-sizing: border-box;
+}
+.automata-input2{
+    height: 30px;
+    width: 325px;
+    margin: 5px;
+    border-radius: 5px;
+    border: 0px solid;
+    background-color: #ccc;
+    font-size: 16px;
     padding-left: 20px;
     padding-right: 20px;
     box-sizing: border-box;

@@ -22,7 +22,7 @@ import { Automata } from "../models/Automata";
 import { State } from "../models/State";
 import { CanvasActions } from "../enums/CanvasActionsEnum";
 import { CanvasTools } from "../enums/CanvasToolsEnum";
-import { CanvasColors } from "../Constants/CanvasConstants";
+import { CanvasColors, CanvasIcons } from "../Constants/CanvasConstants";
 import ErrorIcon from "../symbols/error_icon";
 import { error } from "console";
 
@@ -35,7 +35,6 @@ const Canvas: React.FC = () => {
   // let slider: p5.Element;
   
   let contextMenuIsOpen: boolean = false;
-  let testeArrow = 1;
 
   //Validacao
   const [isValid, setIsValid] = useState<boolean>(false);
@@ -49,7 +48,6 @@ const Canvas: React.FC = () => {
   let clickedState: State | null;
   let selectedStates: State[] = [];
   let nearState: State | null;
-  let highlightedState: State | null;
 
   // Enums
   let currentCanvasAction: CanvasActions = CanvasActions.NONE;
@@ -76,13 +74,70 @@ const Canvas: React.FC = () => {
       if (canvasObject) {
         canvasObject.remove();
       }
-
+      
       canvasObject = new p5((p: p5) => {
         p.setup = () => {
           p.createCanvas(window.innerWidth, window.innerHeight);
           p.frameRate(144);
 
-          
+          // Create the simulation-controller-div
+          let simulationControllerDiv = p.createDiv();
+          simulationControllerDiv.id('simulation-controller-div');
+
+          // Create the div for buttons
+          let buttonsDiv = p.createDiv();
+          buttonsDiv.addClass('simulation-controller-buttons-div');
+
+          // Create the "beginning" button
+          let beginningButton = p.createButton("");
+          beginningButton.id('begining');
+          beginningButton.addClass('canvas-button simulation-controller-button rotateicon180');
+          beginningButton.attribute('title', 'Begining');
+          beginningButton.html(CanvasIcons.FAST_FORWARD);
+
+          // Create the "prev" button
+          let nextButton = p.createButton("");
+          nextButton.id('prev');
+          nextButton.addClass('canvas-button simulation-controller-button');
+          nextButton.attribute('title', 'prev');
+          nextButton.html(CanvasIcons.PREV);
+
+          // Create the "play" button
+          let playButton = p.createButton("");
+          playButton.id('play');
+          playButton.addClass('canvas-button simulation-controller-button');
+          playButton.attribute('title', 'Play');
+          playButton.html(CanvasIcons.PLAY);
+
+          // Create the "next" button
+          let nextButton2 = p.createButton("");
+          nextButton2.id('next');
+          nextButton2.addClass('canvas-button simulation-controller-button');
+          nextButton2.attribute('title', 'Next');
+          nextButton2.html(CanvasIcons.NEXT);
+
+          // // Create the "fastforward" button
+          let fastforwardButton = p.createButton("");
+          fastforwardButton.id('fastforward');
+          fastforwardButton.addClass('canvas-button simulation-controller-button');
+          fastforwardButton.attribute('title', 'Fastforward');
+          fastforwardButton.html(CanvasIcons.FAST_FORWARD);
+
+          // // Append the buttons to the buttonsDiv
+          buttonsDiv.child(beginningButton);
+          buttonsDiv.child(nextButton);
+          buttonsDiv.child(playButton);
+          buttonsDiv.child(nextButton2);
+          buttonsDiv.child(fastforwardButton);
+
+          // Append the buttonsDiv to the simulationControllerDiv
+          simulationControllerDiv.child(buttonsDiv);
+
+          // // Append the simulationControllerDiv to the body or another container element
+          // simulationControllerDiv.parent('container'); // Replace 'container' with the ID of the parent element you want to append to
+
+
+
 
           // slider = p.createSlider(-5, 50, 1);
           // slider.position(10, 80);
@@ -347,7 +402,6 @@ const Canvas: React.FC = () => {
               if (p.mouseButton === p.LEFT) {
                 //Esconde o menu de contexto
                 // hideContextMenu();
-                testeArrow += 0.05;
 
                 /* Shift apertado */
                 // Cria estado
@@ -534,6 +588,7 @@ const Canvas: React.FC = () => {
   }
 
   function toggleInitial(p: p5) {
+    //TODO: FIX
     // O primeiro NÃO é o correto, mas fiz assim para que nunca haja mais de 1 estado inicial
     // Arrumar depois!
     let state: State = selectedStates[0];
@@ -668,6 +723,7 @@ const Canvas: React.FC = () => {
               <span>{errorMessage}</span>
             </div>
           )}
+          
         </div>
       </div>
 
@@ -684,11 +740,11 @@ const Canvas: React.FC = () => {
               <FastforwardIcon/>
           </button>
           <button
-              id="next"
+              id="prev"
               className={
                 "canvas-button simulation-controller-button"
               }
-              title="Next"
+              title="Prev"
             >
               <PrevIcon />
           </button>
