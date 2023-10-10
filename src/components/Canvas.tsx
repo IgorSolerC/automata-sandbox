@@ -1,3 +1,4 @@
+// Css
 import "./Canvas.css";
 
 // Google Material Icons
@@ -14,17 +15,25 @@ import PrevIcon from "../symbols/prev_icon";
 import FastforwardIcon from "../symbols/fastforward_icon";
 import PauseIcon from "../symbols/pause_icon";
 import PlayIcon from "../symbols/play_icon";
+import ErrorIcon from "../symbols/error_icon";
 
-// Canvas.tsx
+// Libaries
 import React, { useRef, useEffect, useState } from "react";
 import p5 from "p5";
+
+// Objects
 import { Automata } from "../models/Automata";
 import { State } from "../models/State";
+
+// Enums
 import { CanvasActions } from "../enums/CanvasActionsEnum";
 import { CanvasTools } from "../enums/CanvasToolsEnum";
+
+// Constants
 import { CanvasColors } from "../Constants/CanvasConstants";
-import ErrorIcon from "../symbols/error_icon";
-import { error } from "console";
+
+// Contexts
+import { ToolboxProvider, useToolboxContext } from "../contexts/ToolboxContext";
 
 // let canvasObject: p5 | null = null; // Variável para armazenar o sketch
 let automata: Automata = new Automata();
@@ -47,6 +56,8 @@ const Canvas: React.FC = () => {
     "Nenhum estado inicial foi definido!"
   );
 
+  const { selectedToolState, updateSelectedTool } = useToolboxContext();
+  
   // Arrays de States
   let clickedState: State | null;
   let selectedStates: State[] = [];
@@ -69,6 +80,7 @@ const Canvas: React.FC = () => {
   let selectionDistanceY: number = 0;
 
   useEffect(() => {
+    console.log('Canvas Rerender Triggered!')
     if (canvasRef.current) {
       //* Parou de funcionar */
       // canvasRef.current.addEventListener("contextmenu", (e) => {
@@ -506,15 +518,19 @@ const Canvas: React.FC = () => {
 
           /* Seleciona tool */
           console.log(inputFocused);
+
           if (!inputFocused) {
             if (p.key === "1") {
               currentCanvasToolRef.current = CanvasTools.POINTER;
+              updateSelectedTool(CanvasTools.POINTER) 
             }
             if (p.key === "2") {
               currentCanvasToolRef.current = CanvasTools.TRANSITION;
+              updateSelectedTool(CanvasTools.TRANSITION)
             }
             if (p.key === "3") {
               currentCanvasToolRef.current = CanvasTools.ERASER;
+              updateSelectedTool(CanvasTools.ERASER)
             }
           }
 
@@ -688,10 +704,10 @@ interface ToolboxProps {
   currentCanvasToolRef: React.MutableRefObject<number>;
 }
 const Toolbox: React.FC<ToolboxProps> = ({ currentCanvasToolRef }) => {
-  const [selectedToolState, setSelectedToolState] = useState(CanvasTools.POINTER);
+  const { selectedToolState, updateSelectedTool } = useToolboxContext();
 
   const handleToolButtonClick = (tool: number) => {
-    setSelectedToolState(tool);
+    updateSelectedTool(tool);
     currentCanvasToolRef.current = tool;
   };
 

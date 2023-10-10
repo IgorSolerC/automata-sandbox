@@ -1,11 +1,16 @@
 import React from 'react';
 import Canvas from './components/Canvas';
 
+// Contexts
+import { ToolboxProvider, useToolboxContext } from "./contexts/ToolboxContext";
+
 const App: React.FC = () => {
   return (
-    <div className="App">
-      <Canvas />
-    </div>
+    <ToolboxProvider>
+      <div className="App">
+        <Canvas />
+      </div>
+    </ToolboxProvider>
   );
 };
 
