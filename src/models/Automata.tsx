@@ -108,13 +108,13 @@ export class Automata {
   }
 
   findState(id: string): State | undefined {
-    return this.states.find((state) => state.id === id);
+    return this.states.find((state) => state.id === id); 
   }
 
   /* Transition */
   getTransitions(): Transition[] {
     return this.transitions;
-  }
+  } 
 
   addTransition(from: State, to: State, label: string): void {
     const newTransition: Transition = { from, to, label };

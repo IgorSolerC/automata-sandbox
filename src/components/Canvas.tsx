@@ -22,19 +22,22 @@ import { Automata } from "../models/Automata";
 import { State } from "../models/State";
 import { CanvasActions } from "../enums/CanvasActionsEnum";
 import { CanvasTools } from "../enums/CanvasToolsEnum";
-import { CanvasColors, CanvasIcons } from "../Constants/CanvasConstants";
+import { CanvasColors } from "../Constants/CanvasConstants";
 import ErrorIcon from "../symbols/error_icon";
 import { error } from "console";
 
-let canvasObject: p5 | null = null; // Variável para armazenar o sketch
+// let canvasObject: p5 | null = null; // Variável para armazenar o sketch
 let automata: Automata = new Automata();
 
 const Canvas: React.FC = () => {
   const canvasRef = useRef<HTMLDivElement | null>(null);
+  const p5Instance = useRef<p5 | null>(null);
+
   let contextMenu: p5.Element;
   // let slider: p5.Element;
   
   let contextMenuIsOpen: boolean = false;
+  let testeArrow = 1;
 
   //Validacao
   const [isValid, setIsValid] = useState<boolean>(false);
@@ -48,17 +51,17 @@ const Canvas: React.FC = () => {
   let clickedState: State | null;
   let selectedStates: State[] = [];
   let nearState: State | null;
+  let highlightedState: State | null;
 
   // Enums
-  let currentCanvasAction: CanvasActions = CanvasActions.NONE;
-  const [currentCanvasTool, setcurrentCanvasTool] = useState<CanvasTools>(
-    CanvasTools.POINTER
-  );
+  let currentCanvasAction: number = CanvasActions.NONE;
+  // let currentCanvasToolRef.current: number = CanvasTools.POINTER
+  const currentCanvasToolRef = useRef(CanvasTools.POINTER);
 
   let selectedStateMouseOffset: any; // {'q1': {'x': 10, 'y': -10}, 'q2': {'x': 10, 'y': -10}}
 
   // Selection box variables
-  let selectionStarterY: number = 0;
+  let selectionStarterY: number = 0; 
   let selectionStarterX: number = 0;
   let selectionX: number = 0;
   let selectionY: number = 0;
@@ -67,77 +70,24 @@ const Canvas: React.FC = () => {
 
   useEffect(() => {
     if (canvasRef.current) {
-      canvasRef.current.addEventListener("contextmenu", (e) => {
+      //* Parou de funcionar */
+      // canvasRef.current.addEventListener("contextmenu", (e) => {
+      //   e.preventDefault();
+      // });
+      document.addEventListener("contextmenu", (e) => {
         e.preventDefault();
       });
 
-      if (canvasObject) {
-        canvasObject.remove();
-      }
-      
-      canvasObject = new p5((p: p5) => {
+      // if (canvasObject) {
+      //   canvasObject.remove();
+      // }
+
+      p5Instance.current = new p5((p: p5) => {
         p.setup = () => {
           p.createCanvas(window.innerWidth, window.innerHeight);
           p.frameRate(144);
 
-          // Create the simulation-controller-div
-          let simulationControllerDiv = p.createDiv();
-          simulationControllerDiv.id('simulation-controller-div');
-
-          // Create the div for buttons
-          let buttonsDiv = p.createDiv();
-          buttonsDiv.addClass('simulation-controller-buttons-div');
-
-          // Create the "beginning" button
-          let beginningButton = p.createButton("");
-          beginningButton.id('begining');
-          beginningButton.addClass('canvas-button simulation-controller-button rotateicon180');
-          beginningButton.attribute('title', 'Begining');
-          beginningButton.html(CanvasIcons.FAST_FORWARD);
-
-          // Create the "prev" button
-          let nextButton = p.createButton("");
-          nextButton.id('prev');
-          nextButton.addClass('canvas-button simulation-controller-button');
-          nextButton.attribute('title', 'prev');
-          nextButton.html(CanvasIcons.PREV);
-
-          // Create the "play" button
-          let playButton = p.createButton("");
-          playButton.id('play');
-          playButton.addClass('canvas-button simulation-controller-button');
-          playButton.attribute('title', 'Play');
-          playButton.html(CanvasIcons.PLAY);
-
-          // Create the "next" button
-          let nextButton2 = p.createButton("");
-          nextButton2.id('next');
-          nextButton2.addClass('canvas-button simulation-controller-button');
-          nextButton2.attribute('title', 'Next');
-          nextButton2.html(CanvasIcons.NEXT);
-
-          // // Create the "fastforward" button
-          let fastforwardButton = p.createButton("");
-          fastforwardButton.id('fastforward');
-          fastforwardButton.addClass('canvas-button simulation-controller-button');
-          fastforwardButton.attribute('title', 'Fastforward');
-          fastforwardButton.html(CanvasIcons.FAST_FORWARD);
-
-          // // Append the buttons to the buttonsDiv
-          buttonsDiv.child(beginningButton);
-          buttonsDiv.child(nextButton);
-          buttonsDiv.child(playButton);
-          buttonsDiv.child(nextButton2);
-          buttonsDiv.child(fastforwardButton);
-
-          // Append the buttonsDiv to the simulationControllerDiv
-          simulationControllerDiv.child(buttonsDiv);
-
-          // // Append the simulationControllerDiv to the body or another container element
-          // simulationControllerDiv.parent('container'); // Replace 'container' with the ID of the parent element you want to append to
-
-
-
+          
 
           // slider = p.createSlider(-5, 50, 1);
           // slider.position(10, 80);
@@ -395,13 +345,14 @@ const Canvas: React.FC = () => {
             }
 
             /* Pointer */
-            if (currentCanvasTool === CanvasTools.POINTER) {
+            if (currentCanvasToolRef.current === CanvasTools.POINTER) {
               // Botão esquerdo: Cria transições / Cria estados
               currentCanvasAction = CanvasActions.NONE;
               // Left click
               if (p.mouseButton === p.LEFT) {
                 //Esconde o menu de contexto
                 // hideContextMenu();
+                testeArrow += 0.05;
 
                 /* Shift apertado */
                 // Cria estado
@@ -480,18 +431,18 @@ const Canvas: React.FC = () => {
               }
 
               /* Eraser */
-            } else if (currentCanvasTool === CanvasTools.ERASER) {
+            } else if (currentCanvasToolRef.current === CanvasTools.ERASER) {
               if (clickedState) {
                 automata.deleteState(clickedState);
               }
 
               /* Mover */
-            } else if (currentCanvasTool === CanvasTools.MOVE) {
+            } else if (currentCanvasToolRef.current === CanvasTools.MOVE) {
               // Move a CAMERA, não o estado
               console.log("Não implementado ainda");
 
               /* Transition */
-            } else if (currentCanvasTool === CanvasTools.TRANSITION) {
+            } else if (currentCanvasToolRef.current === CanvasTools.TRANSITION) {
               currentCanvasAction = CanvasActions.CREATING_TRANSITION;
             }
           }
@@ -557,13 +508,13 @@ const Canvas: React.FC = () => {
           console.log(inputFocused);
           if (!inputFocused) {
             if (p.key === "1") {
-              setcurrentCanvasTool(CanvasTools.POINTER);
+              currentCanvasToolRef.current = CanvasTools.POINTER;
             }
             if (p.key === "2") {
-              setcurrentCanvasTool(CanvasTools.TRANSITION);
+              currentCanvasToolRef.current = CanvasTools.TRANSITION;
             }
             if (p.key === "3") {
-              setcurrentCanvasTool(CanvasTools.ERASER);
+              currentCanvasToolRef.current = CanvasTools.ERASER;
             }
           }
 
@@ -572,9 +523,14 @@ const Canvas: React.FC = () => {
             automata.printInfo();
           }
         };
-      }, canvasRef.current);
+      });
     }
-  }, [currentCanvasTool]);
+    return () => {
+      // Clean up the p5.js instance when the component unmounts
+      if(p5Instance.current)
+        p5Instance.current.remove();
+    };
+  }, []);
 
   function showContextMenu(x: number, y: number) {
     contextMenu.position(x, y);
@@ -588,7 +544,6 @@ const Canvas: React.FC = () => {
   }
 
   function toggleInitial(p: p5) {
-    //TODO: FIX
     // O primeiro NÃO é o correto, mas fiz assim para que nunca haja mais de 1 estado inicial
     // Arrumar depois!
     let state: State = selectedStates[0];
@@ -616,69 +571,9 @@ const Canvas: React.FC = () => {
     <div>
       <div id="navbar-div">
         {/* Lado Esquerdo */}
-        <div id="toolbox">
-          <button
-            id="pointer"
-            className={
-              "canvas-button navbar-button " +
-              (currentCanvasTool === CanvasTools.POINTER ? "selected" : "")
-            }
-            onClick={() => setcurrentCanvasTool(CanvasTools.POINTER)}
-            title="Pointer"
-          >
-            <CursorIcon />
-          </button>
-          <button
-            id="transition"
-            className={
-              "canvas-button navbar-button " +
-              (currentCanvasTool === CanvasTools.TRANSITION ? "selected" : "")
-            }
-            onClick={() => setcurrentCanvasTool(CanvasTools.TRANSITION)}
-            title="Transition"
-          >
-            <TransitionIcon />
-          </button>
-          {/* Acho q da pra usar esse pra mover a camera, não os estados */
-          /* <button
-            id="move"
-            className={
-              "canvas-button navbar-button " +
-              (currentCanvasTool === CanvasTools.MOVE ? "selected" : "")
-            }
-            onClick={() => setcurrentCanvasTool(CanvasTools.MOVE)}
-            title="Move"
-          >
-            <MoveIcon />
-          </button> */}
-          <button
-            id="eraser"
-            className={
-              "canvas-button navbar-button " +
-              (currentCanvasTool === CanvasTools.ERASER ? "selected" : "")
-            }
-            onClick={() => setcurrentCanvasTool(CanvasTools.ERASER)}
-            title="Eraser"
-          >
-            <TrashIcon />
-          </button>
-          <button
-            id="undo"
-            className="canvas-button navbar-button undo"
-            onClick={() => console.log("undo!")}
-            title="Undo"
-          >
-            <UndoIcon />
-          </button>
-          <button
-            id="redo"
-            className="canvas-button navbar-button redo"
-            onClick={() => console.log("redo!")}
-            title="Redo"
-          >
-            <RedoIcon />
-          </button>
-        </div>
+        <Toolbox
+          currentCanvasToolRef={currentCanvasToolRef}
+        />
 
         {/* Lado Direito */}
         <div id="automata-input-div">
@@ -723,12 +618,11 @@ const Canvas: React.FC = () => {
               <span>{errorMessage}</span>
             </div>
           )}
-          
         </div>
       </div>
 
       {/* Step by Step simulation controlls */}
-      {/* <div id="simulation-controller-div">
+      <div id="simulation-controller-div">
         <div className='simulation-controller-buttons-div'>
           <button
               id="begining"
@@ -740,11 +634,11 @@ const Canvas: React.FC = () => {
               <FastforwardIcon/>
           </button>
           <button
-              id="prev"
+              id="next"
               className={
                 "canvas-button simulation-controller-button"
               }
-              title="Prev"
+              title="Next"
             >
               <PrevIcon />
           </button>
@@ -776,7 +670,7 @@ const Canvas: React.FC = () => {
               <FastforwardIcon/>
           </button>
         </div>
-      </div> */}
+      </div>
       
       {/* Canvas */}
       <div ref={canvasRef}></div>
@@ -784,4 +678,81 @@ const Canvas: React.FC = () => {
   );
 };
 
+
+/*
+
+          TOOL BOX 
+
+*/
+interface ToolboxProps {
+  currentCanvasToolRef: React.MutableRefObject<number>;
+}
+const Toolbox: React.FC<ToolboxProps> = ({ currentCanvasToolRef }) => {
+  const [selectedToolState, setSelectedToolState] = useState(CanvasTools.POINTER);
+
+  const handleToolButtonClick = (tool: number) => {
+    setSelectedToolState(tool);
+    currentCanvasToolRef.current = tool;
+  };
+
+  return (
+    <div id="toolbox">
+      <button
+        id="pointer"
+        className={
+          "canvas-button navbar-button " +
+          (selectedToolState === CanvasTools.POINTER ? "selected" : "")
+        }
+        onClick={() => handleToolButtonClick(CanvasTools.POINTER)}
+        title="Pointer"
+      >
+        <CursorIcon />
+      </button>
+      <button
+        id="transition"
+        className={
+          "canvas-button navbar-button " +
+          (selectedToolState === CanvasTools.TRANSITION ? "selected" : "")
+        }
+        onClick={() => handleToolButtonClick(CanvasTools.TRANSITION)}
+        title="Transition"
+      >
+        <TransitionIcon />
+      </button>
+      <button
+        id="eraser"
+        className={
+          "canvas-button navbar-button " +
+          (selectedToolState === CanvasTools.ERASER ? "selected" : "")
+        }
+        onClick={() => handleToolButtonClick(CanvasTools.ERASER)}
+        title="Eraser"
+      >
+        <TrashIcon />
+      </button>
+      <button
+        id="undo"
+        className="canvas-button navbar-button undo"
+        onClick={() => {
+          console.log("undo!");
+        }}
+        title="Undo"
+      >
+        <UndoIcon />
+      </button>
+      <button
+        id="redo"
+        className="canvas-button navbar-button redo"
+        onClick={() => {
+          console.log("redo!");
+        }}
+        title="Redo"
+      >
+        <RedoIcon />
+      </button>
+    </div>
+  );
+};
+
 export default Canvas;
+
