@@ -56,7 +56,7 @@ const Canvas: React.FC = () => {
     "Nenhum estado inicial foi definido!"
   );
 
-  const { selectedToolState, updateSelectedTool } = useToolboxContext();
+  const { selectedToolState, setSelectedToolState } = useToolboxContext();
   
   // Arrays de States
   let clickedState: State | null;
@@ -522,15 +522,15 @@ const Canvas: React.FC = () => {
           if (!inputFocused) {
             if (p.key === "1") {
               currentCanvasToolRef.current = CanvasTools.POINTER;
-              updateSelectedTool(CanvasTools.POINTER) 
+              setSelectedToolState(CanvasTools.POINTER) 
             }
             if (p.key === "2") {
               currentCanvasToolRef.current = CanvasTools.TRANSITION;
-              updateSelectedTool(CanvasTools.TRANSITION)
+              setSelectedToolState(CanvasTools.TRANSITION)
             }
             if (p.key === "3") {
               currentCanvasToolRef.current = CanvasTools.ERASER;
-              updateSelectedTool(CanvasTools.ERASER)
+              setSelectedToolState(CanvasTools.ERASER)
             }
           }
 
@@ -704,10 +704,10 @@ interface ToolboxProps {
   currentCanvasToolRef: React.MutableRefObject<number>;
 }
 const Toolbox: React.FC<ToolboxProps> = ({ currentCanvasToolRef }) => {
-  const { selectedToolState, updateSelectedTool } = useToolboxContext();
+  const { selectedToolState, setSelectedToolState } = useToolboxContext();
 
   const handleToolButtonClick = (tool: number) => {
-    updateSelectedTool(tool);
+    setSelectedToolState(tool);
     currentCanvasToolRef.current = tool;
   };
 
