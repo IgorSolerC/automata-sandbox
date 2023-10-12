@@ -10,11 +10,12 @@ type ToolboxContextType = {
 // Context
 const ToolboxContext = createContext<ToolboxContextType | undefined>(undefined);
 
+// Cria construtor do context (Facilita o seu uso)
 export const useToolboxContext = (): ToolboxContextType => {
   const context = useContext(ToolboxContext);
   if (!context) {
     throw new Error("useToolboxContext must be used within a ToolboxProvider");
-  }
+  } 
   return context;
 };
 

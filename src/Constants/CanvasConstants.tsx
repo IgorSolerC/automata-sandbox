@@ -1,5 +1,5 @@
 export const CanvasColors = {
-    BACKGROUND: "#eee",
+    BACKGROUND: "#ebebeb",
 
     // State
     // DEFAULT_STATE: "#7b2cbf",

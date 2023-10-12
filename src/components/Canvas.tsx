@@ -41,21 +41,20 @@ let automata: Automata = new Automata();
 const Canvas: React.FC = () => {
   const canvasRef = useRef<HTMLDivElement | null>(null);
   const p5Instance = useRef<p5 | null>(null);
-
+  const automataRef = useRef(automata);
   let contextMenu: p5.Element;
   // let slider: p5.Element;
   
   let contextMenuIsOpen: boolean = false;
-  let testeArrow = 1;
-
-  //Validacao
+ 
+  // Validação de inputs
   const [isValid, setIsValid] = useState<boolean>(false);
-  const [inputFocused, setInputFocused] = useState<boolean>(false);
   const [inputValue, setInputValue] = useState("");
   const [errorMessage, setErrorMessage] = useState<string | null>(
     "Nenhum estado inicial foi definido!"
   );
 
+  // Tool selecionada
   const { selectedToolState, setSelectedToolState } = useToolboxContext();
   
   // Arrays de States
@@ -80,6 +79,9 @@ const Canvas: React.FC = () => {
   let selectionDistanceY: number = 0;
 
   useEffect(() => {
+    if(!automataRef.current){
+      automataRef.current = new Automata();
+    }
     console.log('Canvas Rerender Triggered!')
     if (canvasRef.current) {
       //* Parou de funcionar */
@@ -105,7 +107,7 @@ const Canvas: React.FC = () => {
           // slider.position(10, 80);
 
           // Create custom context menu
-          contextMenu = p.createDiv("");
+          contextMenu = p.createDiv(" ");
           contextMenu.id("contextMenu");
           contextMenu.addClass("hidden");
 
@@ -113,16 +115,16 @@ const Canvas: React.FC = () => {
           option2.mouseClicked(() => {
             toggleInitial(p);
             hideContextMenu();
-            const { isValid, errorMessage } = automata.validate(inputValue);
+            const { isValid, errorMessage } = automataRef.current.validate(inputValue);
             setIsValid(isValid);
             setErrorMessage(errorMessage);
           });
 
           let option3 = p.createDiv("Final");
           option3.mouseClicked(() => {
-            automata.toggleFinal(selectedStates);
+            automataRef.current.toggleFinal(selectedStates);
             hideContextMenu();
-            const { isValid, errorMessage } = automata.validate(inputValue);
+            const { isValid, errorMessage } = automataRef.current.validate(inputValue);
             setIsValid(isValid);
             setErrorMessage(errorMessage);
           });
@@ -135,9 +137,9 @@ const Canvas: React.FC = () => {
           p.background(CanvasColors.BACKGROUND);
 
           // Desenha transições
-          automata.getTransitions().forEach((transition) => {
-            const start = automata.findState(transition.from.id);
-            const end = automata.findState(transition.to.id);
+          automataRef.current.getTransitions().forEach((transition) => {
+            const start = automataRef.current.findState(transition.from.id);
+            const end = automataRef.current.findState(transition.to.id);
             const arrow_weight = 5; 
             if (start && end) {
               p.stroke(CanvasColors.DEFAULT_TRANSITION);
@@ -221,14 +223,14 @@ const Canvas: React.FC = () => {
           // ----Desenha estados
           // .slice() cria uma copia shallow
           // .reverse() desenhar mostrando o primeiro como acima, visto que é o primeiro a ser selecionado quando clica-se em estados stackados
-          automata
+          automataRef.current
             .getStates()
             .slice()
             .reverse()
             .forEach((state: State, index) => {
               p.noStroke();
 
-              const allStates = automata.getStates();
+              const allStates = automataRef.current.getStates();
               allStates.forEach(
                 (state) => (state.color = CanvasColors.DEFAULT_STATE)
               );
@@ -293,10 +295,10 @@ const Canvas: React.FC = () => {
         };
 
         p.mouseDragged = () => {
-          const allStates = automata.getStates();
+          const allStates = automataRef.current.getStates();
 
           if (currentCanvasAction === CanvasActions.MOVING_STATE) {
-            // selectedStates.forEach((auxState: automata.State) => { // <--- deu errado o type
+            // selectedStates.forEach((auxState: automataRef.current.State) => { // <--- deu errado o type
             selectedStates.forEach((state: State) => {
               state.x = p.mouseX + selectedStateMouseOffset[state.id]["x"];
               state.y = p.mouseY + selectedStateMouseOffset[state.id]["y"];
@@ -330,11 +332,10 @@ const Canvas: React.FC = () => {
         };
 
         p.mousePressed = () => {
-          setInputFocused(false);
           if (contextMenuIsOpen) {
             console.log("ContextMenu is open, nothing happend");
           } else {
-            const allStates = automata.getStates();
+            const allStates = automataRef.current.getStates();
             // Encontra estado que foi clicado
             clickedState =
               allStates.find((state) => {
@@ -364,7 +365,6 @@ const Canvas: React.FC = () => {
               if (p.mouseButton === p.LEFT) {
                 //Esconde o menu de contexto
                 // hideContextMenu();
-                testeArrow += 0.05;
 
                 /* Shift apertado */
                 // Cria estado
@@ -391,7 +391,7 @@ const Canvas: React.FC = () => {
                         id = `q${id_number}`;
                       }
                       // Cria novo estado
-                      automata.addState(
+                      automataRef.current.addState(
                         id,
                         p.mouseX,
                         p.mouseY,
@@ -445,7 +445,7 @@ const Canvas: React.FC = () => {
               /* Eraser */
             } else if (currentCanvasToolRef.current === CanvasTools.ERASER) {
               if (clickedState) {
-                automata.deleteState(clickedState);
+                automataRef.current.deleteState(clickedState);
               }
 
               /* Mover */
@@ -464,7 +464,7 @@ const Canvas: React.FC = () => {
           p.cursor("default");
 
           if (clickedState) {
-            const endState = automata.getStates().find((state) => {
+            const endState = automataRef.current.getStates().find((state) => {
               return (
                 p.dist(state.x, state.y, p.mouseX, p.mouseY) <
                 state.diameter / 2
@@ -474,17 +474,17 @@ const Canvas: React.FC = () => {
               endState &&
               currentCanvasAction === CanvasActions.CREATING_TRANSITION
             ) {
-              let label = prompt("Digite o símbolo de transição:");
+              let label = prompt("Digite o s 1ímbolo de transição:");
               if (label !== null) {
                 if (label === "") label = "λ";
-                automata.addTransition(clickedState, endState, label);
+                automataRef.current.addTransition(clickedState, endState, label);
               }
             }
           }
           currentCanvasAction = CanvasActions.NONE;
           clickedState = null;
 
-          const { isValid, errorMessage } = automata.validate(inputValue);
+          const { isValid, errorMessage } = automataRef.current.validate(inputValue);
           setIsValid(isValid);
           setErrorMessage(errorMessage);
         };
@@ -493,7 +493,7 @@ const Canvas: React.FC = () => {
           // Está bugado!
           // Não reconhece numero, a não ser q alt ou cntrl estejam apertados
 
-          const allStates = automata.getStates();
+          const allStates = automataRef.current.getStates();
 
           clickedState =
             allStates.find((state) => {
@@ -511,43 +511,51 @@ const Canvas: React.FC = () => {
             if (selectedStates.length === 0) selectedStates = [clickedState!];
 
             selectedStates.forEach((state) => {
-              automata.deleteState(state);
+              automataRef.current.deleteState(state);
             });
             selectedStates = [];
           }
 
           /* Seleciona tool */
-          console.log(inputFocused);
-
-          if (!inputFocused) {
-            if (p.key === "1") {
-              currentCanvasToolRef.current = CanvasTools.POINTER;
-              setSelectedToolState(CanvasTools.POINTER) 
-            }
-            if (p.key === "2") {
-              currentCanvasToolRef.current = CanvasTools.TRANSITION;
-              setSelectedToolState(CanvasTools.TRANSITION)
-            }
-            if (p.key === "3") {
-              currentCanvasToolRef.current = CanvasTools.ERASER;
-              setSelectedToolState(CanvasTools.ERASER)
-            }
+          // if (!inputFocused) {
+          if (p.key === "1") {
+            currentCanvasToolRef.current = CanvasTools.POINTER;
+            setSelectedToolState(CanvasTools.POINTER) 
+          }
+          if (p.key === "2") {
+            currentCanvasToolRef.current = CanvasTools.TRANSITION;
+            setSelectedToolState(CanvasTools.TRANSITION)
+          }
+          if (p.key === "3") {
+            currentCanvasToolRef.current = CanvasTools.ERASER;
+            setSelectedToolState(CanvasTools.ERASER)
           }
 
           /* Debug */
           if (p.key === "!") {
-            automata.printInfo();
+            automataRef.current.printInfo();
           }
         };
       });
     }
     return () => {
       // Clean up the p5.js instance when the component unmounts
-      if(p5Instance.current)
+      if(p5Instance.current){
         p5Instance.current.remove();
+      }
     };
   }, []);
 
+  function calculateSteps() {
+    let input = "010001";
+    let listaEstados = []
+    var estadoAtual = automata.getInitialState();
+    for(let i = 0; i < input.length; i++) {
+      let teste = automata.testTransition(input, estadoAtual!, i);
+      listaEstados.push((teste.isValidTransition, teste.next_state));
+    }
+  }
+  
   function showContextMenu(x: number, y: number) {
     contextMenu.position(x, y);
     contextMenu.removeClass("hidden");
@@ -566,7 +574,7 @@ const Canvas: React.FC = () => {
     state.isInitial = !state.isInitial;
 
     // Remove estado inicial anterior, caso não seja o mesmo estado que o atual
-    let prevInitialState: State | null = automata.getInitialState();
+    let prevInitialState: State | null = automataRef.current.getInitialState();
     if (
       prevInitialState && // Estado inicial anterios não é null
       state.isInitial && // Estado inicial atual foi toggle apara TRUE, não FALSE
@@ -577,9 +585,9 @@ const Canvas: React.FC = () => {
 
     // Set novo estado inicial
     if (state.isInitial) {
-      automata.setInitialState(state);
+      automataRef.current.setInitialState(state);
     } else {
-      automata.setInitialState(null);
+      automataRef.current.setInitialState(null);
     }
   }
 
@@ -592,49 +600,14 @@ const Canvas: React.FC = () => {
         />
 
         {/* Lado Direito */}
-        <div id="automata-input-div">
-          <input
-            placeholder="Input automato"
-            className="automata-input"
-            onFocus={() => {
-              setInputFocused(true);
-            }}
-            onBlur={() => {
-              setInputFocused(false);
-              console.log("teste");
-            }}
-            onChange={(event) => {
-              setInputValue(event.target.value);
-              const { isValid, errorMessage } = automata.validate(
-                event.target.value
-              );
-              setIsValid(isValid);
-              setErrorMessage(errorMessage);
-            }}
-          ></input>
-          <button
-            id="validation"
-            className={
-              "canvas-button input-button " +
-              (isValid ? "accepted" : errorMessage ? "warning" : "rejected")
-            }
-            onClick={() => {console.log("validation!")}}
-            title="Validation"
-          >
-            {isValid ? (
-              <CheckIcon />
-            ) : errorMessage ? (
-              <WarningIcon />
-            ) : (
-              <ErrorIcon />
-            )}
-          </button>
-          {errorMessage && (
-            <div placeholder="Input automato" className="automata-input-error">
-              <span>{errorMessage}</span>
-            </div>
-          )}
-        </div>
+        <AutomataInput
+          setInputValue = {setInputValue}
+          isValid = {isValid}
+          setIsValid = {setIsValid}
+          setErrorMessage = {setErrorMessage}
+          errorMessage = {errorMessage}
+          automataRef = {automataRef}
+        />
       </div>
 
       {/* Step by Step simulation controlls */}
@@ -693,6 +666,73 @@ const Canvas: React.FC = () => {
     </div>
   );
 };
+
+
+/*
+
+          AUTOMATA INPUT
+
+*/ 
+interface AutomataInputProps {
+  setInputValue: any;
+  setIsValid: any;
+  isValid: boolean;
+  setErrorMessage: any;
+  errorMessage: string | null;
+  automataRef: React.MutableRefObject<Automata>;
+}
+const AutomataInput: React.FC<AutomataInputProps> = (
+  {
+    setInputValue,
+    isValid, setIsValid,
+    errorMessage, setErrorMessage,
+    automataRef
+  }
+) => {
+
+  return (
+    <div id="automata-input-div">
+      <input
+        placeholder="Input automato"
+        className="automata-input"
+        // onFocus={() => {setInputFocused(true);}}
+        // onBlur={() => {
+        //   setInputFocused(false);
+        //   console.log("teste");
+        // }}
+        onChange={(event) => {
+          setInputValue(event.target.value);
+          const { isValid, errorMessage } = automataRef.current.validate(
+            event.target.value
+          );
+          setIsValid(isValid);
+          setErrorMessage(errorMessage);
+        }}
+      ></input>
+      <button
+        id="validation"
+        className={
+          "canvas-button input-button " + (isValid ? 'accepted' : (errorMessage ? 'warning' : 'rejected'))
+        }
+        onClick={() => {console.log("validation!")}}
+        title="Validation"
+      >
+        {isValid ? (
+          <CheckIcon />
+        ) : errorMessage ? (
+          <WarningIcon />
+        ) : (
+          <ErrorIcon />
+        )}
+      </button>
+      {errorMessage && (
+        <div placeholder="Input automato" className="automata-input-error">
+          <span>{errorMessage}</span>
+        </div>
+      )}
+    </div>  
+  )
+}
 
 
 /*
