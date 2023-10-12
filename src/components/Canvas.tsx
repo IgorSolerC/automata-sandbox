@@ -58,7 +58,7 @@ const Canvas: React.FC = () => {
   var cameraZoom: number = 1;
 
   // Tool selecionada
-  const { selectedToolState, setSelectedToolState } = useToolboxContext();
+  const { setSelectedToolState } = useToolboxContext();
   
   // Arrays de States
   let clickedState: State | null;
@@ -637,6 +637,12 @@ const Canvas: React.FC = () => {
         />
 
         {/* Lado Direito */}
+        {/* TODO: 
+          Aqui vai ter um array.map() pra renderizar varios input
+          Os inputs terão cada um um index, que vai ser usado pra saber qual o espaço deles no array
+          Cada um vai funcionar de forma independente com os valores do array
+          Um manager vai usar de programação dinamica pra distribuir valores iguais nos casos já calculados
+        */}
         <AutomataInput
           setInputValue = {setInputValue}
           isValid = {isValid}
