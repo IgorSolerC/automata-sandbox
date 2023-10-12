@@ -3,4 +3,5 @@ export enum CanvasActions {
     MOVING_STATE,
     CREATING_TRANSITION,
     CREATING_SELECTION,
+    SIMULATING,
 }

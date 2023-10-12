@@ -54,6 +54,9 @@ const Canvas: React.FC = () => {
     "Nenhum estado inicial foi definido!"
   );
 
+  // Zoom / Movement
+  var cameraZoom: number = 1;
+
   // Tool selecionada
   const { selectedToolState, setSelectedToolState } = useToolboxContext();
   
@@ -62,6 +65,8 @@ const Canvas: React.FC = () => {
   let selectedStates: State[] = [];
   let nearState: State | null;
   let highlightedState: State | null;
+  let simulationStates: State[] = [];
+  let simulationIndex: number = 0;
 
   // Enums
   let currentCanvasAction: number = CanvasActions.NONE;
@@ -78,11 +83,19 @@ const Canvas: React.FC = () => {
   let selectionDistanceX: number = 0;
   let selectionDistanceY: number = 0;
 
+  const getMouseX = (p: p5) => {
+    return p.mouseX / cameraZoom
+  }
+  const getMouseY = (p: p5) => {
+    return p.mouseY / cameraZoom
+  }
+
   useEffect(() => {
+    calculateSteps();
     if(!automataRef.current){
-      automataRef.current = new Automata();
+      automataRef.current = new Automata(); 
     }
-    console.log('Canvas Rerender Triggered!')
+    console.log('%c-- O CANVAS FOI RERENDERED! --', 'color: #ff7777')
     if (canvasRef.current) {
       //* Parou de funcionar */
       // canvasRef.current.addEventListener("contextmenu", (e) => {
@@ -131,10 +144,12 @@ const Canvas: React.FC = () => {
 
           contextMenu.child(option2);
           contextMenu.child(option3);
-        };
+        }; 
 
         p.draw = () => {
           p.background(CanvasColors.BACKGROUND);
+
+          p.scale(cameraZoom)
 
           // Desenha transições
           automataRef.current.getTransitions().forEach((transition) => {
@@ -258,6 +273,9 @@ const Canvas: React.FC = () => {
                 p.pop();
               }
 
+              if(state === simulationStates[simulationIndex])
+                state.color = "#FF0000";
+
               // Circulo do estado (Estado em si)
               p.fill(state.color);
               p.ellipse(state.x, state.y, state.diameter);
@@ -292,33 +310,42 @@ const Canvas: React.FC = () => {
             );
             p.pop();
           }
+
         };
 
+        p.mouseWheel = (event: WheelEvent) => {
+          cameraZoom -= (event.deltaY / 1000)
+          if (cameraZoom < 0.2)
+            cameraZoom = 0.2
+          else if(cameraZoom > 3)
+            cameraZoom = 3
+          console.log(cameraZoom)  
+        }
         p.mouseDragged = () => {
           const allStates = automataRef.current.getStates();
 
           if (currentCanvasAction === CanvasActions.MOVING_STATE) {
             // selectedStates.forEach((auxState: automataRef.current.State) => { // <--- deu errado o type
             selectedStates.forEach((state: State) => {
-              state.x = p.mouseX + selectedStateMouseOffset[state.id]["x"];
-              state.y = p.mouseY + selectedStateMouseOffset[state.id]["y"];
+              state.x = getMouseX(p) + selectedStateMouseOffset[state.id]["x"];
+              state.y = getMouseY(p) + selectedStateMouseOffset[state.id]["y"];
             });
           } else if (currentCanvasAction === CanvasActions.CREATING_SELECTION) {
             // --- Update valor da seleção ---
             // Isso é necessario para evitar tamanhos negativos ao criar
             // seleções onde o ponto de inicio é maior que o de fim
-            selectionDistanceX = p.mouseX - selectionStarterX;
-            selectionDistanceY = p.mouseY - selectionStarterY;
+            selectionDistanceX = getMouseX(p) - selectionStarterX;
+            selectionDistanceY = getMouseY(p) - selectionStarterY;
             selectionX = selectionStarterX;
             selectionY = selectionStarterY;
             if (selectionDistanceX < 0) {
-              selectionX = p.mouseX;
+              selectionX = getMouseX(p);
               selectionDistanceX = -1 * selectionDistanceX;
             }
             if (selectionDistanceY < 0) {
-              selectionY = p.mouseY;
+              selectionY = getMouseY(p);
               selectionDistanceY = -1 * selectionDistanceY;
-            }
+          }
 
             selectedStates = allStates.filter((state) => {
               return (
@@ -333,14 +360,13 @@ const Canvas: React.FC = () => {
 
         p.mousePressed = () => {
           if (contextMenuIsOpen) {
-            console.log("ContextMenu is open, nothing happend");
           } else {
             const allStates = automataRef.current.getStates();
             // Encontra estado que foi clicado
             clickedState =
               allStates.find((state) => {
                 return (
-                  p.dist(state.x, state.y, p.mouseX, p.mouseY) <
+                  p.dist(state.x, state.y, getMouseX(p), getMouseY(p)) <
                   state.diameter / 2
                 );
               }) || null;
@@ -374,7 +400,7 @@ const Canvas: React.FC = () => {
                     nearState =
                       allStates.find((state) => {
                         return (
-                          p.dist(state.x, state.y, p.mouseX, p.mouseY) <
+                          p.dist(state.x, state.y, getMouseX(p), getMouseY(p)) <
                           state.diameter // Note que este não é "/2", isso é proposital
                         );
                       }) || null;
@@ -393,8 +419,8 @@ const Canvas: React.FC = () => {
                       // Cria novo estado
                       automataRef.current.addState(
                         id,
-                        p.mouseX,
-                        p.mouseY,
+                        getMouseX(p),
+                        getMouseY(p),
                         CanvasColors.DEFAULT_STATE
                       );
                     }
@@ -408,9 +434,9 @@ const Canvas: React.FC = () => {
                   selectedStates.forEach((state) => {
                     selectedStateMouseOffset[state.id] = {};
                     selectedStateMouseOffset[state.id]["x"] =
-                      state.x - p.mouseX;
+                      state.x - getMouseX(p);
                     selectedStateMouseOffset[state.id]["y"] =
-                      state.y - p.mouseY;
+                      state.y - getMouseY(p);
                   });
 
                   // Set estado atual como "Movendo estado"
@@ -424,8 +450,8 @@ const Canvas: React.FC = () => {
                   // Set state
                   currentCanvasAction = CanvasActions.CREATING_SELECTION;
                   // Set dados da selecao
-                  selectionStarterX = p.mouseX;
-                  selectionStarterY = p.mouseY;
+                  selectionStarterX = getMouseX(p);
+                  selectionStarterY = getMouseY(p);
                   selectionX = selectionStarterX;
                   selectionY = selectionStarterY;
                   selectionDistanceX = 0;
@@ -466,7 +492,7 @@ const Canvas: React.FC = () => {
           if (clickedState) {
             const endState = automataRef.current.getStates().find((state) => {
               return (
-                p.dist(state.x, state.y, p.mouseX, p.mouseY) <
+                p.dist(state.x, state.y, getMouseX(p), getMouseY(p)) <
                 state.diameter / 2
               );
             });
@@ -498,13 +524,10 @@ const Canvas: React.FC = () => {
           clickedState =
             allStates.find((state) => {
               return (
-                p.dist(state.x, state.y, p.mouseX, p.mouseY) <
+                p.dist(state.x, state.y, getMouseX(p), getMouseY(p)) <
                 state.diameter / 2
               );
             }) || null;
-
-          // console.log(p.keyCode, 'test')
-          // console.log(p.key, 'test')
 
           /* Deleta estado(s) */
           if (p.key === "Delete") {
@@ -543,17 +566,31 @@ const Canvas: React.FC = () => {
       if(p5Instance.current){
         p5Instance.current.remove();
       }
-    };
+    }; 
   }, []);
 
   function calculateSteps() {
-    let input = "010001";
-    let listaEstados = []
-    var estadoAtual = automata.getInitialState();
+    currentCanvasAction = CanvasActions.SIMULATING;
+    var input = (document.getElementsByClassName("automata-input")[0] as HTMLInputElement).value;
+
+    simulationStates = []
+    simulationIndex = 0;
+    var estadoAtual: State = automataRef.current.getInitialState()!;
+    simulationStates.push(estadoAtual)
     for(let i = 0; i < input.length; i++) {
-      let teste = automata.testTransition(input, estadoAtual!, i);
-      listaEstados.push((teste.isValidTransition, teste.next_state));
+      let result = automataRef.current.testTransition(input, estadoAtual, i);
+      simulationStates.push(result.nextState!);
+      if(result.errorMessage !== null){ 
+        console.log(result.errorMessage);
+        break;  
+      }
     }
+    if(automataRef.current.getFinalStates().some(x => x === simulationStates[simulationStates.length - 1])){
+      console.log("ACEITO"); 
+    } else{
+      console.log("REJEITADO");
+    }
+    console.log(simulationStates); 
   }
   
   function showContextMenu(x: number, y: number) {
@@ -607,6 +644,7 @@ const Canvas: React.FC = () => {
           setErrorMessage = {setErrorMessage}
           errorMessage = {errorMessage}
           automataRef = {automataRef}
+          calculateSteps = {calculateSteps}
         />
       </div>
 
@@ -628,6 +666,9 @@ const Canvas: React.FC = () => {
                 "canvas-button simulation-controller-button"
               }
               title="Next"
+              onClick={() => {
+                simulationIndex--;
+              }}
             >
               <PrevIcon />
           </button>
@@ -637,6 +678,9 @@ const Canvas: React.FC = () => {
                 "canvas-button simulation-controller-button"
               }
               title="Play"
+              onClick={() => {
+                simulationIndex = 0;
+              }}
             >
               <PlayIcon />
           </button>
@@ -646,6 +690,9 @@ const Canvas: React.FC = () => {
                 "canvas-button simulation-controller-button"
               }
               title="Next"
+              onClick={() => {
+                simulationIndex++;
+              }}
             >
               <NextIcon />
           </button>
@@ -680,26 +727,27 @@ interface AutomataInputProps {
   setErrorMessage: any;
   errorMessage: string | null;
   automataRef: React.MutableRefObject<Automata>;
+  calculateSteps: any;
 }
 const AutomataInput: React.FC<AutomataInputProps> = (
   {
     setInputValue,
     isValid, setIsValid,
     errorMessage, setErrorMessage,
-    automataRef
+    automataRef,
+    calculateSteps
   }
 ) => {
 
   return (
     <div id="automata-input-div">
       <input
-        placeholder="Input automato"
+        placeholder="Input automato" 
         className="automata-input"
         // onFocus={() => {setInputFocused(true);}}
         // onBlur={() => {
         //   setInputFocused(false);
-        //   console.log("teste");
-        // }}
+        // }} 
         onChange={(event) => {
           setInputValue(event.target.value);
           const { isValid, errorMessage } = automataRef.current.validate(
@@ -714,8 +762,10 @@ const AutomataInput: React.FC<AutomataInputProps> = (
         className={
           "canvas-button input-button " + (isValid ? 'accepted' : (errorMessage ? 'warning' : 'rejected'))
         }
-        onClick={() => {console.log("validation!")}}
-        title="Validation"
+        onClick={() => {
+          calculateSteps();
+        }}
+        title="Simular passo-a-passo"
       >
         {isValid ? (
           <CheckIcon />
@@ -776,6 +826,17 @@ const Toolbox: React.FC<ToolboxProps> = ({ currentCanvasToolRef }) => {
         <TransitionIcon />
       </button>
       <button
+        id="move"
+        className={
+          "canvas-button navbar-button " +
+          (selectedToolState === CanvasTools.MOVE ? "selected" : "")
+        }
+        onClick={() => handleToolButtonClick(CanvasTools.MOVE)}
+        title="Move"
+      >
+        <MoveIcon/>
+      </button>
+      <button
         id="eraser"
         className={
           "canvas-button navbar-button " +
@@ -790,7 +851,7 @@ const Toolbox: React.FC<ToolboxProps> = ({ currentCanvasToolRef }) => {
         id="undo"
         className="canvas-button navbar-button undo"
         onClick={() => {
-          console.log("undo!");
+          console.log("Undo Clicado");
         }}
         title="Undo"
       >
@@ -800,7 +861,7 @@ const Toolbox: React.FC<ToolboxProps> = ({ currentCanvasToolRef }) => {
         id="redo"
         className="canvas-button navbar-button redo"
         onClick={() => {
-          console.log("redo!");
+          console.log("do Clicado");
         }}
         title="Redo"
       >
