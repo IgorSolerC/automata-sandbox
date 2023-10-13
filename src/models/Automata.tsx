@@ -77,7 +77,7 @@ export class Automata {
       id,
       x,
       y,
-      transitions: [],
+      // transitions: [],
       diameter: 80,
       color,
       isInitial: isInitial,

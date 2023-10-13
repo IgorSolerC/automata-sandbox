@@ -7,10 +7,7 @@ type ToolboxContextType = {
   setSelectedToolState: (tool: CanvasTools) => void;
 };
 
-// Context
 const ToolboxContext = createContext<ToolboxContextType | undefined>(undefined);
-
-// Cria construtor do context (Facilita o seu uso)
 export const useToolboxContext = (): ToolboxContextType => {
   const context = useContext(ToolboxContext);
   if (!context) {
@@ -19,10 +16,7 @@ export const useToolboxContext = (): ToolboxContextType => {
   return context;
 };
 
-type ToolboxProviderProps = {
-  children: ReactNode;
-};
-
+type ToolboxProviderProps = {children: ReactNode};
 export const ToolboxProvider: React.FC<ToolboxProviderProps> = ({ children }) => {
   const [selectedToolState, setSelectedToolState] = useState(CanvasTools.POINTER);
 

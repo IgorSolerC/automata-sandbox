@@ -1,3 +1,42 @@
+/* Dark Theme */
+:root {
+    /* Geral */
+    --gui-default-size: 60px;
+
+    /* Buttons */
+    --button-bg: #0D1530;
+    --button-bg-hover: #121C40;
+    --button-icon: #A0AEE4;
+
+    /* Tools */
+    --tool-icon: #A0AEE4;
+    --selected-tool-icon: #DFE4F6;
+    --selected-tool: #233780;
+    --selected-tool-hover: #273E90;
+    
+    /* Input Box */
+    --accepted: #206912;
+    --accepted-hover: #267A15;
+    --accepted-icon: #B4F0A8;
+    --warning: #A58F12;
+    --warning-hover: #B89F14;
+    --warning-icon: #F1E07E;
+    --rejected: #750606;
+    --rejected-hover: #880707;
+    --rejected-icon: #FBB1B1;
+    --error-message: #494008;
+
+    /* Context Menu */
+    --context-menu-bg: #040710;
+    --context-menu-border: #f6f6f6;
+    --context-menu-bg-hover: #f6f6f6;
+
+    /* Html */
+    --html-bg: #090E20;
+
+}
+
+/* Light Theme */
 :root {
     /* Geral */
     --gui-default-size: 60px;
@@ -7,18 +46,21 @@
     --button-bg-hover: #ddd;
 
     /* Tools */
-    --tool-icon: #fff;
+    --tool-icon: #000;
+    --selected-tool-icon: #fff;
     --selected-tool: #7b2cbf;
     --selected-tool-hover: #9d4edd;
     
     /* Input Box */
-    --input-icon: #fff;
     --accepted: #3dc521;
     --accepted-hover: #62d84b;
+    --accepted-icon: #fff;
     --warning: #eed962;
     --warning-hover: #f3e17b;
+    --warning-icon: #fff;
     --rejected: #f53434;
     --rejected-hover: #fc6161;
+    --rejected-icon: #fff;
     --error-message: #816e00;
 
     /* Context Menu */
@@ -27,9 +69,10 @@
     --context-menu-bg-hover: #f6f6f6;
 
     /* Html */
-    --html-bg: #ebebeb; /* Mesma cor que o bg do canvas */
+    --html-bg: #ebebeb;
 
 }
+
   
 html{
     background-color: var(--html-bg);
@@ -63,6 +106,11 @@ html{
 .input-button.accepted{
     background-color: var(--accepted);
 }
+.input-button.accepted > svg{
+    color: var(--accepted-icon);
+    fill: var(--accepted-icon);
+    stroke: var(--accepted-icon);
+}
 .input-button.accepted:hover{
     background-color: var(--accepted-hover);
 }
@@ -72,16 +120,22 @@ html{
 .input-button.rejected:hover{
     background-color: var(--rejected-hover);
 }
+.input-button.rejected > svg{
+    color: var(--rejected-icon);
+    fill: var(--rejected-icon);
+    stroke: var(--rejected-icon);
+}
 .input-button.warning{
     background-color: var(--warning);
 }
 .input-button.warning:hover{
     background-color: var(--warning-hover);
 }
-.input-button > svg{
-    fill: var(--input-icon)
+.input-button.warning > svg{
+    color: var(--warning-icon);
+    fill: var(--warning-icon);
+    stroke: var(--warning-icon);
 }
-
 
 
 .automata-input-error{
@@ -108,6 +162,12 @@ html{
 
 .canvas-button:focus{
     outline: 0px solid;
+}
+
+.canvas-button > svg{
+    color:var(--tool-icon);
+    fill:var(--tool-icon);
+    stroke:var(--tool-icon);
 }
 
 .canvas-button{
@@ -150,20 +210,21 @@ html{
 
 .navbar-button.selected{
     background-color: var(--selected-tool);
-    color: var(--tool-icon);
+    color: var(--selected-tool-icon);
 }
 .navbar-button.selected > svg{
-    color: var(--tool-icon);
-    fill: var(--tool-icon);
-    stroke: var(--tool-icon);
+    color: var(--selected-tool-icon);
+    fill: var(--selected-tool-icon);
+    stroke: var(--selected-tool-icon);
 }
 .navbar-button.selected:hover{
     background-color: var(--selected-tool-hover);
 }
 
 .navbar-button > svg{
-    filter: drop-shadow(2px 2px 4px rgba(0, 0, 0, 0));
-    transition: .2s;
+    color: var(--tool-icon);
+    fill: var(--tool-icon);
+    stroke: var(--tool-icon);
 }
 
 .navbar-button.selected:hover > svg{
