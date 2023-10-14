@@ -32,7 +32,7 @@
     --context-menu-bg-hover: #f6f6f6;
 
     /* Html */
-    --html-bg: #090E20;
+    --html-bg: #212121;
 
 }
 
@@ -72,7 +72,6 @@
     --html-bg: #ebebeb;
 
 }
-
   
 html{
     background-color: var(--html-bg);
@@ -297,4 +296,12 @@ display: none;
 
 #simulation-controller-buttons-div{
     
+}
+
+
+
+#automata-input-drawer{
+    float: right;
+    height: 100vh;
+    width: 500px;
 }

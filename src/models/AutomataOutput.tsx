@@ -1,6 +1,7 @@
-import { AutomataInputResults, AutomataInputMessages } from "../enums/AutomataInputEnum";
+import { AutomataInputResultsEnum } from "../enums/AutomataInputEnum";
 
 export interface AutomataOutput {
-    result: AutomataInputResults,
-    message: AutomataInputMessages
+    input: string,
+    result: AutomataInputResultsEnum,
+    message: string,
 } 

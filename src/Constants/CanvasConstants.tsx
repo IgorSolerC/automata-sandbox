@@ -4,8 +4,6 @@ export const CanvasColors = {
     BACKGROUND: "#ebebeb",
 
     // State
-    // DEFAULT_STATE: "#7b2cbf",
-    // CLICKED_STATE: "#deb8ff",
     DEFAULT_STATE: "#7b2cbf",
     CLICKED_STATE: "#deb8ff",
 
@@ -24,20 +22,18 @@ export const CanvasColors = {
 
 /* Dark Theme */
 // export const CanvasColors = {
-//     BACKGROUND: "#090E20",
+//     BACKGROUND: "#212121",
 
 //     // State
-//     // DEFAULT_STATE: "#121C40",
-//     // CLICKED_STATE: "#273E90",
-//     DEFAULT_STATE: "#121C40",
-//     CLICKED_STATE: "#273E90",
+//     DEFAULT_STATE: "#0091EA",
+//     CLICKED_STATE: "#FF6D00",
 
 //     // State markers
 //     DEFAULT_INITIAL_MARKER: "#1A2960",
 //     DEFAULT_FINAL_MARKER: "#1A2960",
 
 //     // Transition
-//     DEFAULT_TRANSITION: "#1A2960",
+//     DEFAULT_TRANSITION: "#9E9E9E",
 
 //     // Selecion
 //     SELECTION: "#0D153055",

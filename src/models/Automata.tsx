@@ -1,5 +1,9 @@
+// Models
 import { State } from "../models/State";
 import { Transition } from "../models/Transition";
+
+// Enums
+import { AutomataInputResultsEnum } from "../enums/AutomataInputEnum";
 
 export class Automata {
   states: State[];
@@ -150,7 +154,6 @@ export class Automata {
       return {
         isValidTransition: false,
         nextState: null,
-        errorMessage: "Transição inválida!",
       };
     } else {
       estado_atual = possiveis_transicoes.find(
@@ -159,15 +162,11 @@ export class Automata {
       return {
         isValidTransition: true,
         nextState: estado_atual,
-        errorMessage: null,
       };
     }
   }
 
-  validate(input: string): { isValid: boolean; errorMessage: string | null } {
-    const NAO_ACEITO = false;
-    const ACEITO = true;
-
+  validate(input: string): { result: number; message: string } {
     const characters = input.split("");
     const temCharForaDoAlfabeto = characters.some(
       (char) =>
@@ -176,22 +175,22 @@ export class Automata {
 
     if (temCharForaDoAlfabeto) {
       return {
-        isValid: NAO_ACEITO,
-        errorMessage: "Simbolo de entrada fora do alfabeto!",
+        result: AutomataInputResultsEnum.WARNING,
+        message: "Simbolo de entrada fora do alfabeto!",
       };
     }
 
     if (!this.initialState) {
       return {
-        isValid: NAO_ACEITO,
-        errorMessage: "Nenhum estado inicial foi definido!",
+        result: AutomataInputResultsEnum.WARNING,
+        message: "Nenhum estado inicial foi definido!",
       };
     }
 
     if (this.finalStates.length === 0) {
       return {
-        isValid: NAO_ACEITO,
-        errorMessage: "Nenhum estado final foi definido!",
+        result: AutomataInputResultsEnum.WARNING,
+        message: "Nenhum estado final foi definido!",
       };
     }
 
@@ -202,19 +201,22 @@ export class Automata {
       )
     ) {
       return { 
-        isValid: false, 
-        errorMessage: "Não determinismo encontrado!" 
+        result: AutomataInputResultsEnum.WARNING, 
+        message: "Não determinismo encontrado!" 
       };
     }
 
     let estado_atual = this.initialState;
 
     for (let i = 0; i < input.length; i++) {
-      const { isValidTransition, nextState, errorMessage } =
+      const { isValidTransition, nextState } =
         this.testTransition(input, estado_atual, i);
 
       if (!isValidTransition) {
-        return { isValid: NAO_ACEITO, errorMessage };
+        return {
+          result: AutomataInputResultsEnum.REJECTED,
+          message: "Transição inválida!"
+        };
       }
 
       estado_atual = nextState!;
@@ -222,14 +224,13 @@ export class Automata {
 
     if (estado_atual.isFinal) {
       return {
-        isValid: ACEITO,
-        errorMessage: null,
+        result: AutomataInputResultsEnum.ACCEPTED,
+        message: '',
       };
     } else {
       return {
-        isValid: NAO_ACEITO,
-        errorMessage: null,
-        // errorMessage: "Não finalizou em um estado final!",
+        result: AutomataInputResultsEnum.REJECTED,
+        message: "Não finalizou em um estado final!",
       };
     }
   }

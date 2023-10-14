@@ -28,12 +28,14 @@ import { State } from "../models/State";
 // Enums
 import { CanvasActions } from "../enums/CanvasActionsEnum";
 import { CanvasTools } from "../enums/CanvasToolsEnum";
+import { AutomataInputResultsEnum } from "../enums/AutomataInputEnum";
 
 // Constants
 import { CanvasColors } from "../Constants/CanvasConstants";
 
 // Contexts
 import { ToolboxProvider, useToolboxContext } from "../contexts/ToolboxContext";
+import { AutomataInputProvider, useAutomataInputContext } from "../contexts/AutamataInputContext";
 
 // let canvasObject: p5 | null = null; // Variável para armazenar o sketch
 let automata: Automata = new Automata();
@@ -46,19 +48,13 @@ const Canvas: React.FC = () => {
   // let slider: p5.Element;
   
   let contextMenuIsOpen: boolean = false;
- 
-  // Validação de inputs
-  const [isValid, setIsValid] = useState<boolean>(false);
-  const [inputValue, setInputValue] = useState("");
-  const [errorMessage, setErrorMessage] = useState<string | null>(
-    "Nenhum estado inicial foi definido!"
-  );
 
   // Zoom / Movement
   var cameraZoom: number = 1;
 
   // Tool selecionada
   const { setSelectedToolState } = useToolboxContext();
+  const { aumataInputResults, setAumataInputResults } = useAutomataInputContext();
   
   // Arrays de States
   let clickedState: State | null;
@@ -128,18 +124,34 @@ const Canvas: React.FC = () => {
           option2.mouseClicked(() => {
             toggleInitial(p);
             hideContextMenu();
-            const { isValid, errorMessage } = automataRef.current.validate(inputValue);
-            setIsValid(isValid);
-            setErrorMessage(errorMessage);
-          });
+            // Create input array copy
+            let aumataInputResultsAux = [...aumataInputResults]
+            for (let i=0; i<aumataInputResultsAux.length; i++){
+              const { result, message } = automataRef.current.validate(aumataInputResultsAux[i].input);
+              
+              // Update automata results
+              aumataInputResultsAux[i].result = result
+              aumataInputResultsAux[i].message = message
+            }
+              // Simulate automata again
+            setAumataInputResults(aumataInputResultsAux)
+            });
 
           let option3 = p.createDiv("Final");
           option3.mouseClicked(() => {
             automataRef.current.toggleFinal(selectedStates);
             hideContextMenu();
-            const { isValid, errorMessage } = automataRef.current.validate(inputValue);
-            setIsValid(isValid);
-            setErrorMessage(errorMessage);
+            // Create input array copy
+            let aumataInputResultsAux = [...aumataInputResults]
+            for (let i=0; i<aumataInputResultsAux.length; i++){
+              const { result, message } = automataRef.current.validate(aumataInputResultsAux[i].input);
+              
+              // Update automata results
+              aumataInputResultsAux[i].result = result
+              aumataInputResultsAux[i].message = message
+            }
+              // Simulate automata again
+            setAumataInputResults(aumataInputResultsAux)
           });
 
           contextMenu.child(option2);
@@ -510,9 +522,23 @@ const Canvas: React.FC = () => {
           currentCanvasAction = CanvasActions.NONE;
           clickedState = null;
 
-          const { isValid, errorMessage } = automataRef.current.validate(inputValue);
-          setIsValid(isValid);
-          setErrorMessage(errorMessage);
+          // // OLD Input validation
+          // const { isValid, errorMessage } = automataRef.current.validate(inputValue);
+          // setIsValid(isValid);
+          // setErrorMessage(errorMessage);
+
+          // Create input array copy
+          let aumataInputResultsAux = [...aumataInputResults]
+          for (let i=0; i<aumataInputResultsAux.length; i++){
+            const { result, message } = automataRef.current.validate(aumataInputResultsAux[i].input);
+            
+            // Update automata results
+            aumataInputResultsAux[i].result = result
+            aumataInputResultsAux[i].message = message
+          }
+            // Simulate automata again
+          setAumataInputResults(aumataInputResultsAux)
+
         };
 
         p.keyPressed = () => {
@@ -580,8 +606,8 @@ const Canvas: React.FC = () => {
     for(let i = 0; i < input.length; i++) {
       let result = automataRef.current.testTransition(input, estadoAtual, i);
       simulationStates.push(result.nextState!);
-      if(result.errorMessage !== null){ 
-        console.log(result.errorMessage);
+      if(result.isValidTransition){ 
+        console.log('Transição inválida');
         break;  
       }
     }
@@ -637,18 +663,7 @@ const Canvas: React.FC = () => {
         />
 
         {/* Lado Direito */}
-        {/* TODO: 
-          Aqui vai ter um array.map() pra renderizar varios input
-          Os inputs terão cada um um index, que vai ser usado pra saber qual o espaço deles no array
-          Cada um vai funcionar de forma independente com os valores do array
-          Um manager vai usar de programação dinamica pra distribuir valores iguais nos casos já calculados
-        */}
-        <AutomataInput
-          setInputValue = {setInputValue}
-          isValid = {isValid}
-          setIsValid = {setIsValid}
-          setErrorMessage = {setErrorMessage}
-          errorMessage = {errorMessage}
+        <AutomataInputList
           automataRef = {automataRef}
           calculateSteps = {calculateSteps}
         />
@@ -720,6 +735,30 @@ const Canvas: React.FC = () => {
   );
 };
 
+interface AutomataInputListProps {
+  automataRef: React.MutableRefObject<Automata>;
+  calculateSteps: any;
+}
+const AutomataInputList: React.FC<AutomataInputListProps> = (
+  {
+    automataRef,
+    calculateSteps
+  }
+) => {
+  const { aumataInputResults, setAumataInputResults } = useAutomataInputContext();
+
+  return(
+    <div id='automata-input-drawer'>
+      {aumataInputResults.map((results, index) => (
+        <AutomataInput
+          index = {index}
+          automataRef = {automataRef}
+          calculateSteps = {calculateSteps}
+        />
+      ))}
+    </div>
+    )
+}
 
 /*
 
@@ -727,23 +766,21 @@ const Canvas: React.FC = () => {
 
 */ 
 interface AutomataInputProps {
-  setInputValue: any;
-  setIsValid: any;
-  isValid: boolean;
-  setErrorMessage: any;
-  errorMessage: string | null;
+  index: number;
   automataRef: React.MutableRefObject<Automata>;
   calculateSteps: any;
 }
 const AutomataInput: React.FC<AutomataInputProps> = (
   {
-    setInputValue,
-    isValid, setIsValid,
-    errorMessage, setErrorMessage,
+    index,
     automataRef,
     calculateSteps
   }
 ) => {
+  const { aumataInputResults, setAumataInputResults } = useAutomataInputContext();
+
+  let simulationResult = aumataInputResults[index].result
+  let errorMessage = aumataInputResults[index].message
 
   return (
     <div id="automata-input-div">
@@ -755,30 +792,41 @@ const AutomataInput: React.FC<AutomataInputProps> = (
         //   setInputFocused(false);
         // }} 
         onChange={(event) => {
-          setInputValue(event.target.value);
-          const { isValid, errorMessage } = automataRef.current.validate(
-            event.target.value
-          );
-          setIsValid(isValid);
-          setErrorMessage(errorMessage);
+          let aumataInputResultsAux = [...aumataInputResults]
+          let newInput = event.target.value
+
+          // Simulate automata again
+          const { result, message } = automataRef.current.validate(newInput);
+
+          // Update automata results
+          aumataInputResultsAux[index].input = newInput
+          aumataInputResultsAux[index].result = result
+          aumataInputResultsAux[index].message = message
+          setAumataInputResults(aumataInputResultsAux)
         }}
       ></input>
       <button
         id="validation"
         className={
-          "canvas-button input-button " + (isValid ? 'accepted' : (errorMessage ? 'warning' : 'rejected'))
+          "canvas-button input-button " + (
+            (simulationResult == AutomataInputResultsEnum.ACCEPTED) ? 
+              'accepted' : 
+            (simulationResult == AutomataInputResultsEnum.WARNING) ? 
+              'warning' :
+              'rejected'
+          )
         }
         onClick={() => {
           calculateSteps();
         }}
         title="Simular passo-a-passo"
       >
-        {isValid ? (
-          <CheckIcon />
-        ) : errorMessage ? (
-          <WarningIcon />
-        ) : (
-          <ErrorIcon />
+        {(
+          (simulationResult == AutomataInputResultsEnum.ACCEPTED) ? 
+            <CheckIcon/> : 
+          (simulationResult == AutomataInputResultsEnum.WARNING) ? 
+            <WarningIcon/> :
+            <ErrorIcon/>
         )}
       </button>
       {errorMessage && (

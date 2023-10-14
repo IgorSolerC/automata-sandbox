@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, ReactNode } from "react";
-import { AutomataInputResults, AutomataInputMessages } from "../enums/AutomataInputEnum";
+import { AutomataInputResultsEnum } from "../enums/AutomataInputEnum";
 import { AutomataOutput } from "../models/AutomataOutput";
 
 // Definição do tipo do conteudo do context
@@ -23,8 +23,9 @@ export const AutomataInputProvider: React.FC<AutomataInputProviderProps> = ({ ch
   const [aumataInputResults, setAumataInputResults] = useState(
     Array.from({ length: qttInputs }, () => {
       let inputResult: AutomataOutput = {
-        result: AutomataInputResults.WARNING,
-        message: AutomataInputMessages.SEM_ESTADO_FINAL
+        input: '',
+        result: AutomataInputResultsEnum.WARNING,
+        message: 'Nenhum estado inicial foi definido!'
       }  
       return (inputResult)
     }
