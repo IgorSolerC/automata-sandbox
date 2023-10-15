@@ -255,16 +255,20 @@ const Canvas: React.FC = () => {
 
                 // Corrige textos de cabeça para baico
                 // angle + Math.PI == angle + 180º
-                const correctedAngle =
-                  end.x < start.x ? angle + Math.PI : angle;
-
+                let correctedAngle = angle
+                let textOffsetX = 20
+                if(end.x < start.x){
+                  correctedAngle += Math.PI
+                  textOffsetX *= -1
+                }
+              
                 p.strokeWeight(0.1);
                 p.stroke(CanvasColors.DEFAULT_TRANSITION_TEXT)
                 p.fill(CanvasColors.DEFAULT_TRANSITION_TEXT)
                 p.rotate(correctedAngle);
                 p.textAlign(p.CENTER, p.CENTER); // Center the text relative to the point
                 p.textSize(20);
-                p.text(transition.label, 20, textOffsetY);
+                p.text(transition.label, textOffsetX, textOffsetY);
                 p.pop(); // Restore original state
               }
             }
@@ -279,8 +283,10 @@ const Canvas: React.FC = () => {
             }
           );
           // Colore estados do passo atual da simulação como SIMULATION_STEP color
-          simulationStates[simulationIndex].color = CanvasColors.SIMULATION_STEP_STATE;
-          simulationStates[simulationIndex].secondaryColor = CanvasColors.SIMULATION_STEP_STATE_SECONDARY;
+          if(simulationStates[simulationIndex]){
+            simulationStates[simulationIndex].color = CanvasColors.SIMULATION_STEP_STATE;
+            simulationStates[simulationIndex].secondaryColor = CanvasColors.SIMULATION_STEP_STATE_SECONDARY;
+          }
           // Colore todos os estados selecionados como CLICKED color
           selectedStates.forEach(
             (state) => {

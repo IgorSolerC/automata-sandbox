@@ -114,6 +114,7 @@ html{
     position: absolute;
     width: 100vw;
     margin: 5px; 
+    margin-top: calc(5px + 3px); /* Não entendi pq, mas é necessario */
     display: inline-block;
     box-sizing: border-box;
     animation-name: slidedown;
