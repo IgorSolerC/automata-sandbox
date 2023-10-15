@@ -19,7 +19,7 @@ export const useAutomataInputContext = (): AutomataInputContextType => {
 
 type AutomataInputProviderProps = {children: ReactNode};
 export const AutomataInputProvider: React.FC<AutomataInputProviderProps> = ({ children }) => {
-  const qttInputs = 6
+  const qttInputs = 1
   const [aumataInputResults, setAumataInputResults] = useState(
     Array.from({ length: qttInputs }, () => {
       let inputResult: AutomataOutput = {

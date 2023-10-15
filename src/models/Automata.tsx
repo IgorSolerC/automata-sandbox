@@ -75,7 +75,7 @@ export class Automata {
     return this.states;
   }
 
-  addState(id: string, x: number, y: number, color: string): void {
+  addState(id: string, x: number, y: number, color: string, secondaryColor: string): void {
     let isInitial: boolean = this.states.length === 0;
     const newState: State = {
       id,
@@ -84,6 +84,7 @@ export class Automata {
       // transitions: [],
       diameter: 80,
       color,
+      secondaryColor,
       isInitial: isInitial,
       isFinal: false,
     }; // Mudar pra false

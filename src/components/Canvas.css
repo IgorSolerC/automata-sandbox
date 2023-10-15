@@ -48,7 +48,7 @@
 
     /* Tools */
     --tool-icon: #ced4da;
-    --selected-tool-icon: #FFF9C4;
+    --selected-tool-icon: #ffe4c4;
     --selected-tool: #FF6D00;
     --selected-tool-hover: #FF9100;
     
@@ -58,12 +58,12 @@
     --accepted-icon: #B9F6CA;
     --warning: #FFD600;
     --warning-hover: #FFEA00;
-    --warning-icon: #FFF9C4;
+    --warning-icon: #fffce0;
     --rejected: #D50000;
     --rejected-hover: #FF1744;
     --rejected-icon: #FFCDD2;
     --error-message-div: #FF6D00;
-    --error-message: #FFF9C4;
+    --error-message: #ffe4c4;
     --input-palceholder: #6C757D;
 
     /* Context Menu */

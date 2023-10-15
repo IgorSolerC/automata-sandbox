@@ -7,6 +7,7 @@ export interface State {
     y: number;
     diameter: number;
     color: any;
+    secondaryColor: any;
 
     // Definição automato
     isInitial: boolean;

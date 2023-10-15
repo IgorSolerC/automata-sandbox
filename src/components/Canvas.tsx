@@ -162,14 +162,17 @@ const Canvas: React.FC = () => {
           p.background(CanvasColors.BACKGROUND);
 
           p.scale(cameraZoom)
+          p.strokeCap(p.PROJECT);
+          const arrowWeight = 5; 
 
           // Desenha transições
           automataRef.current.getTransitions().forEach((transition) => {
             const start = automataRef.current.findState(transition.from.id);
             const end = automataRef.current.findState(transition.to.id);
-            const arrow_weight = 5; 
             if (start && end) {
               p.stroke(CanvasColors.DEFAULT_TRANSITION);
+
+              // Transições para o mesmo estado
               if (start.id === end.id) {
                 const loopRadius = start.diameter / 2;
                 const angle = Math.PI / 6; 
@@ -179,7 +182,7 @@ const Canvas: React.FC = () => {
           
                 p.noFill();
                 p.stroke(CanvasColors.DEFAULT_TRANSITION);
-                p.strokeWeight(arrow_weight);
+                p.strokeWeight(arrowWeight);
                 p.ellipse(start.x, start.y - start.diameter / 2, loopRadius * 2, loopRadius * 2);
                 
                 p.push();
@@ -189,16 +192,19 @@ const Canvas: React.FC = () => {
                 p.triangle(1,-2,-4,-19,14,-12);
                 p.pop();
 
-                p.fill("black")
+                // Label
                 p.push();
+                p.stroke(CanvasColors.DEFAULT_TRANSITION_TEXT)
+                p.fill(CanvasColors.DEFAULT_TRANSITION_TEXT)
                 p.textAlign(p.CENTER, p.CENTER);
-                p.strokeWeight(1)
-                p.stroke(1)
+                p.strokeWeight(0.1)
                 p.textSize(20);
                 p.text(transition.label, start.x, start.y - start.diameter - 15);
                 p.pop();
 
-              } else {
+              }
+              // Transições para outros estrados
+              else {
                 p.line(start.x  , start.y, end.x, end.y);
 
                 const angle = Math.atan2(end.y - start.y, end.x - start.x); // angle of line
@@ -208,22 +214,21 @@ const Canvas: React.FC = () => {
 
                 // Draw line from the edge of the start circle to the edge of the end circle
                 
-                p.strokeWeight(arrow_weight);
+                p.push(); // Start a new drawing state
+                p.strokeWeight(arrowWeight);
                 p.line(start.x, start.y, end.x - offsetX, end.y - offsetY);
 
                 // Draw an arrowhead at the edge of the end circle
                 const length = 15; // length of arrowhead
-                p.push(); // Start a new drawing state
                 p.translate(end.x - offsetX, end.y - offsetY);
                 p.rotate(angle);
                 // Arrow line 1
-                p.strokeWeight(arrow_weight);
+                p.strokeWeight(arrowWeight);
                 p.line(0, 0, -length, length);
                 // Arrow line 2
-                p.strokeWeight(arrow_weight);
+                p.strokeWeight(arrowWeight);
                 p.line(0, 0, -length, -length);
                 p.pop(); // Restore original state
-                p.stroke(1);
 
                 const midX = (start.x + end.x - offsetX) / 2;
                 const midY = (start.y + end.y - offsetY) / 2;
@@ -237,16 +242,37 @@ const Canvas: React.FC = () => {
                 const correctedAngle =
                   end.x < start.x ? angle + Math.PI : angle;
 
-                p.strokeWeight(1);
+                p.strokeWeight(0.1);
+                p.stroke(CanvasColors.DEFAULT_TRANSITION_TEXT)
+                p.fill(CanvasColors.DEFAULT_TRANSITION_TEXT)
                 p.rotate(correctedAngle);
                 p.textAlign(p.CENTER, p.CENTER); // Center the text relative to the point
                 p.textSize(20);
-                p.text(transition.label, 0, textOffsetY);
+                p.text(transition.label, 20, textOffsetY);
                 p.pop(); // Restore original state
               }
             }
           });
 
+          // Colore todos os estados para DEFAULT color
+          const allStates = automataRef.current.getStates();
+          allStates.forEach(
+            (state) => {
+              state.color = CanvasColors.DEFAULT_STATE
+              state.secondaryColor = CanvasColors.DEFAULT_STATE_SECONDARY
+            }
+          );
+          // Colore estados do passo atual da simulação como SIMULATION_STEP color
+          simulationStates[simulationIndex].color = CanvasColors.SIMULATION_STEP_STATE;
+          simulationStates[simulationIndex].secondaryColor = CanvasColors.SIMULATION_STEP_STATE_SECONDARY;
+          // Colore todos os estados selecionados como CLICKED color
+          selectedStates.forEach(
+            (state) => {
+              state.color = CanvasColors.CLICKED_STATE
+              state.secondaryColor = CanvasColors.CLICKED_STATE_SECONDARY
+            }
+            );
+            
           // ----Desenha estados
           // .slice() cria uma copia shallow
           // .reverse() desenhar mostrando o primeiro como acima, visto que é o primeiro a ser selecionado quando clica-se em estados stackados
@@ -257,16 +283,6 @@ const Canvas: React.FC = () => {
             .forEach((state: State, index) => {
               p.noStroke();
 
-              const allStates = automataRef.current.getStates();
-              allStates.forEach(
-                (state) => (state.color = CanvasColors.DEFAULT_STATE)
-              );
-              selectedStates.forEach(
-                (state) => (state.color = CanvasColors.CLICKED_STATE)
-              );
-
-              // má prática, mas funciona
-              let stateIsSelected = (state.color == CanvasColors.CLICKED_STATE)
               // Marcador de "IsInitial"
               if (state.isInitial) {
                 p.push();
@@ -275,10 +291,7 @@ const Canvas: React.FC = () => {
                 state.diameter / 2 + (state.diameter / 2) * triangleSize;
                 let triangleOffsetY: number =
                 (state.diameter / 2) * triangleSize;
-                if (stateIsSelected)
-                  p.fill(CanvasColors.CLICKED_INITIAL_MARKER);
-                else 
-                  p.fill(CanvasColors.DEFAULT_INITIAL_MARKER);
+                p.fill(state.secondaryColor);
                 p.triangle(
                   state.x - triangleOffsetX,
                   state.y + triangleOffsetY,
@@ -290,12 +303,14 @@ const Canvas: React.FC = () => {
                 p.pop();
               }
 
-              if(state === simulationStates[simulationIndex])
-                state.color = "#FF0000";
-
               // Circulo do estado (Estado em si)
+              p.strokeWeight(4)
+              p.stroke(state.secondaryColor);
               p.fill(state.color);
               p.ellipse(state.x, state.y, state.diameter);
+              p.strokeWeight(0)
+
+              // Titulo do estado
               p.fill(255);
               p.text(state.id, state.x - 5, state.y + 5);
 
@@ -303,13 +318,9 @@ const Canvas: React.FC = () => {
               if (state.isFinal) {
                 // Draw an inner circle with only its outline
                 p.noFill(); // Disable filling
-                // má prática, mas funciona
-                if (stateIsSelected)
-                  p.stroke(CanvasColors.CLICKED_FINAL_MARKER);
-                else 
-                  p.stroke(CanvasColors.DEFAULT_FINAL_MARKER);
+                p.stroke(state.secondaryColor);
                 p.strokeWeight(4); // Set outline thickness
-                const innerDiameter = state.diameter / 1.21; // Set the diameter of the inner circle
+                const innerDiameter = state.diameter / 1.3; // Set the diameter of the inner circle
                 p.ellipse(state.x, state.y, innerDiameter);
               }
 
@@ -442,7 +453,8 @@ const Canvas: React.FC = () => {
                         id,
                         getMouseX(p),
                         getMouseY(p),
-                        CanvasColors.DEFAULT_STATE
+                        CanvasColors.DEFAULT_STATE,
+                        CanvasColors.DEFAULT_STATE_SECONDARY,
                       );
                     }
                   }
