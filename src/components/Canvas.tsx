@@ -171,27 +171,22 @@ const Canvas: React.FC = () => {
             const end = automataRef.current.findState(transition.to.id);
             if (start && end) {
               p.stroke(CanvasColors.DEFAULT_TRANSITION);
+              p.fill(CanvasColors.DEFAULT_TRANSITION);
 
               // Transições para o mesmo estado
               if (start.id === end.id) {
+                // Transition line
+                const loopDiameter = start.diameter;
                 const loopRadius = start.diameter / 2;
-                const angle = Math.PI / 6; 
-                
-                const loopStartX = start.x + loopRadius * Math.cos(angle);
-                const loopStartY = start.y + loopRadius * Math.sin(angle);
-          
+
+                p.push()
                 p.noFill();
                 p.stroke(CanvasColors.DEFAULT_TRANSITION);
                 p.strokeWeight(arrowWeight);
-                p.ellipse(start.x, start.y - start.diameter / 2, loopRadius * 2, loopRadius * 2);
+                // p.ellipse(start.x, start.y - loopRadius, loopDiameter, loopDiameter);
+                p.arc(start.x, start.y - loopRadius, loopDiameter*0.85, loopDiameter*0.85, Math.PI/2, Math.PI/0.255);
+                p.pop()
                 
-                p.push();
-                p.translate(loopStartX, loopStartY - loopRadius);
-
-                p.fill(CanvasColors.DEFAULT_TRANSITION);
-                p.triangle(1,-2,-4,-19,14,-12);
-                p.pop();
-
                 // Label
                 p.push();
                 p.stroke(CanvasColors.DEFAULT_TRANSITION_TEXT)
@@ -201,12 +196,30 @@ const Canvas: React.FC = () => {
                 p.textSize(20);
                 p.text(transition.label, start.x, start.y - start.diameter - 15);
                 p.pop();
+                
+                // Arror tip
+                // const angle = Math.PI / 6; 
+                // const loopStartX = start.x + loopRadius * Math.cos(angle);
+                // const loopStartY = start.y + loopRadius * Math.sin(angle);
+                // p.push();
+                // p.translate(loopStartX, loopStartY - loopRadius);
+                // p.fill(CanvasColors.DEFAULT_TRANSITION);
+                // p.triangle(1,-2,-4,-19,14,-12);
+                // p.pop();
+
+                // Arrow tip
+                const arrowWidth = 15; // length of arrowhead
+                const arrowHeight = 9; // length of arrowhead
+                const angle = Math.PI * 0.55; 
+                p.push();
+                p.translate(end.x + 30, end.y - 32);
+                p.rotate(angle);
+                p.triangle(0, 0, -arrowWidth, +arrowHeight, -arrowWidth, -arrowHeight);
+                p.pop();
 
               }
               // Transições para outros estrados
               else {
-                p.line(start.x  , start.y, end.x, end.y);
-
                 const angle = Math.atan2(end.y - start.y, end.x - start.x); // angle of line
                 const radius = start.diameter / 2; // diameter of circle
                 const offsetX = radius * Math.cos(angle);
@@ -217,17 +230,20 @@ const Canvas: React.FC = () => {
                 p.push(); // Start a new drawing state
                 p.strokeWeight(arrowWeight);
                 p.line(start.x, start.y, end.x - offsetX, end.y - offsetY);
-
+                p.pop()
+                
                 // Draw an arrowhead at the edge of the end circle
-                const length = 15; // length of arrowhead
+                p.push(); // Start a new drawing state
+                const arrowWidth = 15; // length of arrowhead
+                const arrowHeight = 9; // length of arrowhead
                 p.translate(end.x - offsetX, end.y - offsetY);
                 p.rotate(angle);
-                // Arrow line 1
-                p.strokeWeight(arrowWeight);
-                p.line(0, 0, -length, length);
-                // Arrow line 2
-                p.strokeWeight(arrowWeight);
-                p.line(0, 0, -length, -length);
+                // // Arrow tip
+                // p.strokeWeight(arrowWeight);
+                // p.line(0, 0, -arrowWidth, +arrowHeight); // Arrow line 1
+                // p.line(0, 0, -arrowWidth, -arrowHeight); // Arrow line 2
+                // Arrow tip
+                p.triangle(0, 0, -arrowWidth, +arrowHeight, -arrowWidth, -arrowHeight);
                 p.pop(); // Restore original state
 
                 const midX = (start.x + end.x - offsetX) / 2;

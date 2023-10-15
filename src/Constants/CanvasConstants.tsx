@@ -37,6 +37,6 @@ export const CanvasColors = {
     DEFAULT_TRANSITION_TEXT: "#E9ECEF",
 
     // Selecion
-    SELECTION: "#424242" + '55',
-    SELECTION_BORDER: "#424242" + 'AA',
+    SELECTION: "#495057" + '55',
+    SELECTION_BORDER: "#495057" + 'AA',
 };
