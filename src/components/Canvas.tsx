@@ -265,15 +265,20 @@ const Canvas: React.FC = () => {
                 (state) => (state.color = CanvasColors.CLICKED_STATE)
               );
 
+              // má prática, mas funciona
+              let stateIsSelected = (state.color == CanvasColors.CLICKED_STATE)
               // Marcador de "IsInitial"
               if (state.isInitial) {
                 p.push();
                 const triangleSize = 0.6;
                 let triangleOffsetX: number =
-                  state.diameter / 2 + (state.diameter / 2) * triangleSize;
+                state.diameter / 2 + (state.diameter / 2) * triangleSize;
                 let triangleOffsetY: number =
-                  (state.diameter / 2) * triangleSize;
-                p.fill(CanvasColors.DEFAULT_INITIAL_MARKER);
+                (state.diameter / 2) * triangleSize;
+                if (stateIsSelected)
+                  p.fill(CanvasColors.CLICKED_INITIAL_MARKER);
+                else 
+                  p.fill(CanvasColors.DEFAULT_INITIAL_MARKER);
                 p.triangle(
                   state.x - triangleOffsetX,
                   state.y + triangleOffsetY,
@@ -298,9 +303,13 @@ const Canvas: React.FC = () => {
               if (state.isFinal) {
                 // Draw an inner circle with only its outline
                 p.noFill(); // Disable filling
-                p.stroke(CanvasColors.DEFAULT_FINAL_MARKER); // Set outline color to white (or any color you prefer)
-                p.strokeWeight(2); // Set outline thickness
-                const innerDiameter = state.diameter / 1.5; // Set the diameter of the inner circle
+                // má prática, mas funciona
+                if (stateIsSelected)
+                  p.stroke(CanvasColors.CLICKED_FINAL_MARKER);
+                else 
+                  p.stroke(CanvasColors.DEFAULT_FINAL_MARKER);
+                p.strokeWeight(4); // Set outline thickness
+                const innerDiameter = state.diameter / 1.21; // Set the diameter of the inner circle
                 p.ellipse(state.x, state.y, innerDiameter);
               }
 
@@ -563,6 +572,18 @@ const Canvas: React.FC = () => {
               automataRef.current.deleteState(state);
             });
             selectedStates = [];
+
+            // Create input array copy
+            let aumataInputResultsAux = [...aumataInputResults]
+            for (let i=0; i<aumataInputResultsAux.length; i++){
+              const { result, message } = automataRef.current.validate(aumataInputResultsAux[i].input);
+              
+              // Update automata results
+              aumataInputResultsAux[i].result = result
+              aumataInputResultsAux[i].message = message
+            }
+              // Simulate automata again
+            setAumataInputResults(aumataInputResultsAux)
           }
 
           /* Seleciona tool */

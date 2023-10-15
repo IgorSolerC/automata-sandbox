@@ -1,41 +1,44 @@
 
 /* Light Theme */
-export const CanvasColors = {
-    BACKGROUND: "#ebebeb",
+// export const CanvasColors = {
+//     BACKGROUND: "#ebebeb",
 
-    // State
-    DEFAULT_STATE: "#7b2cbf",
-    CLICKED_STATE: "#deb8ff",
+//     // State
+//     DEFAULT_STATE: "#7b2cbf",
+//     CLICKED_STATE: "#deb8ff",
 
-    // State markers
-    DEFAULT_INITIAL_MARKER: "#370c5c",
-    DEFAULT_FINAL_MARKER: "#370c5c",
+//     // State markers
+//     DEFAULT_INITIAL_MARKER: "#370c5c",
+//     DEFAULT_FINAL_MARKER: "#370c5c",
 
-    // Transition
-    DEFAULT_TRANSITION: "#ccc",
+//     // Transition
+//     DEFAULT_TRANSITION: "#ccc",
 
-    // Selecion
-    SELECTION: "#cccccc55",
-    SELECTION_BORDER: "#ccccccAA",
-};
+//     // Selecion
+//     SELECTION: "#cccccc55",
+//     SELECTION_BORDER: "#ccccccAA",
+// };
 
 
 /* Dark Theme */
-// export const CanvasColors = {
-//     BACKGROUND: "#212121",
+export const CanvasColors = {
+    BACKGROUND: "#212529",
 
-//     // State
-//     DEFAULT_STATE: "#0091EA",
-//     CLICKED_STATE: "#FF6D00",
+    // State
+    DEFAULT_STATE: "#FF6D00",
+    CLICKED_STATE: "#0b63de",
 
-//     // State markers
-//     DEFAULT_INITIAL_MARKER: "#1A2960",
-//     DEFAULT_FINAL_MARKER: "#1A2960",
+    
+    // State markers
+    CLICKED_INITIAL_MARKER: "#4b9cf9",
+    CLICKED_FINAL_MARKER: "#4b9cf9",
+    DEFAULT_INITIAL_MARKER: "#FF9100",
+    DEFAULT_FINAL_MARKER: "#FF9100",
 
-//     // Transition
-//     DEFAULT_TRANSITION: "#9E9E9E",
+    // Transition
+    DEFAULT_TRANSITION: "#495057",
 
-//     // Selecion
-//     SELECTION: "#0D153055",
-//     SELECTION_BORDER: "#0D1530AA",
-// };
+    // Selecion
+    SELECTION: "#424242" + '55',
+    SELECTION_BORDER: "#424242" + 'AA',
+};
