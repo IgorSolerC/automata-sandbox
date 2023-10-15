@@ -59,7 +59,7 @@
     --warning: #FFD600;
     --warning-hover: #FFEA00;
     --warning-icon: #fffce0;
-    --rejected: #D50000;
+    --rejected: #eb022f;
     --rejected-hover: #FF1744;
     --rejected-icon: #FFCDD2;
     --error-message-div: #FF6D00;
@@ -72,7 +72,7 @@
     --context-menu-bg-hover: #495057;
 
     /* Html */
-    --html-bg: #212121;
+    --html-bg: #212529;
 
 }
 
@@ -114,7 +114,6 @@ html{
     position: absolute;
     width: 100vw;
     margin: 5px; 
-    margin-top: calc(5px + 3px); /* Não entendi pq, mas é necessario */
     display: inline-block;
     box-sizing: border-box;
     animation-name: slidedown;
@@ -128,7 +127,7 @@ html{
 
 #automata-input-div{
     float: right;
-    margin-right: 10px; /* Não entedi pq precisa disso, mas precisa  */
+    margin-right: 5px; /* Não entedi pq precisa disso, mas precisa  */
 }
 
 .input-button.accepted{
@@ -192,6 +191,8 @@ html{
 .canvas-button > svg{
     fill:var(--tool-icon);
     stroke:var(--tool-icon);
+    width: 80%;
+    height: 80%;
 }
 
 .canvas-button{
@@ -228,6 +229,16 @@ html{
 .automata-input::placeholder{
     color: var(--input-palceholder);
 }
+
+/* .automata-input.small{
+    height: 40px;
+    font-size: 17px;
+}
+
+.input-button.small{
+    height: 40px;
+    font-size: 17px;
+} */
 
 /* .navbar-button.redo{
     border-radius: 0% 5px 5px 0%;
@@ -329,8 +340,51 @@ display: none;
 
 
 
-#automata-input-drawer{
+#automata-input-list{
     float: right;
     height: 100vh;
-    width: 500px;
+    width: 415px;
+    /* overflow-y: auto; */
+}
+
+#automata-input-adder-div{
+    float: left;
+    margin-right: 0px;
+    width: 80px;
+}
+#automata-input-adder-div:hover{
+    background-color: var(--button-bg);
+}
+
+.automata-input-adder-button{
+    display: inline-block;
+    /* width: 100%;
+    height: 30px; */
+    width: 40px;
+    height: 100%;
+    background-color: var(--button-bg);
+    border: 0px solid;
+}
+
+.automata-input-adder-button:focus{
+    outline: 0px solid;
+}
+
+.automata-input-adder-button.menos{
+    border-radius: 0px 5px 5px 0px;
+}
+.automata-input-adder-button.mais{
+    border-radius: 5px 0px 0px 5px;
+}
+
+.automata-input-adder-button > svg{
+    fill:var(--tool-icon);
+    stroke:var(--tool-icon);
+    width: 80%;
+    height: 80%;
+}
+
+.automata-input-adder-button:hover{
+    background-color: var(--button-bg-hover);
+
 }

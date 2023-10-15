@@ -16,6 +16,8 @@ import FastforwardIcon from "../symbols/fastforward_icon";
 import PauseIcon from "../symbols/pause_icon";
 import PlayIcon from "../symbols/play_icon";
 import ErrorIcon from "../symbols/error_icon";
+import PlusIcon from "../symbols/plus_icon";
+import MinusIcon from "../symbols/minus_icon";
 
 // Libaries
 import React, { useRef, useEffect, useState } from "react";
@@ -44,6 +46,7 @@ const Canvas: React.FC = () => {
   const canvasRef = useRef<HTMLDivElement | null>(null);
   const p5Instance = useRef<p5 | null>(null);
   const automataRef = useRef(automata);
+
   let contextMenu: p5.Element;
   // let slider: p5.Element;
   
@@ -54,7 +57,6 @@ const Canvas: React.FC = () => {
 
   // Tool selecionada
   const { setSelectedToolState } = useToolboxContext();
-  const { aumataInputResults, setAumataInputResults } = useAutomataInputContext();
   
   // Arrays de States
   let clickedState: State | null;
@@ -84,6 +86,22 @@ const Canvas: React.FC = () => {
   }
   const getMouseY = (p: p5) => {
     return p.mouseY / cameraZoom
+  }
+
+  const { aumataInputResultsRef, setAumataInputResults } = useAutomataInputContext();
+  const validadeAllInputs = () => {
+
+    // Create input array copy
+    let aumataInputResultsAux = [...aumataInputResultsRef.current]
+    for (let i=0; i<aumataInputResultsAux.length; i++){
+      const { result, message } = automataRef.current.validate(aumataInputResultsAux[i].input);
+      
+      // Update automata results
+      aumataInputResultsAux[i].result = result
+      aumataInputResultsAux[i].message = message
+    }
+      // Simulate automata again
+    setAumataInputResults(aumataInputResultsAux)
   }
 
   useEffect(() => {
@@ -124,34 +142,14 @@ const Canvas: React.FC = () => {
           option2.mouseClicked(() => {
             toggleInitial(p);
             hideContextMenu();
-            // Create input array copy
-            let aumataInputResultsAux = [...aumataInputResults]
-            for (let i=0; i<aumataInputResultsAux.length; i++){
-              const { result, message } = automataRef.current.validate(aumataInputResultsAux[i].input);
-              
-              // Update automata results
-              aumataInputResultsAux[i].result = result
-              aumataInputResultsAux[i].message = message
-            }
-              // Simulate automata again
-            setAumataInputResults(aumataInputResultsAux)
+            validadeAllInputs()
             });
 
           let option3 = p.createDiv("Final");
           option3.mouseClicked(() => {
             automataRef.current.toggleFinal(selectedStates);
             hideContextMenu();
-            // Create input array copy
-            let aumataInputResultsAux = [...aumataInputResults]
-            for (let i=0; i<aumataInputResultsAux.length; i++){
-              const { result, message } = automataRef.current.validate(aumataInputResultsAux[i].input);
-              
-              // Update automata results
-              aumataInputResultsAux[i].result = result
-              aumataInputResultsAux[i].message = message
-            }
-              // Simulate automata again
-            setAumataInputResults(aumataInputResultsAux)
+            validadeAllInputs()
           });
 
           contextMenu.child(option2);
@@ -559,29 +557,12 @@ const Canvas: React.FC = () => {
               if (label !== null) {
                 if (label === "") label = "λ";
                 automataRef.current.addTransition(clickedState, endState, label);
+                validadeAllInputs()
               }
             }
           }
           currentCanvasAction = CanvasActions.NONE;
           clickedState = null;
-
-          // // OLD Input validation
-          // const { isValid, errorMessage } = automataRef.current.validate(inputValue);
-          // setIsValid(isValid);
-          // setErrorMessage(errorMessage);
-
-          // Create input array copy
-          let aumataInputResultsAux = [...aumataInputResults]
-          for (let i=0; i<aumataInputResultsAux.length; i++){
-            const { result, message } = automataRef.current.validate(aumataInputResultsAux[i].input);
-            
-            // Update automata results
-            aumataInputResultsAux[i].result = result
-            aumataInputResultsAux[i].message = message
-          }
-            // Simulate automata again
-          setAumataInputResults(aumataInputResultsAux)
-
         };
 
         p.keyPressed = () => {
@@ -607,17 +588,7 @@ const Canvas: React.FC = () => {
             });
             selectedStates = [];
 
-            // Create input array copy
-            let aumataInputResultsAux = [...aumataInputResults]
-            for (let i=0; i<aumataInputResultsAux.length; i++){
-              const { result, message } = automataRef.current.validate(aumataInputResultsAux[i].input);
-              
-              // Update automata results
-              aumataInputResultsAux[i].result = result
-              aumataInputResultsAux[i].message = message
-            }
-              // Simulate automata again
-            setAumataInputResults(aumataInputResultsAux)
+            validadeAllInputs()
           }
 
           /* Seleciona tool */
@@ -800,17 +771,33 @@ const AutomataInputList: React.FC<AutomataInputListProps> = (
     calculateSteps
   }
 ) => {
-  const { aumataInputResults, setAumataInputResults } = useAutomataInputContext();
+  const { aumataInputResults, removeInput, addInput } = useAutomataInputContext();
 
   return(
-    <div id='automata-input-drawer'>
-      {aumataInputResults.map((results, index) => (
-        <AutomataInput
+    <div id='automata-input-div'>
+      <div id='automata-input-adder-div' className="canvas-button ">
+        <button
+          className="automata-input-adder-button mais"
+          onClick={() => {addInput(automataRef)}}
+        >
+          <PlusIcon/>
+        </button>
+        <button
+          className="automata-input-adder-button menos"
+          onClick={removeInput}
+        >
+          <MinusIcon/>
+        </button>
+      </div>
+      <div id='automata-input-list'>
+        {aumataInputResults.map((results, index) => (
+          <AutomataInput
           index = {index}
           automataRef = {automataRef}
           calculateSteps = {calculateSteps}
-        />
-      ))}
+          />
+          ))}
+      </div>
     </div>
     )
 }
@@ -834,6 +821,7 @@ const AutomataInput: React.FC<AutomataInputProps> = (
 ) => {
   const { aumataInputResults, setAumataInputResults } = useAutomataInputContext();
 
+  let qtdInput = aumataInputResults.length
   let simulationResult = aumataInputResults[index].result
   let errorMessage = aumataInputResults[index].message
 
@@ -841,7 +829,7 @@ const AutomataInput: React.FC<AutomataInputProps> = (
     <div id="automata-input-div">
       <input
         placeholder="Input automato" 
-        className="automata-input"
+        className={"automata-input " + (index == 0 ? '' : 'small')}
         // onFocus={() => {setInputFocused(true);}}
         // onBlur={() => {
         //   setInputFocused(false);
@@ -865,11 +853,11 @@ const AutomataInput: React.FC<AutomataInputProps> = (
         className={
           "canvas-button input-button " + (
             (simulationResult == AutomataInputResultsEnum.ACCEPTED) ? 
-              'accepted' : 
+              'accepted ' : 
             (simulationResult == AutomataInputResultsEnum.WARNING) ? 
-              'warning' :
-              'rejected'
-          )
+              'warning ' :
+              'rejected '
+          ) + (index == 0 ? '' : 'small')
         }
         onClick={() => {
           calculateSteps();
@@ -884,7 +872,7 @@ const AutomataInput: React.FC<AutomataInputProps> = (
             <ErrorIcon/>
         )}
       </button>
-      {errorMessage && (
+      {(errorMessage && index == qtdInput-1) && (
         <div placeholder="Input automato" className="automata-input-error">
           <span>{errorMessage}</span>
         </div>
