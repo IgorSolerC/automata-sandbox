@@ -54,6 +54,8 @@ const Canvas: React.FC = () => {
 
   // Zoom / Movement
   var cameraZoom: number = 1;
+  var globalTranslateX = -100
+  var globalTranslateY = -100
 
   // Tool selecionada
   const { setSelectedToolState } = useToolboxContext();
@@ -81,11 +83,19 @@ const Canvas: React.FC = () => {
   let selectionDistanceX: number = 0;
   let selectionDistanceY: number = 0;
 
+
+  const getMouseXScaled = (p: p5) => {
+    return (p.mouseX / cameraZoom)
+  }
+  const getMouseYScaled = (p: p5) => {
+    return (p.mouseY / cameraZoom)
+  }
+
   const getMouseX = (p: p5) => {
-    return p.mouseX / cameraZoom
+    return getMouseXScaled(p) - globalTranslateX
   }
   const getMouseY = (p: p5) => {
-    return p.mouseY / cameraZoom
+    return getMouseYScaled(p) - globalTranslateY
   }
 
   const { aumataInputResultsRef, setAumataInputResults } = useAutomataInputContext();
@@ -128,8 +138,6 @@ const Canvas: React.FC = () => {
           p.createCanvas(window.innerWidth, window.innerHeight);
           p.frameRate(144);
 
-          
-
           // slider = p.createSlider(-5, 50, 1);
           // slider.position(10, 80);
 
@@ -159,8 +167,10 @@ const Canvas: React.FC = () => {
         p.draw = () => {
           p.background(CanvasColors.BACKGROUND);
 
+          p.push();
           p.scale(cameraZoom)
           p.strokeCap(p.PROJECT);
+          p.translate(globalTranslateX, globalTranslateY)
           const arrowWeight = 5; 
 
           // Desenha transições
@@ -181,7 +191,6 @@ const Canvas: React.FC = () => {
                 p.noFill();
                 p.stroke(CanvasColors.DEFAULT_TRANSITION);
                 p.strokeWeight(arrowWeight);
-                // p.ellipse(start.x, start.y - loopRadius, loopDiameter, loopDiameter);
                 p.arc(start.x, start.y - loopRadius, loopDiameter*0.85, loopDiameter*0.85, Math.PI/2, Math.PI/0.255);
                 p.pop()
                 
@@ -194,16 +203,6 @@ const Canvas: React.FC = () => {
                 p.textSize(20);
                 p.text(transition.label, start.x, start.y - start.diameter - 15);
                 p.pop();
-                
-                // Arror tip
-                // const angle = Math.PI / 6; 
-                // const loopStartX = start.x + loopRadius * Math.cos(angle);
-                // const loopStartY = start.y + loopRadius * Math.sin(angle);
-                // p.push();
-                // p.translate(loopStartX, loopStartY - loopRadius);
-                // p.fill(CanvasColors.DEFAULT_TRANSITION);
-                // p.triangle(1,-2,-4,-19,14,-12);
-                // p.pop();
 
                 // Arrow tip
                 const arrowWidth = 15; // length of arrowhead
@@ -224,10 +223,17 @@ const Canvas: React.FC = () => {
                 const offsetY = radius * Math.sin(angle);
 
                 // Draw line from the edge of the start circle to the edge of the end circle
-                
                 p.push(); // Start a new drawing state
                 p.strokeWeight(arrowWeight);
-                p.line(start.x, start.y, end.x - offsetX, end.y - offsetY);
+                p.noFill()
+                const middleX = (start.x + end.x) / 2
+                const middleY = (start.y + end.y) / 2
+                p.bezier(
+                  start.x, start.y,
+                  middleX, middleY,
+                  middleX, middleY,
+                  end.x, end.y,
+                )
                 p.pop()
                 
                 // Draw an arrowhead at the edge of the end circle
@@ -236,25 +242,20 @@ const Canvas: React.FC = () => {
                 const arrowHeight = 9; // length of arrowhead
                 p.translate(end.x - offsetX, end.y - offsetY);
                 p.rotate(angle);
-                // // Arrow tip
-                // p.strokeWeight(arrowWeight);
-                // p.line(0, 0, -arrowWidth, +arrowHeight); // Arrow line 1
-                // p.line(0, 0, -arrowWidth, -arrowHeight); // Arrow line 2
                 // Arrow tip
                 p.triangle(0, 0, -arrowWidth, +arrowHeight, -arrowWidth, -arrowHeight);
                 p.pop(); // Restore original state
 
-                const midX = (start.x + end.x - offsetX) / 2;
-                const midY = (start.y + end.y - offsetY) / 2;
+                const midX = (start.x + end.x) / 2;
+                const midY = (start.y + end.y) / 2;
                 const textOffsetY = -15; // Vertical offset for the text label
 
                 p.push(); // Start another new drawing state for the tilted text
                 p.translate(midX, midY);
 
                 // Corrige textos de cabeça para baico
-                // angle + Math.PI == angle + 180º
                 let correctedAngle = angle
-                let textOffsetX = 20
+                let textOffsetX = 0
                 if(end.x < start.x){
                   correctedAngle += Math.PI
                   textOffsetX *= -1
@@ -362,17 +363,37 @@ const Canvas: React.FC = () => {
             );
             p.pop();
           }
-
         };
 
         p.mouseWheel = (event: WheelEvent) => {
-          cameraZoom -= (event.deltaY / 1000)
+          var oldZoom = cameraZoom;
+          cameraZoom -= (event.deltaY / 1000) //1000
           if (cameraZoom < 0.2)
             cameraZoom = 0.2
-          else if(cameraZoom > 3)
-            cameraZoom = 3
-          console.log(cameraZoom)  
+          else if(cameraZoom > 4)
+            cameraZoom = 4
+          
+          var newZoom = cameraZoom;
+
+          // ☠️☠️☠️☠️☠️☠️☠️☠️
+          // globalTranslateX = (getMouseXScaled(p) - (p.mouseX - globalTranslateX));
+          // globalTranslateY = (getMouseYScaled(p) - (p.mouseY - globalTranslateY));
+          // ☠️☠️☠️☠️☠️☠️☠️☠️
+          
+          // 🕯️🕯️🕯️🕯️🕯️🕯️🕯️🕯️
+          const mouseXWorld = getMouseXScaled(p);
+          const mouseYWorld = getMouseYScaled(p);
+          
+          // Calculate how the mouse's world coordinates would change due to the new zoom
+          const mouseXWorldScaled = mouseXWorld * (newZoom / oldZoom);
+          const mouseYWorldScaled = mouseYWorld * (newZoom / oldZoom);
+          
+          // Update globalTranslateX and globalTranslateY to keep the mouse's world coordinates the same
+          globalTranslateX += mouseXWorld - mouseXWorldScaled;
+          globalTranslateY += mouseYWorld - mouseYWorldScaled;
+          // 🕯️🕯️🕯️🕯️🕯️🕯️🕯️🕯️
         }
+        
         p.mouseDragged = () => {
           const allStates = automataRef.current.getStates();
 
