@@ -97,6 +97,12 @@ const Canvas: React.FC = () => {
   const getMouseY = (p: p5) => {
     return getMouseYScaled(p) - globalTranslateY
   }
+  const getPreviousMouseX = (p: p5) => {
+    return (p.pmouseX / cameraZoom) - globalTranslateX
+  }
+  const getPreviousMouseY = (p: p5) => {
+    return (p.pmouseY / cameraZoom) - globalTranslateY
+  }
 
   const { aumataInputResultsRef, setAumataInputResults } = useAutomataInputContext();
   const validadeAllInputs = () => {
@@ -166,7 +172,6 @@ const Canvas: React.FC = () => {
 
         p.draw = () => {
           p.background(CanvasColors.BACKGROUND);
-
           p.push();
           p.scale(cameraZoom)
           p.strokeCap(p.PROJECT);
@@ -247,19 +252,14 @@ const Canvas: React.FC = () => {
                 p.pop(); // Restore original state
 
                 const midX = (start.x + end.x) / 2;
-                const midY = (start.y + end.y) / 2;
-                const textOffsetY = -15; // Vertical offset for the text label
+                const midY = (start.y + end.y) / 2; 
+                const textOffsetY = -15; // Vertical offset for the text label 
 
                 p.push(); // Start another new drawing state for the tilted text
                 p.translate(midX, midY);
 
                 // Corrige textos de cabeça para baico
                 let correctedAngle = angle
-                let textOffsetX = 0
-                if(end.x < start.x){
-                  correctedAngle += Math.PI
-                  textOffsetX *= -1
-                }
               
                 p.strokeWeight(0.1);
                 p.stroke(CanvasColors.DEFAULT_TRANSITION_TEXT)
@@ -267,7 +267,7 @@ const Canvas: React.FC = () => {
                 p.rotate(correctedAngle);
                 p.textAlign(p.CENTER, p.CENTER); // Center the text relative to the point
                 p.textSize(20);
-                p.text(transition.label, textOffsetX, textOffsetY);
+                p.text(transition.label, 0, textOffsetY);
                 p.pop(); // Restore original state
               }
             }
@@ -418,7 +418,7 @@ const Canvas: React.FC = () => {
             if (selectionDistanceY < 0) {
               selectionY = getMouseY(p);
               selectionDistanceY = -1 * selectionDistanceY;
-          }
+            }
 
             selectedStates = allStates.filter((state) => {
               return (
@@ -428,6 +428,11 @@ const Canvas: React.FC = () => {
                 state.y <= selectionY + selectionDistanceY
               );
             });
+          } else if (currentCanvasAction === CanvasActions.MOVING_CANVAS){
+            const deltaX = getMouseX(p) - getPreviousMouseX(p);
+            const deltaY = getMouseY(p) - getPreviousMouseY(p);
+            globalTranslateX += deltaX;
+            globalTranslateY += deltaY;
           }
         };
 
@@ -456,53 +461,66 @@ const Canvas: React.FC = () => {
               selectedStates = [];
             }
 
+            // Create new 
+            if (p.mouseButton === p.LEFT && p.keyIsDown(p.SHIFT)) {
+              if (!clickedState) {
+                // Check se o novo estado criado estaria overlaping com um estágo exstente
+                nearState =
+                  allStates.find((state) => {
+                    return (
+                      p.dist(state.x, state.y, getMouseX(p), getMouseY(p)) <
+                      state.diameter // Note que este não é "/2", isso é proposital
+                    );
+                  }) || null;
+
+                if (!nearState) {
+                  // Gera ID do novo estado
+                  var id: string;
+                  if (!allStates.length) {
+                    id = "q0";
+                  } else {
+                    let lastest_id = allStates[allStates.length - 1].id;
+                    let id_number_string = lastest_id.slice(1);
+                    let id_number = parseInt(id_number_string) + 1;
+                    id = `q${id_number}`;
+                  }
+                  // Cria novo estado
+                  automataRef.current.addState(
+                    id,
+                    getMouseX(p),
+                    getMouseY(p),
+                    CanvasColors.DEFAULT_STATE,
+                    CanvasColors.DEFAULT_STATE_SECONDARY,
+                  );
+                }
+              }
+            }
+            else if (p.mouseButton === p.CENTER || (p.keyIsDown(p.CONTROL) && p.mouseButton === p.LEFT)){
+                currentCanvasAction = CanvasActions.MOVING_CANVAS;
+                // Muda cursor para "grap" cursor
+                window.document.body.style.cursor = 'grab';
+            }
             /* Pointer */
-            if (currentCanvasToolRef.current === CanvasTools.POINTER) {
+            else if (currentCanvasToolRef.current === CanvasTools.POINTER) {
               // Botão esquerdo: Cria transições / Cria estados
               currentCanvasAction = CanvasActions.NONE;
+
+              // Open context menu
+              if (p.mouseButton === p.RIGHT) {
+                if (clickedState) {
+                  showContextMenu(p.mouseX, p.mouseY);
+                } else {
+                  hideContextMenu();
+                }
+              }
               // Left click
-              if (p.mouseButton === p.LEFT) {
+              else if (p.mouseButton === p.LEFT) {
                 //Esconde o menu de contexto
                 // hideContextMenu();
-
-                /* Shift apertado */
-                // Cria estado
-                if (p.keyIsDown(p.SHIFT)) {
-                  if (!clickedState) {
-                    // Check se o novo estado criado estaria overlaping com um estágo exstente
-                    nearState =
-                      allStates.find((state) => {
-                        return (
-                          p.dist(state.x, state.y, getMouseX(p), getMouseY(p)) <
-                          state.diameter // Note que este não é "/2", isso é proposital
-                        );
-                      }) || null;
-
-                    if (!nearState) {
-                      // Gera ID do novo estado
-                      var id: string;
-                      if (!allStates.length) {
-                        id = "q0";
-                      } else {
-                        let lastest_id = allStates[allStates.length - 1].id;
-                        let id_number_string = lastest_id.slice(1);
-                        let id_number = parseInt(id_number_string) + 1;
-                        id = `q${id_number}`;
-                      }
-                      // Cria novo estado
-                      automataRef.current.addState(
-                        id,
-                        getMouseX(p),
-                        getMouseY(p),
-                        CanvasColors.DEFAULT_STATE,
-                        CanvasColors.DEFAULT_STATE_SECONDARY,
-                      );
-                    }
-                  }
-                }
+                
                 /* Shift NÃO apertado, clicou em um estado */
                 // Move estado
-                else if (clickedState) {
+                if (clickedState) {
                   // Set offset, usado para não centralizar com o mouse os estados movidos
                   selectedStateMouseOffset = {};
                   selectedStates.forEach((state) => {
@@ -517,8 +535,8 @@ const Canvas: React.FC = () => {
                   currentCanvasAction = CanvasActions.MOVING_STATE;
 
                   // Muda cursor para "grap" cursor
-                  p.cursor("grab");
-                }
+                  window.document.body.style.cursor = 'grab';
+                } 
                 // Criando caixa de seleção
                 else {
                   // Set state
@@ -533,15 +551,6 @@ const Canvas: React.FC = () => {
                 }
               }
 
-              // Botão direito: Move estados
-              if (p.mouseButton === p.RIGHT) {
-                if (clickedState) {
-                  showContextMenu(p.mouseX, p.mouseY);
-                } else {
-                  hideContextMenu();
-                }
-              }
-
               /* Eraser */
             } else if (currentCanvasToolRef.current === CanvasTools.ERASER) {
               if (clickedState) {
@@ -550,10 +559,10 @@ const Canvas: React.FC = () => {
 
               /* Mover */
             } else if (currentCanvasToolRef.current === CanvasTools.MOVE) {
-              // Move a CAMERA, não o estado
-              console.log("Não implementado ainda");
-
-              /* Transition */
+              currentCanvasAction = CanvasActions.MOVING_CANVAS;
+              // Muda cursor para "grap" cursor
+              window.document.body.style.cursor = 'grab';
+              // p.cursor()           
             } else if (currentCanvasToolRef.current === CanvasTools.TRANSITION) {
               currentCanvasAction = CanvasActions.CREATING_TRANSITION;
             }
@@ -561,7 +570,7 @@ const Canvas: React.FC = () => {
         };
 
         p.mouseReleased = () => {
-          p.cursor("default");
+          window.document.body.style.cursor = 'default';
 
           if (clickedState) {
             const endState = automataRef.current.getStates().find((state) => {
@@ -623,6 +632,10 @@ const Canvas: React.FC = () => {
             setSelectedToolState(CanvasTools.TRANSITION)
           }
           if (p.key === "3") {
+            currentCanvasToolRef.current = CanvasTools.MOVE;
+            setSelectedToolState(CanvasTools.MOVE)
+          }
+          if (p.key === "4") {
             currentCanvasToolRef.current = CanvasTools.ERASER;
             setSelectedToolState(CanvasTools.ERASER)
           }
