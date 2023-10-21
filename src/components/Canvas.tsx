@@ -53,9 +53,9 @@ const Canvas: React.FC = () => {
   let contextMenuIsOpen: boolean = false;
 
   // Zoom / Movement
-  var cameraZoom: number = 1;
-  var globalTranslateX = -100
-  var globalTranslateY = -100
+  var cameraZoom: number = 1
+  var globalTranslateX = 0
+  var globalTranslateY = 0
 
   // Tool selecionada
   const { setSelectedToolState } = useToolboxContext();
@@ -103,6 +103,24 @@ const Canvas: React.FC = () => {
   const getPreviousMouseY = (p: p5) => {
     return (p.pmouseY / cameraZoom) - globalTranslateY
   }
+
+  /* 
+   * Rotaciona um ponto em volta de outro ponto (ancora)
+   * Como se a ancora fosse um prego na parede, e o ponto o fim de uma corda presa neste prego
+   * O retorno é a posição do fim da corda ao se rotacionar ao redor do prego
+   */
+  
+  function rotatePoint(x: number, y: number, anchorX: number, anchorY: number, angle: number, ): { x: number, y: number } {
+    const translatedX: number = anchorX - x;
+    const translatedY: number = anchorY - y;
+  
+    const newX: number = x + translatedX * Math.cos(angle) - translatedY * Math.sin(angle);
+    const newY: number = y + translatedX * Math.sin(angle) + translatedY * Math.cos(angle);
+  
+    return { x: newX, y: newY };
+  }
+  
+  
 
   const { aumataInputResultsRef, setAumataInputResults } = useAutomataInputContext();
   const validadeAllInputs = () => {
@@ -222,55 +240,83 @@ const Canvas: React.FC = () => {
               }
               // Transições para outros estrados
               else {
-                const angle = Math.atan2(end.y - start.y, end.x - start.x); // angle of line
-                const radius = start.diameter / 2; // diameter of circle
-                const offsetX = radius * Math.cos(angle);
-                const offsetY = radius * Math.sin(angle);
 
-                // Draw line from the edge of the start circle to the edge of the end circle
-                p.push(); // Start a new drawing state
-                p.strokeWeight(arrowWeight);
-                p.noFill()
+                /* 
+                 * ARCO DA TRANSIÇÃO
+                 * A posição do arco deve ser 0, 0
+                 * Isso é necessario pois a rotação ocorre sempre com 0, 0 de ancora
+                 * Entao o mais facio é criar o elemento lá e então movelo para a posição correta
+                 * Por isso o p.translate() recebe o local onde o arc() deveria estar
+                 */
+                const lineAngle = Math.atan2(end.y - start.y, end.x - start.x); // angle of line
+                const lineLenght = p.dist(start.x, start.y, end.x, end.y); // angle of line
                 const middleX = (start.x + end.x) / 2
                 const middleY = (start.y + end.y) / 2
-                p.bezier(
-                  start.x, start.y,
-                  middleX, middleY,
-                  middleX, middleY,
-                  end.x, end.y,
+                // 👺👺 PRA DESATIVAR O MOVIMENTOQ  SEGUE O MOUSE, SET ESSA VAR PRA -> 0 👺👺
+                let transitionHeight = middleY - getMouseY(p) // 0
+                if (transitionHeight === 0)
+                  transitionHeight = 0.00000001
+                
+                // Faz o arco representar o lado oposto da elipse caso
+                // a altura do arco seja negativa
+                let arcStart = 0
+                let arcEnd = p.PI
+                if (transitionHeight < 0){
+                  arcStart = p.PI
+                  arcEnd = 0
+                }
+
+                // Desenha
+                p.push();
+                p.strokeWeight(arrowWeight);
+                p.noFill()
+                p.translate(middleX, middleY)
+                p.rotate(lineAngle)
+                p.arc(
+                  0, 0, 
+                  lineLenght, transitionHeight,
+                  arcStart, arcEnd,
                 )
                 p.pop()
-                
-                // Draw an arrowhead at the edge of the end circle
-                p.push(); // Start a new drawing state
-                const arrowWidth = 15; // length of arrowhead
-                const arrowHeight = 9; // length of arrowhead
-                p.translate(end.x - offsetX, end.y - offsetY);
-                p.rotate(angle);
-                // Arrow tip
-                p.triangle(0, 0, -arrowWidth, +arrowHeight, -arrowWidth, -arrowHeight);
+
+                /* 
+                 * SIZE GRABBER DA TRANSIÇÃO
+                 * Tava pensando em usar isso pra ser a colisão provisoria pra servir como click na transição
+                 * mas aí lembrei q esses valores não estão disponiveis na função de mouseClick e fui dormir :)
+                 */
+                // Vertical offset for the text label 
+                let arcMiddleOffsetY = transitionHeight/2; 
+                let textOffsetY = -20
+                // Corrige textos de cabeça para baico
+                let correctedAngle = lineAngle
+                if(end.x < start.x){
+                  correctedAngle += Math.PI                  
+                  arcMiddleOffsetY *= -1
+                }
+                // Desenha Grabber
+                p.push();
+                p.translate(middleX, middleY);              
+                p.rotate(correctedAngle);
+                p.strokeWeight(0)
+                p.stroke(CanvasColors.DEFAULT_TRANSITION_TEXT)
+                p.fill(CanvasColors.DEFAULT_TRANSITION)
+                p.circle(0, arcMiddleOffsetY, 20);
                 p.pop(); // Restore original state
 
-                const midX = (start.x + end.x) / 2;
-                const midY = (start.y + end.y) / 2; 
-                const textOffsetY = -15; // Vertical offset for the text label 
-
-                p.push(); // Start another new drawing state for the tilted text
-                p.translate(midX, midY);
-
-                // Corrige textos de cabeça para baico
-                let correctedAngle = angle
-                if(end.x < start.x){
-                  correctedAngle += Math.PI
-                }
-              
+                /* 
+                 * LABEL DA TRANSIÇÃO
+                 * A mesma conta da rotação da transição é feita com o label
+                 */
+                // Desenha label da transição
+                p.push();
+                p.translate(middleX, middleY);              
+                p.rotate(correctedAngle);
                 p.strokeWeight(0.1);
                 p.stroke(CanvasColors.DEFAULT_TRANSITION_TEXT)
                 p.fill(CanvasColors.DEFAULT_TRANSITION_TEXT)
-                p.rotate(correctedAngle);
                 p.textAlign(p.CENTER, p.CENTER); // Center the text relative to the point
                 p.textSize(20);
-                p.text(transition.label, 0, textOffsetY);
+                p.text(transition.label, 0, arcMiddleOffsetY+textOffsetY);
                 p.pop(); // Restore original state
               }
             }
