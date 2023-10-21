@@ -260,6 +260,9 @@ const Canvas: React.FC = () => {
 
                 // Corrige textos de cabeça para baico
                 let correctedAngle = angle
+                if(end.x < start.x){
+                  correctedAngle += Math.PI
+                }
               
                 p.strokeWeight(0.1);
                 p.stroke(CanvasColors.DEFAULT_TRANSITION_TEXT)
