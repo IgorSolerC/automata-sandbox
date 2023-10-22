@@ -137,12 +137,76 @@ const Canvas: React.FC = () => {
     }
   }
 
+  // Check colision
+  const collidePointArc = (pointX: number, pointY: number, ellipseX: number, ellipseY: number, ellipseWidth: number, ellipseHeight: number, rotation: number, arcStart: number, arcEnd: number) => {
+    // 2D
+    var ellipseRadiusX = ellipseWidth / 2, ellipseRadiusY = ellipseHeight / 2;
+
+    // Apply the rotation to the point
+    var cosR = Math.cos(rotation);
+    var sinR = Math.sin(rotation);
+    var xDiff = pointX - ellipseX;
+    var yDiff = pointY - ellipseY;
+    var rotatedX = cosR * xDiff + sinR * yDiff + ellipseX;
+    var rotatedY = -sinR * xDiff + cosR * yDiff + ellipseY;
+
+    // Calculate the angle from the center of the ellipse to the point
+    var angle = Math.atan2(rotatedY - ellipseY, rotatedX - ellipseX);
+
+    // Calculate the angle within the specified arc range
+    if (arcStart < 0) arcStart += 2 * Math.PI;
+    if (arcEnd < 0) arcEnd += 2 * Math.PI;
+    if (arcEnd < arcStart) {
+        if (angle >= 0) angle += 2 * Math.PI;
+        arcEnd += 2 * Math.PI;
+    }
+
+    // Check if the angle is within the specified arc range
+    if (angle >= arcStart && angle <= arcEnd) {
+        // Discard the points outside the bounding box of the rotated ellipse
+        if (rotatedX > ellipseX + ellipseRadiusX || rotatedX < ellipseX - ellipseRadiusX || rotatedY > ellipseY + ellipseRadiusY || rotatedY < ellipseY - ellipseRadiusY) {
+            return false;
+        }
+
+        // Compare the point to its equivalent on the rotated ellipse
+        var xx = rotatedX - ellipseX, yy = rotatedY - ellipseY;
+        var eyy = ellipseRadiusY * Math.sqrt(Math.abs(ellipseRadiusX * ellipseRadiusX - xx * xx)) / ellipseRadiusX;
+
+        return yy <= eyy && yy >= -eyy;
+    }
+
+    return false;
+  };
+
+  const collidePointEllipse = (pointX: number, pointY: number, ellipseX: number, ellipseY: number, ellipseWidth: number, ellipseHeight: number, rotation: number) => {
+    // 2D
+    var ellipseRadiusX = ellipseWidth / 2, ellipseRadiusY = ellipseHeight / 2;
+
+    // Apply the rotation to the point
+    var cosR = Math.cos(rotation);
+    var sinR = Math.sin(rotation);
+    var xDiff = pointX - ellipseX;
+    var yDiff = pointY - ellipseY;
+    var rotatedX = cosR * xDiff + sinR * yDiff + ellipseX;
+    var rotatedY = -sinR * xDiff + cosR * yDiff + ellipseY;
+
+    // Discard the points outside the bounding box of the rotated ellipse
+    if (rotatedX > ellipseX + ellipseRadiusX || rotatedX < ellipseX - ellipseRadiusX || rotatedY > ellipseY + ellipseRadiusY || rotatedY < ellipseY - ellipseRadiusY) {
+        return false;
+    }
+
+    // Compare the point to its equivalent on the rotated ellipse
+    var xx = rotatedX - ellipseX, yy = rotatedY - ellipseY;
+    var eyy = ellipseRadiusY * Math.sqrt(Math.abs(ellipseRadiusX * ellipseRadiusX - xx * xx)) / ellipseRadiusX;
+
+    return yy <= eyy && yy >= -eyy;
+  };
+
   /* 
    * Rotaciona um ponto em volta de outro ponto (ancora)
    * Como se a ancora fosse um prego na parede, e o ponto o fim de uma corda presa neste prego
    * O retorno é a posição do fim da corda ao se rotacionar ao redor do prego
-   */
-  
+   */  
   function rotatePoint(x: number, y: number, anchorX: number, anchorY: number, angle: number, ): { x: number, y: number } {
     const translatedX: number = anchorX - x;
     const translatedY: number = anchorY - y;
@@ -233,6 +297,7 @@ const Canvas: React.FC = () => {
           automataRef.current.getTransitions().forEach((transition) => {
             const start = automataRef.current.findState(transition.from.id);
             const end = automataRef.current.findState(transition.to.id);
+            let transitionHeight = transition.height
             if (start && end) {
               p.stroke(CanvasColors.DEFAULT_TRANSITION);
               p.fill(CanvasColors.DEFAULT_TRANSITION);
@@ -281,34 +346,81 @@ const Canvas: React.FC = () => {
                  * Entao o mais facio é criar o elemento lá e então movelo para a posição correta
                  * Por isso o p.translate() recebe o local onde o arc() deveria estar
                  */
-                const lineAngle = Math.atan2(end.y - start.y, end.x - start.x); // angle of line
-                const lineLenght = p.dist(start.x, start.y, end.x, end.y); // angle of line
+                const transitionAngle = Math.atan2(end.y - start.y, end.x - start.x); // angle of line
+                const transitionLenght = p.dist(start.x, start.y, end.x, end.y); // angle of line
                 const middleX = (start.x + end.x) / 2
                 const middleY = (start.y + end.y) / 2
-                // 👺👺 PRA DESATIVAR O MOVIMENTOQ  SEGUE O MOUSE, SET ESSA VAR PRA -> 0 👺👺
-                let transitionHeight = middleY - getMouseY(p) // 0
+                const COLISION_ERROR_MARGIN = 20
+
+                // Fix bug onde transição some se for 100% reta
                 if (transitionHeight === 0)
                   transitionHeight = 0.00000001
                 
                 // Faz o arco representar o lado oposto da elipse caso
                 // a altura do arco seja negativa
-                let arcStart = 0
-                let arcEnd = p.PI
-                if (transitionHeight < 0){
-                  arcStart = p.PI
-                  arcEnd = 0
+                const getArcSlice = (transitionHeight:number, p:p5) => {
+                  let arcStart = 0
+                  let arcEnd = p.PI
+                  if (transitionHeight < 0){
+                    arcStart = p.PI
+                    arcEnd = 0
+                  }
+                  return {arcStart, arcEnd}
+                }
+                let {arcStart, arcEnd} = getArcSlice(transitionHeight, p)
+                
+
+                let outerColisionWidth = transitionLenght + COLISION_ERROR_MARGIN
+                let outerColisionHeight = transitionHeight + COLISION_ERROR_MARGIN
+                let outerColisionArc = getArcSlice(outerColisionHeight, p)
+                let innerColisionWidth = transitionLenght - COLISION_ERROR_MARGIN
+                let innerColisionHeight = transitionHeight - COLISION_ERROR_MARGIN
+                let innerColisionArc = getArcSlice(innerColisionHeight, p)
+
+                console.log(innerColisionHeight)
+
+                if (
+                  (innerColisionHeight < 0)
+                  ? 
+                    collidePointEllipse(getMouseX(p), getMouseY(p), middleX, middleY, outerColisionWidth, outerColisionHeight, transitionAngle)
+                  :
+                    (collidePointArc(getMouseX(p), getMouseY(p), middleX, middleY, outerColisionWidth, outerColisionHeight, transitionAngle, outerColisionArc.arcStart, outerColisionArc.arcEnd)
+                    && !collidePointArc(getMouseX(p), getMouseY(p), middleX, middleY, innerColisionWidth, innerColisionHeight, transitionAngle, innerColisionArc.arcStart, innerColisionArc.arcEnd))
+                ){
+                  // Show colision point
+                  p.push()
+                  p.noFill()
+                  p.stroke('#ff0000')
+                  p.circle(getMouseX(p), getMouseY(p), 20)
+                  p.pop()
                 }
 
-                // Desenha
+                // Desenha arco da transição
                 p.push();
                 p.strokeWeight(arrowWeight);
                 p.noFill()
                 p.translate(middleX, middleY)
-                p.rotate(lineAngle)
+                p.rotate(transitionAngle)
+                // Real arc
                 p.arc(
                   0, 0, 
-                  lineLenght, transitionHeight,
+                  transitionLenght, transitionHeight,
                   arcStart, arcEnd,
+                )
+                // Colision arcs
+                p.strokeWeight(3)
+                p.stroke('#ffff00')
+                p.arc(
+                  0, 0, 
+                  innerColisionWidth, innerColisionHeight,
+                  innerColisionArc.arcStart, innerColisionArc.arcEnd,
+                )
+                p.strokeWeight(2)
+                p.stroke('#ff0000')
+                p.arc(
+                  0, 0, 
+                  outerColisionWidth, outerColisionHeight,
+                  outerColisionArc.arcStart, outerColisionArc.arcEnd,
                 )
                 p.pop()
 
@@ -321,7 +433,7 @@ const Canvas: React.FC = () => {
                 let arcMiddleOffsetY = transitionHeight/2; 
                 let textOffsetY = -20
                 // Corrige textos de cabeça para baico
-                let correctedAngle = lineAngle
+                let correctedAngle = transitionAngle
                 if(end.x < start.x){
                   correctedAngle += Math.PI                  
                   arcMiddleOffsetY *= -1

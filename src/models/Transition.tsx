@@ -5,4 +5,5 @@ export interface Transition {
     from: State;
     to: State;
     label: string;
+    height: number;
 }

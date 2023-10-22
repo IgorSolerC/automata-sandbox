@@ -122,7 +122,7 @@ export class Automata {
   }
 
   addTransition(from: State, to: State, label: string): void {
-    const newTransition: Transition = { from, to, label };
+    const newTransition: Transition = { from, to, label, height: 0 };
     this.transitions.push(newTransition);
   }
 
