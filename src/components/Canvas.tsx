@@ -27,6 +27,7 @@ import p5 from "p5";
 // Objects
 import { Automata } from "../models/Automata";
 import { State } from "../models/State";
+import { Transition } from "../models/Transition";
 
 // Enums
 import { CanvasActions } from "../enums/CanvasActionsEnum";
@@ -68,6 +69,8 @@ const Canvas: React.FC = () => {
   let highlightedState: State | null;
   let simulationStates: State[] = [];
   let simulationIndex: number = 0;
+  let clickedTransition: Transition | null;
+  let selectedTransitions: Transition[] = [];
 
   // Enums
   let currentCanvasAction: number = CanvasActions.NONE;
@@ -202,6 +205,72 @@ const Canvas: React.FC = () => {
     return yy <= eyy && yy >= -eyy;
   };
 
+  const getClickedTransition = (p: p5) => {
+    let clickedTransitionTemp = null
+
+    // Desenha transições
+    automataRef.current.getTransitions().forEach((transition) => {
+      const start = automataRef.current.findState(transition.from.id);
+      const end = automataRef.current.findState(transition.to.id);
+      let transitionHeight = transition.height
+      if (start && end) {
+        // Transições para o mesmo estado
+        if (start.id === end.id){
+        }
+        else {
+          /* 
+           * ARCO DA TRANSIÇÃO
+           * A posição do arco deve ser 0, 0
+           * Isso é necessario pois a rotação ocorre sempre com 0, 0 de ancora
+           * Entao o mais facio é criar o elemento lá e então movelo para a posição correta
+           * Por isso o p.translate() recebe o local onde o arc() deveria estar
+           */
+          const transitionAngle = Math.atan2(end.y - start.y, end.x - start.x); // angle of line
+          const transitionLenght = p.dist(start.x, start.y, end.x, end.y); // angle of line
+          const middleX = (start.x + end.x) / 2
+          const middleY = (start.y + end.y) / 2
+          const COLISION_ERROR_MARGIN = 20
+
+          // Fix bug onde transição some se for 100% reta
+          if (transitionHeight === 0)
+            transitionHeight = 0.00000001
+          
+          // Faz o arco representar o lado oposto da elipse caso
+          // a altura do arco seja negativa
+          const getArcSlice = (transitionHeight:number, p:p5) => {
+            let arcStart = 0
+            let arcEnd = p.PI
+            if (transitionHeight < 0){
+              arcStart = p.PI
+              arcEnd = 0
+            }
+            return {arcStart, arcEnd}
+          }
+
+          let outerColisionWidth = transitionLenght + COLISION_ERROR_MARGIN
+          let outerColisionHeight = transitionHeight + COLISION_ERROR_MARGIN
+          let outerColisionArc = getArcSlice(outerColisionHeight, p)
+          let innerColisionWidth = transitionLenght - COLISION_ERROR_MARGIN
+          let innerColisionHeight = transitionHeight - COLISION_ERROR_MARGIN
+          let innerColisionArc = getArcSlice(innerColisionHeight, p)
+
+          if (
+            (innerColisionHeight < 0)
+            ? 
+              collidePointEllipse(getMouseX(p), getMouseY(p), middleX, middleY, outerColisionWidth, outerColisionHeight, transitionAngle)
+            :
+              (collidePointArc(getMouseX(p), getMouseY(p), middleX, middleY, outerColisionWidth, outerColisionHeight, transitionAngle, outerColisionArc.arcStart, outerColisionArc.arcEnd)
+              && !collidePointArc(getMouseX(p), getMouseY(p), middleX, middleY, innerColisionWidth, innerColisionHeight, transitionAngle, innerColisionArc.arcStart, innerColisionArc.arcEnd))
+          ){
+            clickedTransitionTemp = transition
+            return
+          }
+        }
+      }
+    })
+    return clickedTransitionTemp
+  }
+
   /* 
    * Rotaciona um ponto em volta de outro ponto (ancora)
    * Como se a ancora fosse um prego na parede, e o ponto o fim de uma corda presa neste prego
@@ -216,8 +285,6 @@ const Canvas: React.FC = () => {
   
     return { x: newX, y: newY };
   }
-  
-  
 
   const { aumataInputResultsRef, setAumataInputResults } = useAutomataInputContext();
   const validadeAllInputs = () => {
@@ -293,14 +360,28 @@ const Canvas: React.FC = () => {
           p.translate(globalTranslateX, globalTranslateY)
           const arrowWeight = 5; 
 
-          // Desenha transições
-          automataRef.current.getTransitions().forEach((transition) => {
+          const allTransitions = automataRef.current.getTransitions();
+          allTransitions.forEach(
+            (transition) => {
+              transition.color = CanvasColors.DEFAULT_TRANSITION
+              transition.textColor = CanvasColors.DEFAULT_TRANSITION_TEXT
+            }
+          );
+          // Colore todos os estados selecionados como CLICKED color
+          selectedTransitions.forEach(
+            (transition) => {
+              transition.color = CanvasColors.CLICKED_TRANSITION
+              transition.textColor = CanvasColors.CLICKED_TRANSITION_TEXT
+            }
+          );
+
+          allTransitions.forEach((transition) => {
             const start = automataRef.current.findState(transition.from.id);
             const end = automataRef.current.findState(transition.to.id);
             let transitionHeight = transition.height
             if (start && end) {
-              p.stroke(CanvasColors.DEFAULT_TRANSITION);
-              p.fill(CanvasColors.DEFAULT_TRANSITION);
+              p.stroke(transition.color);
+              p.fill(transition.color);
 
               // Transições para o mesmo estado
               if (start.id === end.id) {
@@ -310,15 +391,15 @@ const Canvas: React.FC = () => {
 
                 p.push()
                 p.noFill();
-                p.stroke(CanvasColors.DEFAULT_TRANSITION);
+                p.stroke(transition.color);
                 p.strokeWeight(arrowWeight);
                 p.arc(start.x, start.y - loopRadius, loopDiameter*0.85, loopDiameter*0.85, Math.PI/2, Math.PI/0.255);
                 p.pop()
                 
                 // Label
                 p.push();
-                p.stroke(CanvasColors.DEFAULT_TRANSITION_TEXT)
-                p.fill(CanvasColors.DEFAULT_TRANSITION_TEXT)
+                p.stroke(transition.textColor)
+                p.fill(transition.textColor)
                 p.textAlign(p.CENTER, p.CENTER);
                 p.strokeWeight(0.1)
                 p.textSize(20);
@@ -350,7 +431,6 @@ const Canvas: React.FC = () => {
                 const transitionLenght = p.dist(start.x, start.y, end.x, end.y); // angle of line
                 const middleX = (start.x + end.x) / 2
                 const middleY = (start.y + end.y) / 2
-                const COLISION_ERROR_MARGIN = 20
 
                 // Fix bug onde transição some se for 100% reta
                 if (transitionHeight === 0)
@@ -368,32 +448,6 @@ const Canvas: React.FC = () => {
                   return {arcStart, arcEnd}
                 }
                 let {arcStart, arcEnd} = getArcSlice(transitionHeight, p)
-                
-
-                let outerColisionWidth = transitionLenght + COLISION_ERROR_MARGIN
-                let outerColisionHeight = transitionHeight + COLISION_ERROR_MARGIN
-                let outerColisionArc = getArcSlice(outerColisionHeight, p)
-                let innerColisionWidth = transitionLenght - COLISION_ERROR_MARGIN
-                let innerColisionHeight = transitionHeight - COLISION_ERROR_MARGIN
-                let innerColisionArc = getArcSlice(innerColisionHeight, p)
-
-                console.log(innerColisionHeight)
-
-                if (
-                  (innerColisionHeight < 0)
-                  ? 
-                    collidePointEllipse(getMouseX(p), getMouseY(p), middleX, middleY, outerColisionWidth, outerColisionHeight, transitionAngle)
-                  :
-                    (collidePointArc(getMouseX(p), getMouseY(p), middleX, middleY, outerColisionWidth, outerColisionHeight, transitionAngle, outerColisionArc.arcStart, outerColisionArc.arcEnd)
-                    && !collidePointArc(getMouseX(p), getMouseY(p), middleX, middleY, innerColisionWidth, innerColisionHeight, transitionAngle, innerColisionArc.arcStart, innerColisionArc.arcEnd))
-                ){
-                  // Show colision point
-                  p.push()
-                  p.noFill()
-                  p.stroke('#ff0000')
-                  p.circle(getMouseX(p), getMouseY(p), 20)
-                  p.pop()
-                }
 
                 // Desenha arco da transição
                 p.push();
@@ -401,34 +455,17 @@ const Canvas: React.FC = () => {
                 p.noFill()
                 p.translate(middleX, middleY)
                 p.rotate(transitionAngle)
-                // Real arc
                 p.arc(
                   0, 0, 
                   transitionLenght, transitionHeight,
                   arcStart, arcEnd,
                 )
-                // Colision arcs
-                p.strokeWeight(3)
-                p.stroke('#ffff00')
-                p.arc(
-                  0, 0, 
-                  innerColisionWidth, innerColisionHeight,
-                  innerColisionArc.arcStart, innerColisionArc.arcEnd,
-                )
-                p.strokeWeight(2)
-                p.stroke('#ff0000')
-                p.arc(
-                  0, 0, 
-                  outerColisionWidth, outerColisionHeight,
-                  outerColisionArc.arcStart, outerColisionArc.arcEnd,
-                )
                 p.pop()
 
                 /* 
-                 * SIZE GRABBER DA TRANSIÇÃO
-                 * Tava pensando em usar isso pra ser a colisão provisoria pra servir como click na transição
-                 * mas aí lembrei q esses valores não estão disponiveis na função de mouseClick e fui dormir :)
-                 */
+                * LABEL DA TRANSIÇÃO
+                * A mesma conta da rotação da transição é feita com o label
+                */
                 // Vertical offset for the text label 
                 let arcMiddleOffsetY = transitionHeight/2; 
                 let textOffsetY = -20
@@ -438,20 +475,7 @@ const Canvas: React.FC = () => {
                   correctedAngle += Math.PI                  
                   arcMiddleOffsetY *= -1
                 }
-                // Desenha Grabber
-                p.push();
-                p.translate(middleX, middleY);              
-                p.rotate(correctedAngle);
-                p.strokeWeight(0)
-                p.stroke(CanvasColors.DEFAULT_TRANSITION_TEXT)
-                p.fill(CanvasColors.DEFAULT_TRANSITION)
-                p.circle(0, arcMiddleOffsetY, 20);
-                p.pop(); // Restore original state
 
-                /* 
-                 * LABEL DA TRANSIÇÃO
-                 * A mesma conta da rotação da transição é feita com o label
-                 */
                 // Desenha label da transição
                 p.push();
                 p.translate(middleX, middleY);              
@@ -486,7 +510,7 @@ const Canvas: React.FC = () => {
               state.color = CanvasColors.CLICKED_STATE
               state.secondaryColor = CanvasColors.CLICKED_STATE_SECONDARY
             }
-            );
+          );
             
           // ----Desenha estados
           // .slice() cria uma copia shallow
@@ -627,6 +651,13 @@ const Canvas: React.FC = () => {
             const deltaY = getMouseY(p) - getPreviousMouseY(p);
             globalTranslateX += deltaX;
             globalTranslateY += deltaY;
+          } else if (currentCanvasAction === CanvasActions.RESIZING_TRANSITION){
+            if (clickedTransition){
+              clickedTransition.height += (getMouseY(p) - getPreviousMouseY(p)) * 2
+              if (clickedTransition.height < 0){
+                clickedTransition.height = 0
+              }
+            }
           }
         };
 
@@ -653,6 +684,14 @@ const Canvas: React.FC = () => {
               }
             } else {
               selectedStates = [];
+            }
+
+            // Clicked transition
+            clickedTransition = getClickedTransition(p)
+            if (clickedTransition){
+              selectedTransitions = [clickedTransition] 
+            } else {
+              selectedTransitions = []
             }
 
             // Create new 
@@ -704,6 +743,9 @@ const Canvas: React.FC = () => {
                   window.document.body.style.cursor = 'grab';
                 } 
                 // Criando caixa de seleção
+                else if (clickedTransition){
+                  currentCanvasAction = CanvasActions.RESIZING_TRANSITION;
+                }
                 else {
                   // Set state
                   currentCanvasAction = CanvasActions.CREATING_SELECTION;
@@ -755,7 +797,13 @@ const Canvas: React.FC = () => {
               let label = prompt("Digite o s 1ímbolo de transição:");
               if (label !== null) {
                 if (label === "") label = "λ";
-                automataRef.current.addTransition(clickedState, endState, label);
+                automataRef.current.addTransition(
+                  clickedState,
+                  endState,
+                  label,
+                  CanvasColors.DEFAULT_TRANSITION,
+                  CanvasColors.DEFAULT_TRANSITION_TEXT,
+                );
                 validadeAllInputs()
               }
             }

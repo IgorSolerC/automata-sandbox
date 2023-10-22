@@ -12,5 +12,4 @@ export interface State {
     // Definição automato
     isInitial: boolean;
     isFinal: boolean;
-    // transitions: string[];
 } 

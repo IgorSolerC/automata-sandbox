@@ -121,8 +121,15 @@ export class Automata {
     return this.transitions;
   }
 
-  addTransition(from: State, to: State, label: string): void {
-    const newTransition: Transition = { from, to, label, height: 0 };
+  addTransition(from: State, to: State, label: string, color: any, textColor: any): void {
+    const newTransition: Transition = {
+      from,
+      to,
+      label,
+      height: 0,
+      color,
+      textColor,
+    };
     this.transitions.push(newTransition);
   }
 
