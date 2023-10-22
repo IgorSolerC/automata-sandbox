@@ -3,4 +3,5 @@ export enum CanvasTools {
     ERASER,
     MOVE,
     TRANSITION,
+    ADD_STATE,
   }

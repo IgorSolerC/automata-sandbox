@@ -18,6 +18,7 @@ import PlayIcon from "../symbols/play_icon";
 import ErrorIcon from "../symbols/error_icon";
 import PlusIcon from "../symbols/plus_icon";
 import MinusIcon from "../symbols/minus_icon";
+import AddCircleIcon from "../symbols/add_circle_icon";
 
 // Libaries
 import React, { useRef, useEffect, useState } from "react";
@@ -102,6 +103,38 @@ const Canvas: React.FC = () => {
   }
   const getPreviousMouseY = (p: p5) => {
     return (p.pmouseY / cameraZoom) - globalTranslateY
+  }
+
+  const createNewState = (allStates: State[], p: p5) => {
+    // Check se o novo estado criado estaria overlaping com um estágo exstente
+    nearState =
+      allStates.find((state) => {
+        return (
+          p.dist(state.x, state.y, getMouseX(p), getMouseY(p)) <
+          state.diameter // Note que este não é "/2", isso é proposital
+        );
+      }) || null;
+
+    if (!nearState) {
+      // Gera ID do novo estado
+      var id: string;
+      if (!allStates.length) {
+        id = "q0";
+      } else {
+        let lastest_id = allStates[allStates.length - 1].id;
+        let id_number_string = lastest_id.slice(1);
+        let id_number = parseInt(id_number_string) + 1;
+        id = `q${id_number}`;
+      }
+      // Cria novo estado
+      automataRef.current.addState(
+        id,
+        getMouseX(p),
+        getMouseY(p),
+        CanvasColors.DEFAULT_STATE,
+        CanvasColors.DEFAULT_STATE_SECONDARY,
+      );
+    }
   }
 
   /* 
@@ -513,35 +546,7 @@ const Canvas: React.FC = () => {
             // Create new 
             if (p.mouseButton === p.LEFT && p.keyIsDown(p.SHIFT)) {
               if (!clickedState) {
-                // Check se o novo estado criado estaria overlaping com um estágo exstente
-                nearState =
-                  allStates.find((state) => {
-                    return (
-                      p.dist(state.x, state.y, getMouseX(p), getMouseY(p)) <
-                      state.diameter // Note que este não é "/2", isso é proposital
-                    );
-                  }) || null;
-
-                if (!nearState) {
-                  // Gera ID do novo estado
-                  var id: string;
-                  if (!allStates.length) {
-                    id = "q0";
-                  } else {
-                    let lastest_id = allStates[allStates.length - 1].id;
-                    let id_number_string = lastest_id.slice(1);
-                    let id_number = parseInt(id_number_string) + 1;
-                    id = `q${id_number}`;
-                  }
-                  // Cria novo estado
-                  automataRef.current.addState(
-                    id,
-                    getMouseX(p),
-                    getMouseY(p),
-                    CanvasColors.DEFAULT_STATE,
-                    CanvasColors.DEFAULT_STATE_SECONDARY,
-                  );
-                }
+                createNewState(allStates, p)
               }
             }
             else if (p.mouseButton === p.CENTER || (p.keyIsDown(p.CONTROL) && p.mouseButton === p.LEFT)){
@@ -611,9 +616,12 @@ const Canvas: React.FC = () => {
               currentCanvasAction = CanvasActions.MOVING_CANVAS;
               // Muda cursor para "grap" cursor
               window.document.body.style.cursor = 'grab';
-              // p.cursor()           
+              /* Cria transição */
             } else if (currentCanvasToolRef.current === CanvasTools.TRANSITION) {
               currentCanvasAction = CanvasActions.CREATING_TRANSITION;
+              /* Cria estado */
+            } else if (currentCanvasToolRef.current === CanvasTools.ADD_STATE) {
+              createNewState(allStates, p)
             }
           }
         };
@@ -676,15 +684,19 @@ const Canvas: React.FC = () => {
             currentCanvasToolRef.current = CanvasTools.POINTER;
             setSelectedToolState(CanvasTools.POINTER) 
           }
-          if (p.key === "2") {
+          else if (p.key === "2") {
             currentCanvasToolRef.current = CanvasTools.TRANSITION;
             setSelectedToolState(CanvasTools.TRANSITION)
           }
-          if (p.key === "3") {
+          else if (p.key === "3") {
+            currentCanvasToolRef.current = CanvasTools.ADD_STATE;
+            setSelectedToolState(CanvasTools.ADD_STATE)
+          }
+          else if (p.key === "4") {
             currentCanvasToolRef.current = CanvasTools.MOVE;
             setSelectedToolState(CanvasTools.MOVE)
           }
-          if (p.key === "4") {
+          else if (p.key === "5") {
             currentCanvasToolRef.current = CanvasTools.ERASER;
             setSelectedToolState(CanvasTools.ERASER)
           }
@@ -1004,6 +1016,17 @@ const Toolbox: React.FC<ToolboxProps> = ({ currentCanvasToolRef }) => {
         title="Transition"
       >
         <TransitionIcon />
+      </button>
+      <button
+        id="add_state"
+        className={
+          "canvas-button navbar-button " +
+          (selectedToolState === CanvasTools.ADD_STATE ? "selected" : "")
+        }
+        onClick={() => handleToolButtonClick(CanvasTools.ADD_STATE)}
+        title="Add State"
+      >
+        <AddCircleIcon />
       </button>
       <button
         id="move"
