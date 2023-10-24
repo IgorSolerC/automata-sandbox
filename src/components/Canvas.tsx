@@ -141,7 +141,7 @@ const Canvas: React.FC = () => {
   }
 
   // Check colision
-  const collidePointArc = (pointX: number, pointY: number, ellipseX: number, ellipseY: number, ellipseWidth: number, ellipseHeight: number, rotation: number, arcStart: number, arcEnd: number) => {
+  const collidePointArc = (pointX: number, pointY: number, ellipseX: number, ellipseY: number, ellipseWidth: number, ellipseHeight: number, rotation: number, arcStart: number, arcEnd: number) => {   
     // 2D
     var ellipseRadiusX = ellipseWidth / 2, ellipseRadiusY = ellipseHeight / 2;
 
@@ -160,7 +160,7 @@ const Canvas: React.FC = () => {
     if (arcStart < 0) arcStart += 2 * Math.PI;
     if (arcEnd < 0) arcEnd += 2 * Math.PI;
     if (arcEnd < arcStart) {
-        if (angle >= 0) angle += 2 * Math.PI;
+        angle += 2 * Math.PI; // Fiz essa linha na mão, talvez esteja errada
         arcEnd += 2 * Math.PI;
     }
 
@@ -254,13 +254,19 @@ const Canvas: React.FC = () => {
           let innerColisionHeight = transitionHeight - COLISION_ERROR_MARGIN
           let innerColisionArc = getArcSlice(innerColisionHeight, p)
 
+          if (transitionHeight < -COLISION_ERROR_MARGIN){
+            let aux = outerColisionHeight;
+            outerColisionHeight = innerColisionHeight;
+            innerColisionHeight = aux;
+          }
+
           if (
-            (innerColisionHeight < 0)
-            ? 
-              collidePointEllipse(getMouseX(p), getMouseY(p), middleX, middleY, outerColisionWidth, outerColisionHeight, transitionAngle)
+            (-COLISION_ERROR_MARGIN < transitionHeight && transitionHeight < COLISION_ERROR_MARGIN) ?
+              (collidePointArc(getMouseX(p), getMouseY(p), middleX, middleY, outerColisionWidth, Math.abs(outerColisionHeight), transitionAngle, outerColisionArc.arcStart, outerColisionArc.arcEnd)  
+              || collidePointArc(getMouseX(p), getMouseY(p), middleX, middleY, innerColisionWidth, Math.abs(innerColisionHeight), transitionAngle, innerColisionArc.arcStart, innerColisionArc.arcEnd))
             :
-              (collidePointArc(getMouseX(p), getMouseY(p), middleX, middleY, outerColisionWidth, outerColisionHeight, transitionAngle, outerColisionArc.arcStart, outerColisionArc.arcEnd)
-              && !collidePointArc(getMouseX(p), getMouseY(p), middleX, middleY, innerColisionWidth, innerColisionHeight, transitionAngle, innerColisionArc.arcStart, innerColisionArc.arcEnd))
+              (collidePointArc(getMouseX(p), getMouseY(p), middleX, middleY, outerColisionWidth, Math.abs(outerColisionHeight), transitionAngle, outerColisionArc.arcStart, outerColisionArc.arcEnd)  
+              && !collidePointArc(getMouseX(p), getMouseY(p), middleX, middleY, innerColisionWidth, Math.abs(innerColisionHeight), transitionAngle, innerColisionArc.arcStart, innerColisionArc.arcEnd))
           ){
             clickedTransitionTemp = transition
             return
@@ -448,13 +454,14 @@ const Canvas: React.FC = () => {
                   return {arcStart, arcEnd}
                 }
                 let {arcStart, arcEnd} = getArcSlice(transitionHeight, p)
-
+          
                 // Desenha arco da transição
                 p.push();
                 p.strokeWeight(arrowWeight);
                 p.noFill()
                 p.translate(middleX, middleY)
                 p.rotate(transitionAngle)
+                // Real arc
                 p.arc(
                   0, 0, 
                   transitionLenght, transitionHeight,
@@ -653,10 +660,12 @@ const Canvas: React.FC = () => {
             globalTranslateY += deltaY;
           } else if (currentCanvasAction === CanvasActions.RESIZING_TRANSITION){
             if (clickedTransition){
-              clickedTransition.height += (getMouseY(p) - getPreviousMouseY(p)) * 2
-              if (clickedTransition.height < 0){
-                clickedTransition.height = 0
-              }
+              let dx = (getMouseX(p) - getPreviousMouseX(p)) * 2
+              let dy = (getMouseY(p) - getPreviousMouseY(p)) * 2
+              let angle = Math.atan2(clickedTransition.from.y - clickedTransition.to.y, clickedTransition.from.x - clickedTransition.to.x)
+              let final = (Math.sin(angle) * dx) - (Math.cos(angle) * dy)
+
+              clickedTransition.height += final
             }
           }
         };
