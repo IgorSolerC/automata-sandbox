@@ -370,7 +370,7 @@ const Canvas: React.FC = () => {
           }
 
           if (transitioning) {
-            const lerpFactor = 0.002; //Essa variável controla a velocidade da transição
+            const lerpFactor = 0.02; //Essa variável controla a velocidade da transição
         
             currentZoom = p.lerp(currentZoom, targetZoom, lerpFactor);
             currentTranslateX = p.lerp(currentTranslateX, targetTranslateX, lerpFactor);
