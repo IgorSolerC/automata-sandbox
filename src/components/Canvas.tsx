@@ -389,6 +389,13 @@ const Canvas: React.FC = () => {
             }
           }
 
+          if(currentCanvasAction === CanvasActions.CREATING_TRANSITION && clickedState){
+            p.stroke(CanvasColors.CLICKED_TRANSITION);
+            p.fill(CanvasColors.CLICKED_TRANSITION);
+            p.strokeWeight(arrowWeight);
+            p.line(clickedState.x, clickedState.y, getMouseXScaled(p), getMouseYScaled(p));
+          }
+
           const allTransitions = automataRef.current.getTransitions();
           allTransitions.forEach(
             (transition) => {
@@ -993,7 +1000,7 @@ const Canvas: React.FC = () => {
         />
       </div>
 
-      {/* Step by Step simulation controlls */}
+      {/* Step by Step simulation controls */}
       <div id="simulation-controller-div">
         <div className='simulation-controller-buttons-div'>
           <button
