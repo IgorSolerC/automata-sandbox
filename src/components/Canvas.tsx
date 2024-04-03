@@ -1004,11 +1004,11 @@ const Canvas: React.FC = () => {
       <div id="simulation-controller-div">
         <div className='simulation-controller-buttons-div'>
           <button
-              id="begining"
+              id="beginning"
               className={
                 "canvas-button simulation-controller-button rotateicon180"
               }
-              title="Begining"
+              title="Beginning"
               onClick={() => {
               }}
             >
