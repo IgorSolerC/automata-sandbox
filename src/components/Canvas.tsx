@@ -81,6 +81,9 @@ const Canvas: React.FC = () => {
   const [simulationIndex, setSimulationIndex] = useState<number>();
   const simulationIndexRef = useRef(simulationIndex);
 
+  const [zoomTarget, setZoomTarget] = useState<State>();
+  const zoomTargetRef = useRef(zoomTarget);
+
   useEffect(() => {
     simulationStatesRef.current = simulationStates;
   }, [simulationStates]);
@@ -94,6 +97,16 @@ const Canvas: React.FC = () => {
   let selectionY: number = 0;
   let selectionDistanceX: number = 0;
   let selectionDistanceY: number = 0;
+
+  let transitioning = false;
+  let targetZoom: number;
+  let targetTranslateX: number;
+  let targetTranslateY: number;
+
+  let currentZoom = cameraZoom; // Initialize with current zoom
+  let currentTranslateX = globalTranslateX; // Initialize with current translation X
+  let currentTranslateY = globalTranslateY; // Initialize with current translation Y
+
 
 
   const getMouseXScaled = (p: p5) => {
@@ -350,6 +363,32 @@ const Canvas: React.FC = () => {
           p.translate(globalTranslateX, globalTranslateY)
           const arrowWeight = 5; 
 
+          if (zoomTargetRef.current !== null && zoomTargetRef.current) {
+            adjustZoomAndPan(zoomTargetRef.current!.x, zoomTargetRef.current!.y)
+            startTransition(zoomTargetRef.current.x, zoomTargetRef.current.y, 1); //Esse 1 é o nível de zoom. Valores diferentes de 1 ainda bugam.
+            zoomTargetRef.current = undefined;
+          }
+
+          if (transitioning) {
+            const lerpFactor = 0.002; //Essa variável controla a velocidade da transição
+        
+            currentZoom = p.lerp(currentZoom, targetZoom, lerpFactor);
+            currentTranslateX = p.lerp(currentTranslateX, targetTranslateX, lerpFactor);
+            currentTranslateY = p.lerp(currentTranslateY, targetTranslateY, lerpFactor);
+        
+            // Update actual values
+            cameraZoom = currentZoom;
+            globalTranslateX = currentTranslateX;
+            globalTranslateY = currentTranslateY;
+        
+            // Check if close to target values
+            if (p.abs(cameraZoom - targetZoom) < 0.01 && 
+                p.abs(globalTranslateX - targetTranslateX) < 0.01 && 
+                p.abs(globalTranslateY - targetTranslateY) < 0.01) {
+              transitioning = false; // Stop transitioning
+            }
+          }
+
           const allTransitions = automataRef.current.getTransitions();
           allTransitions.forEach(
             (transition) => {
@@ -552,6 +591,32 @@ const Canvas: React.FC = () => {
             p.pop();
           }
         };
+
+        function startTransition(newTargetX: number, newTargetY: number, newZoom: number) {
+          targetZoom = newZoom;
+          targetTranslateX = (p.width / newZoom) / 2 - newTargetX * newZoom;
+          targetTranslateY = (p.height / newZoom) / 2 - newTargetY * newZoom;
+          transitioning = true;
+        }
+
+        function adjustZoomAndPan(targetX: number, targetY: number) {
+          console.log(cameraZoom)
+          const newZoom = 1;
+          
+          cameraZoom = newZoom;
+        
+          // Calculate the necessary translation to center on the target
+          const canvasCenterX = (p.width / cameraZoom) / 2;
+          const canvasCenterY = (p.height / cameraZoom) / 2;
+        
+
+          //Não ta centralizando corretamente. É próximo, então acredito que não está considerando
+          //A escala na hora do cálculo
+          //NewZoom = 1 funciona corretamente. O problema é o zoom.
+          globalTranslateX = canvasCenterX - targetX * newZoom;
+          globalTranslateY = canvasCenterY - targetY * newZoom;
+        }
+      
 
         p.mouseWheel = (event: WheelEvent) => {
           var oldZoom = cameraZoom;
@@ -949,9 +1014,12 @@ const Canvas: React.FC = () => {
               }
               title="Next"
               onClick={() => {
-                setSimulationIndex(simulationIndex! - 1)
-                simulationIndexRef.current = simulationIndex! - 1 
-
+                const index = simulationIndex! - 1;
+                setSimulationIndex(index);
+                simulationIndexRef.current = index ;
+                const targetState = simulationStatesRef.current[index];
+                setZoomTarget(targetState);
+                zoomTargetRef.current = targetState;
               }}
             >
               <PrevIcon />
@@ -963,8 +1031,12 @@ const Canvas: React.FC = () => {
               }
               title="Play"
               onClick={() => {
-                setSimulationIndex(0)
-                simulationIndexRef.current = 0;
+                const index = 0;
+                setSimulationIndex(index);
+                simulationIndexRef.current = index ;
+                const targetState = simulationStatesRef.current[index];
+                setZoomTarget(targetState);
+                zoomTargetRef.current = targetState;
               }}
             >
               <PlayIcon />
@@ -976,8 +1048,12 @@ const Canvas: React.FC = () => {
               }
               title="Next"
               onClick={() => {
-                setSimulationIndex(simulationIndex! + 1)
-                simulationIndexRef.current = simulationIndex! + 1 
+                const index = simulationIndex! + 1;
+                setSimulationIndex(index);
+                simulationIndexRef.current = index ;
+                const targetState = simulationStatesRef.current[index];
+                setZoomTarget(targetState);
+                zoomTargetRef.current = targetState;
               }}
             >
               <NextIcon />
