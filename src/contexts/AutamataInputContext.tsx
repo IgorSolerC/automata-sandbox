@@ -40,8 +40,6 @@ export const AutomataInputProvider: React.FC<AutomataInputProviderProps> = ({ ch
 const setAumataInputResults = (inputResults: AutomataOutput[]) => {
   let newValue = [...inputResults]
   setAumataInputResultsAux(newValue)
-  console.log('teste')
-  console.log(aumataInputResultsRef.current)
   aumataInputResultsRef.current = newValue
 }
 

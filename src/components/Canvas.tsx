@@ -67,15 +67,23 @@ const Canvas: React.FC = () => {
   let selectedStates: State[] = [];
   let nearState: State | null;
   let highlightedState: State | null;
-  let simulationStates: State[] = [];
-  let simulationIndex: number = 0;
-  let clickedTransition: Transition | null;
   let selectedTransitions: Transition[] = [];
-
+  let clickedTransition: Transition | null;
+  
   // Enums
   let currentCanvasAction: number = CanvasActions.NONE;
   // let currentCanvasToolRef.current: number = CanvasTools.POINTER
   const currentCanvasToolRef = useRef(CanvasTools.POINTER);
+  
+  const [simulationStates, setSimulationStates] = useState<State[]>([]);
+  const simulationStatesRef = useRef(simulationStates);
+  
+  const [simulationIndex, setSimulationIndex] = useState<number>();
+  const simulationIndexRef = useRef(simulationIndex);
+
+  useEffect(() => {
+    simulationStatesRef.current = simulationStates;
+  }, [simulationStates]);
 
   let selectedStateMouseOffset: any; // {'q1': {'x': 10, 'y': -10}, 'q2': {'x': 10, 'y': -10}}
 
@@ -462,9 +470,9 @@ const Canvas: React.FC = () => {
             }
           );
           // Colore estados do passo atual da simulação como SIMULATION_STEP color
-          if(simulationStates[simulationIndex]){
-            simulationStates[simulationIndex].color = CanvasColors.SIMULATION_STEP_STATE;
-            simulationStates[simulationIndex].secondaryColor = CanvasColors.SIMULATION_STEP_STATE_SECONDARY;
+          if(simulationStatesRef.current[simulationIndexRef.current!]){
+            simulationStatesRef.current[simulationIndexRef.current!].color = CanvasColors.SIMULATION_STEP_STATE;
+            simulationStatesRef.current[simulationIndexRef.current!].secondaryColor = CanvasColors.SIMULATION_STEP_STATE_SECONDARY;
           }
           // Colore todos os estados selecionados como CLICKED color
           selectedStates.forEach(
@@ -845,24 +853,29 @@ const Canvas: React.FC = () => {
     currentCanvasAction = CanvasActions.SIMULATING;
     var input = (document.getElementsByClassName("automata-input")[0] as HTMLInputElement).value;
     
-    simulationStates = []
-    simulationIndex = 0;
+    let newSimulationStates = [];
+    setSimulationIndex(0);
     var estadoAtual: State = automataRef.current.getInitialState()!;
-    simulationStates.push(estadoAtual)
+    newSimulationStates.push(estadoAtual)
     for(let i = 0; i < input.length; i++) {
       let result = automataRef.current.testTransition(input, estadoAtual, i);
-      simulationStates.push(result.nextState!);
-      if(result.isValidTransition){ 
+      newSimulationStates.push(result.nextState!);
+      if(!result.isValidTransition){ 
         console.log('Transição inválida');
         break;  
       }
+      estadoAtual = result.nextState!;
     }
+
     if(automataRef.current.getFinalStates().some(x => x === simulationStates[simulationStates.length - 1])){
       console.log("ACEITO"); 
     } else{
       console.log("REJEITADO");
     }
     console.log(simulationStates); 
+    setSimulationStates(newSimulationStates);
+    simulationStatesRef.current = newSimulationStates;
+    console.log("Updated States", newSimulationStates);
   }
   
   function showContextMenu(x: number, y: number) {
@@ -924,6 +937,8 @@ const Canvas: React.FC = () => {
                 "canvas-button simulation-controller-button rotateicon180"
               }
               title="Begining"
+              onClick={() => {
+              }}
             >
               <FastforwardIcon/>
           </button>
@@ -934,7 +949,9 @@ const Canvas: React.FC = () => {
               }
               title="Next"
               onClick={() => {
-                simulationIndex--;
+                setSimulationIndex(simulationIndex! - 1)
+                simulationIndexRef.current = simulationIndex! - 1 
+
               }}
             >
               <PrevIcon />
@@ -946,7 +963,8 @@ const Canvas: React.FC = () => {
               }
               title="Play"
               onClick={() => {
-                simulationIndex = 0;
+                setSimulationIndex(0)
+                simulationIndexRef.current = 0;
               }}
             >
               <PlayIcon />
@@ -958,7 +976,8 @@ const Canvas: React.FC = () => {
               }
               title="Next"
               onClick={() => {
-                simulationIndex++;
+                setSimulationIndex(simulationIndex! + 1)
+                simulationIndexRef.current = simulationIndex! + 1 
               }}
             >
               <NextIcon />
@@ -1049,7 +1068,7 @@ const AutomataInput: React.FC<AutomataInputProps> = (
     <div id="automata-input-div">
       <input
         placeholder="Input automato" 
-        className={"automata-input " + (index == 0 ? '' : 'small')}
+        className={"automata-input " + (index === 0 ? '' : 'small')}
         // onFocus={() => {setInputFocused(true);}}
         // onBlur={() => {
         //   setInputFocused(false);
@@ -1072,12 +1091,12 @@ const AutomataInput: React.FC<AutomataInputProps> = (
         id="validation"
         className={
           "canvas-button input-button " + (
-            (simulationResult == AutomataInputResultsEnum.ACCEPTED) ? 
+            (simulationResult === AutomataInputResultsEnum.ACCEPTED) ? 
               'accepted ' : 
-            (simulationResult == AutomataInputResultsEnum.WARNING) ? 
+            (simulationResult === AutomataInputResultsEnum.WARNING) ? 
               'warning ' :
               'rejected '
-          ) + (index == 0 ? '' : 'small')
+          ) + (index === 0 ? '' : 'small')
         }
         onClick={() => {
           calculateSteps();
@@ -1085,14 +1104,14 @@ const AutomataInput: React.FC<AutomataInputProps> = (
         title="Simular passo-a-passo"
       >
         {(
-          (simulationResult == AutomataInputResultsEnum.ACCEPTED) ? 
+          (simulationResult === AutomataInputResultsEnum.ACCEPTED) ? 
             <CheckIcon/> : 
-          (simulationResult == AutomataInputResultsEnum.WARNING) ? 
+          (simulationResult === AutomataInputResultsEnum.WARNING) ? 
             <WarningIcon/> :
             <ErrorIcon/>
         )}
       </button>
-      {(errorMessage && index == qtdInput-1) && (
+      {(errorMessage && index === qtdInput-1) && (
         <div placeholder="Input automato" className="automata-input-error">
           <span>{errorMessage}</span>
         </div>
