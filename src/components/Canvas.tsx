@@ -181,30 +181,6 @@ const Canvas: React.FC = () => {
     return false;
   };
 
-  const collidePointEllipse = (pointX: number, pointY: number, ellipseX: number, ellipseY: number, ellipseWidth: number, ellipseHeight: number, rotation: number) => {
-    // 2D
-    var ellipseRadiusX = ellipseWidth / 2, ellipseRadiusY = ellipseHeight / 2;
-
-    // Apply the rotation to the point
-    var cosR = Math.cos(rotation);
-    var sinR = Math.sin(rotation);
-    var xDiff = pointX - ellipseX;
-    var yDiff = pointY - ellipseY;
-    var rotatedX = cosR * xDiff + sinR * yDiff + ellipseX;
-    var rotatedY = -sinR * xDiff + cosR * yDiff + ellipseY;
-
-    // Discard the points outside the bounding box of the rotated ellipse
-    if (rotatedX > ellipseX + ellipseRadiusX || rotatedX < ellipseX - ellipseRadiusX || rotatedY > ellipseY + ellipseRadiusY || rotatedY < ellipseY - ellipseRadiusY) {
-        return false;
-    }
-
-    // Compare the point to its equivalent on the rotated ellipse
-    var xx = rotatedX - ellipseX, yy = rotatedY - ellipseY;
-    var eyy = ellipseRadiusY * Math.sqrt(Math.abs(ellipseRadiusX * ellipseRadiusX - xx * xx)) / ellipseRadiusX;
-
-    return yy <= eyy && yy >= -eyy;
-  };
-
   const getClickedTransition = (p: p5) => {
     let clickedTransitionTemp = null
 
@@ -425,74 +401,53 @@ const Canvas: React.FC = () => {
               }
               // Transições para outros estrados
               else {
+                const angle = Math.atan2(end.y - start.y, end.x - start.x); // angle of line
+                const radius = start.diameter / 2; // diameter of circle
+                const offsetX = radius * Math.cos(angle);
+                const offsetY = radius * Math.sin(angle);
 
-                /* 
-                 * ARCO DA TRANSIÇÃO
-                 * A posição do arco deve ser 0, 0
-                 * Isso é necessario pois a rotação ocorre sempre com 0, 0 de ancora
-                 * Entao o mais facio é criar o elemento lá e então movelo para a posição correta
-                 * Por isso o p.translate() recebe o local onde o arc() deveria estar
-                 */
-                const transitionAngle = Math.atan2(end.y - start.y, end.x - start.x); // angle of line
-                const transitionLenght = p.dist(start.x, start.y, end.x, end.y); // angle of line
-                const middleX = (start.x + end.x) / 2
-                const middleY = (start.y + end.y) / 2
-
-                // Fix bug onde transição some se for 100% reta
-                if (transitionHeight === 0)
-                  transitionHeight = 0.00000001
-                
-                // Faz o arco representar o lado oposto da elipse caso
-                // a altura do arco seja negativa
-                const getArcSlice = (transitionHeight:number, p:p5) => {
-                  let arcStart = 0
-                  let arcEnd = p.PI
-                  if (transitionHeight < 0){
-                    arcStart = p.PI
-                    arcEnd = 0
-                  }
-                  return {arcStart, arcEnd}
-                }
-                let {arcStart, arcEnd} = getArcSlice(transitionHeight, p)
-          
-                // Desenha arco da transição
-                p.push();
+                // Draw line from the edge of the start circle to the edge of the end circle
+                p.push(); // Start a new drawing state
                 p.strokeWeight(arrowWeight);
                 p.noFill()
-                p.translate(middleX, middleY)
-                p.rotate(transitionAngle)
-                // Real arc
-                p.arc(
-                  0, 0, 
-                  transitionLenght, transitionHeight,
-                  arcStart, arcEnd,
+                const middleX = (start.x + end.x) / 2
+                const middleY = (start.y + end.y) / 2
+                p.bezier(
+                  start.x, start.y,
+                  middleX, middleY,
+                  middleX, middleY,
+                  end.x, end.y,
                 )
                 p.pop()
 
-                /* 
-                * LABEL DA TRANSIÇÃO
-                * A mesma conta da rotação da transição é feita com o label
-                */
-                // Vertical offset for the text label 
-                let arcMiddleOffsetY = transitionHeight/2; 
-                let textOffsetY = -20
-                // Corrige textos de cabeça para baico
-                let correctedAngle = transitionAngle
-                if(end.x < start.x){
-                  correctedAngle += Math.PI                  
-                  arcMiddleOffsetY *= -1
-                }
+                // Draw an arrowhead at the edge of the end circle
+                p.push(); // Start a new drawing state
+                const arrowWidth = 15; // length of arrowhead
+                const arrowHeight = 9; // length of arrowhead
+                p.translate(end.x - offsetX, end.y - offsetY);
+                p.rotate(angle);
+                // Arrow tip
+                p.triangle(0, 0, -arrowWidth, +arrowHeight, -arrowWidth, -arrowHeight);
+                p.pop(); // Restore original state
 
-                // Desenha label da transição
-                p.push();
-                p.translate(middleX, middleY);              
-                p.rotate(correctedAngle);
-                p.strokeWeight(0.1);
+                const midX = (start.x + end.x) / 2;
+                const midY = (start.y + end.y) / 2; 
+                const textOffsetY = -15; // Vertical offset for the text label 
+
+                p.push(); // Start another new drawing state for the tilted text
+                p.translate(midX, midY);
+                 // Corrige textos de cabeça para baico
+                 let correctedAngle = angle
+                 if(end.x < start.x){
+                   correctedAngle += Math.PI
+                 }
+                 p.strokeWeight(0.1);
                 p.stroke(CanvasColors.DEFAULT_TRANSITION_TEXT)
                 p.fill(CanvasColors.DEFAULT_TRANSITION_TEXT)
+                p.rotate(correctedAngle);
                 p.textAlign(p.CENTER, p.CENTER); // Center the text relative to the point
                 p.textSize(20);
-                p.text(transition.label, 0, arcMiddleOffsetY+textOffsetY);
+                p.text(transition.label, 0, textOffsetY);
                 p.pop(); // Restore original state
               }
             }
@@ -665,7 +620,8 @@ const Canvas: React.FC = () => {
               let angle = Math.atan2(clickedTransition.from.y - clickedTransition.to.y, clickedTransition.from.x - clickedTransition.to.x)
               let final = (Math.sin(angle) * dx) - (Math.cos(angle) * dy)
 
-              clickedTransition.height += final
+              //clickedTransition.height += final
+              clickedTransition.height = clickedTransition.height;
             }
           }
         };
@@ -803,7 +759,7 @@ const Canvas: React.FC = () => {
               endState &&
               currentCanvasAction === CanvasActions.CREATING_TRANSITION
             ) {
-              let label = prompt("Digite o s 1ímbolo de transição:");
+              let label = prompt("Digite o símbolo de transição: ");
               if (label !== null) {
                 if (label === "") label = "λ";
                 automataRef.current.addTransition(
@@ -888,7 +844,7 @@ const Canvas: React.FC = () => {
   function calculateSteps() {
     currentCanvasAction = CanvasActions.SIMULATING;
     var input = (document.getElementsByClassName("automata-input")[0] as HTMLInputElement).value;
-
+    
     simulationStates = []
     simulationIndex = 0;
     var estadoAtual: State = automataRef.current.getInitialState()!;
