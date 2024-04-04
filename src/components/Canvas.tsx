@@ -426,6 +426,7 @@ const Canvas: React.FC = () => {
           allTransitions.forEach((transition) => {
             const start = automataRef.current.findState(transition.from.id);
             const end = automataRef.current.findState(transition.to.id);
+            p.strokeWeight(arrowWeight)
             let transitionHeight = transition.height
             if (start && end) {
               p.stroke(transition.color);
@@ -502,12 +503,12 @@ const Canvas: React.FC = () => {
 
                 p.push(); // Start another new drawing state for the tilted text
                 p.translate(midX, midY);
-                 // Corrige textos de cabeça para baico
-                 let correctedAngle = angle
-                 if(end.x < start.x){
-                   correctedAngle += Math.PI
-                 }
-                 p.strokeWeight(0.1);
+                // Corrige textos de cabeça para baixo
+                let correctedAngle = angle
+                if(end.x < start.x){
+                  correctedAngle += Math.PI
+                }
+                p.strokeWeight(0.1);
                 p.stroke(CanvasColors.DEFAULT_TRANSITION_TEXT)
                 p.fill(CanvasColors.DEFAULT_TRANSITION_TEXT)
                 p.rotate(correctedAngle);

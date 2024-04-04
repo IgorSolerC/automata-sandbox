@@ -345,7 +345,13 @@ display: none;
   }
 
 .simulation-message {
+    font-size: 20px;
     color: var(--error-message-div);
+    text-shadow:
+    -1px -1px 0 #000,  
+     1px -1px 0 #000,
+    -1px  1px 0 #000,
+     1px  1px 0 #000;
     text-align: center;
     margin-bottom: 10px;
     width: 100%;
