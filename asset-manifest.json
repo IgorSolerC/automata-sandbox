@@ -1,15 +1,15 @@
 {
   "files": {
-    "main.css": "/automata-sandbox/static/css/main.0ab46d12.css",
-    "main.js": "/automata-sandbox/static/js/main.9f723d7b.js",
+    "main.css": "/automata-sandbox/static/css/main.5dec3187.css",
+    "main.js": "/automata-sandbox/static/js/main.15da5db9.js",
     "static/js/787.393a29d4.chunk.js": "/automata-sandbox/static/js/787.393a29d4.chunk.js",
     "index.html": "/automata-sandbox/index.html",
-    "main.0ab46d12.css.map": "/automata-sandbox/static/css/main.0ab46d12.css.map",
-    "main.9f723d7b.js.map": "/automata-sandbox/static/js/main.9f723d7b.js.map",
+    "main.5dec3187.css.map": "/automata-sandbox/static/css/main.5dec3187.css.map",
+    "main.15da5db9.js.map": "/automata-sandbox/static/js/main.15da5db9.js.map",
     "787.393a29d4.chunk.js.map": "/automata-sandbox/static/js/787.393a29d4.chunk.js.map"
   },
   "entrypoints": [
-    "static/css/main.0ab46d12.css",
-    "static/js/main.9f723d7b.js"
+    "static/css/main.5dec3187.css",
+    "static/js/main.15da5db9.js"
   ]
 }
