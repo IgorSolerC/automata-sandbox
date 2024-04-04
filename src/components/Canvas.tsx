@@ -75,8 +75,15 @@ const Canvas: React.FC = () => {
   // let currentCanvasToolRef.current: number = CanvasTools.POINTER
   const currentCanvasToolRef = useRef(CanvasTools.POINTER);
   
+  const [simulationMessage, setSimulationMessage] = useState('');
+  const [isBackSimulationButtonsDisabled, setIsBackSimulationButtonsDisabled] = React.useState(false);
+  const [isNextSimulationButtonsDisabled, setIsNextSimulationButtonsDisabled] = React.useState(false);
+
   const [simulationStates, setSimulationStates] = useState<State[]>([]);
   const simulationStatesRef = useRef(simulationStates);
+  
+  const [simulationTransitions, setSimulationTransitions] = useState<(Transition | null)[]>([]);
+  const simulationTransitionsRef = useRef(simulationTransitions);
   
   const [simulationIndex, setSimulationIndex] = useState<number>();
   const simulationIndexRef = useRef(simulationIndex);
@@ -393,7 +400,7 @@ const Canvas: React.FC = () => {
             p.stroke(CanvasColors.CLICKED_TRANSITION);
             p.fill(CanvasColors.CLICKED_TRANSITION);
             p.strokeWeight(arrowWeight);
-            p.line(clickedState.x, clickedState.y, getMouseXScaled(p), getMouseYScaled(p));
+            p.line(clickedState.x, clickedState.y, getMouseX(p), getMouseY(p));
           }
 
           const allTransitions = automataRef.current.getTransitions();
@@ -410,6 +417,11 @@ const Canvas: React.FC = () => {
               transition.textColor = CanvasColors.CLICKED_TRANSITION_TEXT
             }
           );
+
+          if(simulationIndexRef && simulationIndexRef.current! > 0 && simulationIndexRef.current! < simulationStatesRef.current.length){
+            simulationTransitionsRef.current[simulationIndexRef.current!]!.color = CanvasColors.SIMULATION_STEP_TRANSITION;
+            simulationTransitionsRef.current[simulationIndexRef.current!]!.textColor = CanvasColors.SIMULATION_STEP_TRANSITION_TEXT;
+          }
 
           allTransitions.forEach((transition) => {
             const start = automataRef.current.findState(transition.from.id);
@@ -607,7 +619,6 @@ const Canvas: React.FC = () => {
         }
 
         function adjustZoomAndPan(targetX: number, targetY: number) {
-          console.log(cameraZoom)
           const newZoom = 1;
           
           cameraZoom = newZoom;
@@ -626,6 +637,7 @@ const Canvas: React.FC = () => {
       
 
         p.mouseWheel = (event: WheelEvent) => {
+          transitioning = false;
           var oldZoom = cameraZoom;
           cameraZoom -= (event.deltaY / 1000) //1000
           if (cameraZoom < 0.2)
@@ -747,7 +759,8 @@ const Canvas: React.FC = () => {
             }
             else if (p.mouseButton === p.CENTER || (p.keyIsDown(p.CONTROL) && p.mouseButton === p.LEFT)){
                 currentCanvasAction = CanvasActions.MOVING_CANVAS;
-                // Muda cursor para "grap" cursor
+                transitioning = false;
+                // Muda cursor para "grab" cursor
                 window.document.body.style.cursor = 'grab';
             }
             /* Pointer */
@@ -926,20 +939,38 @@ const Canvas: React.FC = () => {
     var input = (document.getElementsByClassName("automata-input")[0] as HTMLInputElement).value;
     
     let newSimulationStates = [];
+    let newSimulationTransitions = [];
     setSimulationIndex(0);
     var estadoAtual: State = automataRef.current.getInitialState()!;
+
+    var estadoAnterior: State = estadoAtual;
+
     newSimulationStates.push(estadoAtual)
+    const allTransitions = automataRef.current.getTransitions();
     for(let i = 0; i < input.length; i++) {
       let result = automataRef.current.testTransition(input, estadoAtual, i);
+
+      if(i === 0)
+        newSimulationTransitions.push(null);
+      else{
+        newSimulationTransitions.push(allTransitions.find(x => x.from === estadoAnterior && x.label === input[i - 1])!);
+      }
+      
+
       newSimulationStates.push(result.nextState!);
       if(!result.isValidTransition){ 
         console.log('Transição inválida');
         break;  
       }
+      estadoAnterior = estadoAtual;
       estadoAtual = result.nextState!;
     }
 
-    if(automataRef.current.getFinalStates().some(x => x === simulationStates[simulationStates.length - 1])){
+    console.log(input[input.length - 1]);
+    if(estadoAnterior)
+      newSimulationTransitions.push(allTransitions.find(x => x.from === estadoAnterior && x.label === input[input.length - 1])!);
+    
+      if(automataRef.current.getFinalStates().some(x => x === simulationStates[simulationStates.length - 1])){
       console.log("ACEITO"); 
     } else{
       console.log("REJEITADO");
@@ -947,7 +978,10 @@ const Canvas: React.FC = () => {
     console.log(simulationStates); 
     setSimulationStates(newSimulationStates);
     simulationStatesRef.current = newSimulationStates;
+    setSimulationTransitions(newSimulationTransitions)
+    simulationTransitionsRef.current = newSimulationTransitions;
     console.log("Updated States", newSimulationStates);
+    console.log("Updated Transitions", newSimulationTransitions);
   }
   
   function showContextMenu(x: number, y: number) {
@@ -985,6 +1019,38 @@ const Canvas: React.FC = () => {
     }
   }
 
+  function handleSimulationButtonClick(change: number) {
+    let newIndex = simulationIndexRef.current! + change;
+
+    if(change === 0 || newIndex === 0){
+      newIndex = 0;
+      setSimulationMessage("");
+      setIsBackSimulationButtonsDisabled(false);
+      setIsNextSimulationButtonsDisabled(false);
+    }
+    else if (newIndex < 0) {
+      newIndex = 0;
+      setSimulationMessage("A Simulação já está em seu estado inicial");
+      setIsBackSimulationButtonsDisabled(true);
+      setIsNextSimulationButtonsDisabled(false);
+    } else if (newIndex >= simulationStatesRef.current.length) {
+      newIndex = simulationStatesRef.current.length - 1;
+      setSimulationMessage("A Simulação já chegou ao fim");
+      setIsBackSimulationButtonsDisabled(false);
+      setIsNextSimulationButtonsDisabled(true);
+    } else {
+      setSimulationMessage("");
+      setIsBackSimulationButtonsDisabled(false);
+      setIsNextSimulationButtonsDisabled(false);
+    }
+  
+    setSimulationIndex(newIndex);
+    simulationIndexRef.current = newIndex;
+    const targetState = simulationStatesRef.current[newIndex];
+    setZoomTarget(targetState);
+    zoomTargetRef.current = targetState;
+  }
+
   return (
     <div>
       <div id="navbar-div">
@@ -1002,31 +1068,38 @@ const Canvas: React.FC = () => {
 
       {/* Step by Step simulation controls */}
       <div id="simulation-controller-div">
+      {simulationMessage && (
+          <div className={`simulation-message ${simulationMessage && 'animate-message'}`}>
+            {simulationMessage}
+          </div>
+        )}
         <div className='simulation-controller-buttons-div'>
           <button
               id="beginning"
+              disabled={isBackSimulationButtonsDisabled}
               className={
-                "canvas-button simulation-controller-button rotateicon180"
-              }
+                `canvas-button simulation-controller-button rotateicon180 ${
+                    !isBackSimulationButtonsDisabled ? "enabled-button-class" : "disabled-button-class"
+                }`
+            }
               title="Beginning"
               onClick={() => {
+                handleSimulationButtonClick(0);
               }}
             >
               <FastforwardIcon/>
           </button>
           <button
               id="next"
+              disabled={isBackSimulationButtonsDisabled}
               className={
-                "canvas-button simulation-controller-button"
+                `canvas-button simulation-controller-button ${
+                  !isBackSimulationButtonsDisabled ? "enabled-button-class" : "disabled-button-class"
+              }`
               }
               title="Next"
               onClick={() => {
-                const index = simulationIndex! - 1;
-                setSimulationIndex(index);
-                simulationIndexRef.current = index ;
-                const targetState = simulationStatesRef.current[index];
-                setZoomTarget(targetState);
-                zoomTargetRef.current = targetState;
+                handleSimulationButtonClick(-1);
               }}
             >
               <PrevIcon />
@@ -1038,39 +1111,38 @@ const Canvas: React.FC = () => {
               }
               title="Play"
               onClick={() => {
-                const index = 0;
-                setSimulationIndex(index);
-                simulationIndexRef.current = index ;
-                const targetState = simulationStatesRef.current[index];
-                setZoomTarget(targetState);
-                zoomTargetRef.current = targetState;
+                handleSimulationButtonClick(0);
               }}
             >
               <PlayIcon />
           </button>
           <button
               id="next"
+              disabled={isNextSimulationButtonsDisabled}
               className={
-                "canvas-button simulation-controller-button"
+                `canvas-button simulation-controller-button ${
+                  !isNextSimulationButtonsDisabled ? "enabled-button-class" : "disabled-button-class"
+              }`
               }
               title="Next"
               onClick={() => {
-                const index = simulationIndex! + 1;
-                setSimulationIndex(index);
-                simulationIndexRef.current = index ;
-                const targetState = simulationStatesRef.current[index];
-                setZoomTarget(targetState);
-                zoomTargetRef.current = targetState;
+                handleSimulationButtonClick(+1);
               }}
             >
               <NextIcon />
           </button>
           <button
               id="fastforward"
+              disabled={isNextSimulationButtonsDisabled}
               className={
-                "canvas-button simulation-controller-button"
+                `canvas-button simulation-controller-button ${
+                  !isNextSimulationButtonsDisabled ? "enabled-button-class" : "disabled-button-class"
+              }`
               }
               title="Fastforward"
+              onClick={() => {
+                handleSimulationButtonClick(simulationStatesRef.current.length - 1);
+              }}
             >
               <FastforwardIcon/>
           </button>
