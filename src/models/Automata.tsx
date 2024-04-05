@@ -43,9 +43,26 @@ export class Automata {
     console.log("initial = " + initial);
   }
 
+  clearAutomata(){
+    this.states = [];
+    this.transitions = [];
+    this.initialState = null;
+    this.finalStates = [];
+  }
+
   /* Initial state */
-  setInitialState(state: State | null) {
-    this.initialState = state;
+  setInitialState(newState: State | null) {
+    const initialStates = this.states.filter(state => state.isInitial);
+
+    for (const state of initialStates) {
+        state.isInitial = false;
+    }
+
+    if (newState) {
+      newState.isInitial = true;
+    }
+
+    this.initialState = newState;
   }
 
   getInitialState() {
@@ -75,10 +92,16 @@ export class Automata {
     return this.states;
   }
 
-  addState(id: string, x: number, y: number, color: string, secondaryColor: string): void {
-    let isInitial: boolean = this.states.length === 0;
+  addState(id: string, x: number, y: number, color: string, secondaryColor: string, isInitial: boolean = false, isFinal: boolean = false, label: string = ""): void {
+    if(!isInitial) 
+      isInitial = this.states.length === 0;
+    
+    if(!label)
+      label = id;
+
     const newState: State = {
       id,
+      label,
       x,
       y,
       // transitions: [],
@@ -86,10 +109,11 @@ export class Automata {
       color,
       secondaryColor,
       isInitial: isInitial,
-      isFinal: false,
+      isFinal: isFinal,
     }; // Mudar pra false
 
     if (isInitial) this.setInitialState(newState);
+    if (isFinal) this.finalStates.push(newState);
 
     this.states.push(newState);
   }

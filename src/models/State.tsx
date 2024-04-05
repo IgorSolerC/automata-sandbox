@@ -1,6 +1,6 @@
 export interface State {
     id: string;
-    // label: string;
+    label: string;
 
     // Rendering
     x: number;

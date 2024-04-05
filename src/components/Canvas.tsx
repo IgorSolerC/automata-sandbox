@@ -23,6 +23,7 @@ import AddCircleIcon from "../symbols/add_circle_icon";
 // Libaries
 import React, { useRef, useEffect, useState } from "react";
 import p5 from "p5";
+import { XMLParser } from 'fast-xml-parser';
 
 // Objects
 import { Automata } from "../models/Automata";
@@ -40,9 +41,20 @@ import { CanvasColors } from "../Constants/CanvasConstants";
 // Contexts
 import { ToolboxProvider, useToolboxContext } from "../contexts/ToolboxContext";
 import { AutomataInputProvider, useAutomataInputContext } from "../contexts/AutamataInputContext";
+import { json } from "body-parser";
 
 // let canvasObject: p5 | null = null; // Variável para armazenar o sketch
+
 let automata: Automata = new Automata();
+
+const options = {
+  attributeNamePrefix: "", // Removes any prefix for attributes
+  ignoreAttributes: false, // Ensures attributes are not ignored
+  trimValues: false, // Add any other options you need
+};
+
+const parser = new XMLParser(options);
+
 
 const Canvas: React.FC = () => {
   const canvasRef = useRef<HTMLDivElement | null>(null);
@@ -151,14 +163,21 @@ const Canvas: React.FC = () => {
       }) || null;
 
     if (!nearState) {
+      const qStates = allStates.filter(state => state.id.startsWith("q"));
       // Gera ID do novo estado
       var id: string;
-      if (!allStates.length) {
-        id = "q0";
+      var id_number: number;
+      if (!qStates.length) {
+        id_number = 0;
       } else {
-        let lastest_id = allStates[allStates.length - 1].id;
+        let lastest_id = qStates[qStates.length - 1].id;
         let id_number_string = lastest_id.slice(1);
-        let id_number = parseInt(id_number_string) + 1;
+        id_number = parseInt(id_number_string) + 1;
+      }
+      
+      id = `q${id_number}`;
+      while (allStates.some(state => state.id === id || state.label === id)) {
+        id_number++;
         id = `q${id_number}`;
       }
       // Cria novo estado
@@ -584,7 +603,7 @@ const Canvas: React.FC = () => {
 
               // Titulo do estado
               p.fill(255);
-              p.text(state.id, state.x - 5, state.y + 5);
+              p.text(state.label, state.x - 5, state.y + 5);
 
               // Marcador de "IsFinal"
               if (state.isFinal) {
@@ -971,7 +990,6 @@ const Canvas: React.FC = () => {
       estadoAtual = result.nextState!;
     }
 
-    console.log(input[input.length - 1]);
     if(estadoAnterior)
       newSimulationTransitions.push(allTransitions.find(x => x.from === estadoAnterior && x.label === input[input.length - 1])!);
     
@@ -980,7 +998,6 @@ const Canvas: React.FC = () => {
     } else{
       console.log("REJEITADO");
     }
-    console.log(simulationStates); 
     setSimulationStates(newSimulationStates);
     simulationStatesRef.current = newSimulationStates;
     setSimulationTransitions(newSimulationTransitions)
@@ -1009,9 +1026,9 @@ const Canvas: React.FC = () => {
     // Remove estado inicial anterior, caso não seja o mesmo estado que o atual
     let prevInitialState: State | null = automataRef.current.getInitialState();
     if (
-      prevInitialState && // Estado inicial anterios não é null
+      prevInitialState && // Estado inicial anterior não é null
       state.isInitial && // Estado inicial atual foi toggle apara TRUE, não FALSE
-      state.id !== prevInitialState.id // O estad inicial anterios não é o mesmo estado que o atual
+      state.id !== prevInitialState.id // O estado inicial anterior não é o mesmo estado que o atual
     ) {
       prevInitialState.isInitial = false;
     }
@@ -1059,11 +1076,63 @@ const Canvas: React.FC = () => {
   const handleFileSelection = (event: any) => {
     const file = event.target.files[0];
     if (file && file.name.endsWith('.jff')) {
-      // Process the .jflap file
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        automataRef.current.clearAutomata();
+        const content = e.target!.result;
+        if (typeof content === "string") {
+          const jsonObj = parser.parse(content);
+          console.log(content);
+          console.log(jsonObj);
+          createStatesFromXML(jsonObj.structure.automaton.state);
+          console.log(automataRef.current.states)
+          createTransitionsFromXML(jsonObj.structure.automaton.transition, automataRef.current.states);
+          console.log(automataRef.current.transitions);
+          event.target.value = '';
+      } else {
+        console.error("File content is not a string.");
+      }
+    };
+    reader.readAsText(file);
     } else {
-      // Handle incorrect file type
-      alert("Please select a .jff (JFLAP) file.");
+      alert("Please select a .jff file.");
     }
+  };
+
+  const createStatesFromXML = (statesXml: any) => {
+    //Os arquivos do JFLAP possuem uma escala menor, então aumento um pouco as distâncias durante a importação para ter maior semelhança.
+    const scaleMultiplier =  1.6;
+    return statesXml.map((stateXml: { id: any; name: string; x: string; y: string; initial?: string; final?: string }) => {
+      const isFinal = stateXml.final === "" ? true : false;
+      const isInitial = stateXml.initial === "" ? true: false;
+      const state = automataRef.current.addState(
+        stateXml.id,
+        +stateXml.x * scaleMultiplier,
+        +stateXml.y * scaleMultiplier,
+        CanvasColors.DEFAULT_STATE,
+        CanvasColors.DEFAULT_STATE_SECONDARY,
+        isInitial,
+        isFinal,
+        stateXml.name,
+      );
+      return state;
+    });
+  };
+
+  const createTransitionsFromXML = (transitionsXml: any, states: State[]) => {
+    return transitionsXml.map((transitionXml: { from: string; to: string; read: string; }) => {
+      const fromState = states.find(state => state.id === transitionXml.from.toString())!;
+      const toState = states.find(state => state.id === transitionXml.to.toString())!;
+      const label = transitionXml.read === "" ? "λ" : transitionXml.read.toString();
+      const transition = automataRef.current.addTransition(
+        fromState, 
+        toState, 
+        label, 
+        CanvasColors.DEFAULT_TRANSITION, 
+        CanvasColors.DEFAULT_TRANSITION_TEXT
+      );
+      return transition;
+    });
   };
 
   return (
