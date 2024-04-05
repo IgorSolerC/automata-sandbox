@@ -90,10 +90,14 @@ const Canvas: React.FC = () => {
 
   const [zoomTarget, setZoomTarget] = useState<State>();
   const zoomTargetRef = useRef(zoomTarget);
+  
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     simulationStatesRef.current = simulationStates;
   }, [simulationStates]);
+
+
 
   let selectedStateMouseOffset: any; // {'q1': {'x': 10, 'y': -10}, 'q2': {'x': 10, 'y': -10}}
 
@@ -1052,6 +1056,16 @@ const Canvas: React.FC = () => {
     zoomTargetRef.current = targetState;
   }
 
+  const handleFileSelection = (event: any) => {
+    const file = event.target.files[0];
+    if (file && file.name.endsWith('.jff')) {
+      // Process the .jflap file
+    } else {
+      // Handle incorrect file type
+      alert("Please select a .jff (JFLAP) file.");
+    }
+  };
+
   return (
     <div>
       <div id="navbar-div">
@@ -1147,6 +1161,25 @@ const Canvas: React.FC = () => {
             >
               <FastforwardIcon/>
           </button>
+          <button
+            id="Import"
+            className="canvas-button simulation-controller-button rotateicon90"
+            title="Import"
+            onClick={() => {
+              if (fileInputRef.current) {
+                fileInputRef.current.click();
+              }
+            }}
+          >
+            <PlayIcon />
+          </button>
+          <input
+            type="file"
+            ref={fileInputRef}
+            accept=".jff"
+            style={{ display: 'none' }}
+            onChange={handleFileSelection}
+          />
         </div>
       </div>
       

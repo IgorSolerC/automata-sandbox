@@ -283,6 +283,10 @@ html{
     transform: rotate(180deg);
 }
 
+.rotateicon90 > svg{
+    transform: rotate(90deg);
+}
+
 .canvas-button:hover{
     background-color: var(--button-bg-hover);
 } 
