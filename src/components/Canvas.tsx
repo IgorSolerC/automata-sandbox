@@ -331,6 +331,9 @@ const Canvas: React.FC = () => {
       aumataInputResultsAux[i].result = result
       aumataInputResultsAux[i].message = message
     }
+
+    calculateSteps();
+
       // Simulate automata again
     setAumataInputResults(aumataInputResultsAux)
   }
@@ -902,6 +905,10 @@ const Canvas: React.FC = () => {
             } else if (currentCanvasToolRef.current === CanvasTools.ERASER) {
               if (clickedState) {
                 automataRef.current.deleteState(clickedState);
+                validadeAllInputs()
+              } else if(clickedTransition){
+                automataRef.current.deleteTransition(clickedTransition);
+                validadeAllInputs()
               }
 
               /* Mover */
@@ -967,13 +974,20 @@ const Canvas: React.FC = () => {
 
           /* Deleta estado(s) */
           if (p.key === "Delete") {
-            if (selectedStates.length === 0) selectedStates = [clickedState!];
-
-            selectedStates.forEach((state) => {
-              automataRef.current.deleteState(state);
-            });
-            selectedStates = [];
-
+            if(clickedState){
+              if (selectedStates.length === 0) 
+              selectedStates = [clickedState!];
+            
+              if(selectedStates[0] !== null){
+                selectedStates.forEach((state) => {
+                  automataRef.current.deleteState(state);
+                });
+                selectedStates = [];
+              }
+            
+            } else if (clickedTransition){
+              automataRef.current.deleteTransition(clickedTransition);
+            }
             validadeAllInputs()
           }
 

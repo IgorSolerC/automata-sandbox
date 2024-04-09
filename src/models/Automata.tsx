@@ -157,8 +157,11 @@ export class Automata {
     this.transitions.push(newTransition);
   }
 
-  deleteTransition(referenceState: State): void {
-    // Your code for deleting transition can go here
+  deleteTransition(transition: Transition): void {
+    const index = this.transitions.findIndex((t) => t.from === transition.from && t.to === transition.to && t.label == transition.label);
+    if (index !== -1) {
+      this.transitions.splice(index, 1);
+    }
   }
 
   deleteTransitionFromState(state: State): void {
