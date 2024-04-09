@@ -392,7 +392,7 @@ const Canvas: React.FC = () => {
           p.strokeCap(p.PROJECT);
           p.translate(globalTranslateX, globalTranslateY)
           
-          var input = (document.getElementsByClassName("automata-input")[0] as HTMLInputElement).value;
+          var input = (document.getElementsByClassName("automata-input")[0] as HTMLInputElement)?.value;
           let currentIndex = simulationIndexRef.current;
           if (input && (currentIndex || currentIndex === 0)) {
             let x = - (input.length * 12) / 2; // Adjust starting x position relative to the center
@@ -794,7 +794,12 @@ const Canvas: React.FC = () => {
           }
         };
 
-        p.mousePressed = () => {
+        p.mousePressed = (event: any) => {
+          //Gambiarra para não executar a tool selecionada ao clicar em botões
+          if ((event.target instanceof HTMLButtonElement || event.target instanceof HTMLInputElement || event.target.nodeName === 'svg' || event.target.nodeName === 'path')) {
+            return;
+          }
+
           if (contextMenuIsOpen) {
           } else {
             const allStates = automataRef.current.getStates();
