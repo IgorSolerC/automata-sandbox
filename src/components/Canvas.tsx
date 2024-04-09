@@ -391,6 +391,58 @@ const Canvas: React.FC = () => {
           p.scale(cameraZoom)
           p.strokeCap(p.PROJECT);
           p.translate(globalTranslateX, globalTranslateY)
+          
+          var input = (document.getElementsByClassName("automata-input")[0] as HTMLInputElement).value;
+          let currentIndex = simulationIndexRef.current;
+          if (input && (currentIndex || currentIndex === 0)) {
+            let x = - (input.length * 12) / 2; // Adjust starting x position relative to the center
+
+            p.push(); // Save current transformation state
+            p.resetMatrix(); // Reset transformations or adjust according to the camera
+
+            // Drawing the text at the top of the canvas
+            if(currentIndex < simulationStatesRef.current.length - 1){
+
+              for (let i = 0; i < input.length; i++) {
+                let char = input[i];
+                if (i < currentIndex) {
+                    p.fill('gray');
+                  } else if (i === currentIndex) {
+                    p.fill('red');
+                    p.textSize(30);
+                } else {
+                    p.fill(CanvasColors.DEFAULT_TRANSITION_TEXT);
+                    p.textSize(20);
+                }
+                
+                p.textAlign(p.CENTER, p.CENTER);
+                p.strokeWeight(0.1);
+                p.text(char, x + (window.innerWidth / 2), 20); // Position the text at the top
+                x += 18; // Increment x for the next character
+              }
+
+              p.pop(); // Restore previous transformation state
+            } else { //Finalizou por completo a simulação
+              for (let i = 0; i < input.length; i++) {
+                let char = input[i];
+                let lastState = simulationStatesRef.current[simulationIndexRef.current!]
+                if (lastState && lastState.isFinal) {
+                    p.fill('green');
+                } else {
+                    p.fill('red');
+                  }
+                p.textSize(30);
+                
+                p.textAlign(p.CENTER, p.CENTER);
+                p.strokeWeight(0.1);
+                p.text(char, x + (window.innerWidth / 2), 20); // Position the text at the top
+                x += 20; // Increment x for the next character
+              }
+
+              p.pop(); // Restore previous transformation state
+            }
+          } 
+          
           const arrowWeight = 5; 
 
           if (zoomTargetRef.current !== null && zoomTargetRef.current) {
@@ -961,10 +1013,10 @@ const Canvas: React.FC = () => {
   function calculateSteps() {
     currentCanvasAction = CanvasActions.SIMULATING;
     var input = (document.getElementsByClassName("automata-input")[0] as HTMLInputElement).value;
-    
     let newSimulationStates = [];
     let newSimulationTransitions = [];
     setSimulationIndex(0);
+    simulationIndexRef.current = 0;
     var estadoAtual: State = automataRef.current.getInitialState()!;
 
     var estadoAnterior: State = estadoAtual;
@@ -1082,12 +1134,8 @@ const Canvas: React.FC = () => {
         const content = e.target!.result;
         if (typeof content === "string") {
           const jsonObj = parser.parse(content);
-          console.log(content);
-          console.log(jsonObj);
           createStatesFromXML(jsonObj.structure.automaton.state);
-          console.log(automataRef.current.states)
           createTransitionsFromXML(jsonObj.structure.automaton.transition, automataRef.current.states);
-          console.log(automataRef.current.transitions);
           event.target.value = '';
       } else {
         console.error("File content is not a string.");
@@ -1334,6 +1382,9 @@ const AutomataInput: React.FC<AutomataInputProps> = (
         onChange={(event) => {
           let aumataInputResultsAux = [...aumataInputResults]
           let newInput = event.target.value
+          
+          // Um pouco gambiarrado, mas foi o jeito que encontrei de "resetar" os valores de simulação
+          calculateSteps()
 
           // Simulate automata again
           const { result, message } = automataRef.current.validate(newInput);
