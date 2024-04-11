@@ -1,9 +1,9 @@
 ### Links
 
-Plataforma Web
+Plataforma Web: 
 [Automata Sandbox](https://igorsolerc.github.io/automata-sandbox/)
 
-Link para download JFLAP
+Link para download JFLAP: 
 [JFLAP](https://www.jflap.org/jflaptmp/july27-18/JFLAP7.1.jar)
 
 ### `npm start`
