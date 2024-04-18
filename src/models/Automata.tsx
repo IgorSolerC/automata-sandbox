@@ -4,18 +4,30 @@ import { Transition } from "../models/Transition";
 
 // Enums
 import { AutomataInputResultsEnum } from "../enums/AutomataInputEnum";
+import { urlToHttpOptions } from "url";
+
+interface AutomataSnapshot {
+  states: State[];
+  transitions: Transition[];
+  initialState: State | null;
+  finalStates: State[];
+}
 
 export class Automata {
   states: State[];
   transitions: Transition[];
   initialState: State | null;
   finalStates: State[];
+  undoStack: AutomataSnapshot[];
+  redoStack: AutomataSnapshot[];
 
   constructor() {
     this.states = [];
     this.transitions = [];
     this.initialState = null;
     this.finalStates = [];
+    this.undoStack = [];
+    this.redoStack = [];
   }
 
   /* Misc */
@@ -43,15 +55,68 @@ export class Automata {
     console.log("initial = " + initial);
   }
 
+  pushSnapshotToUndo(){
+    const newSnapshot: AutomataSnapshot = {
+      states: JSON.parse(JSON.stringify(this.states)),
+      transitions: JSON.parse(JSON.stringify(this.transitions)),
+      initialState: JSON.parse(JSON.stringify(this.initialState)),
+      finalStates: JSON.parse(JSON.stringify(this.finalStates))
+    };
+    
+    //Validation to not make duped snapshots
+    if (this.undoStack.length === 0 || !this.areSnapshotsEqual(this.undoStack[this.undoStack.length - 1], newSnapshot)) {
+      this.undoStack.push(newSnapshot);
+    }
+  
+  }
+
+  areSnapshotsEqual(snapshot1: AutomataSnapshot, snapshot2: AutomataSnapshot): boolean {
+    return JSON.stringify(snapshot1) === JSON.stringify(snapshot2);
+  }
+
+  undo(){
+    if(this.undoStack.length > 1){
+      this.pushSnapshotToUndo();
+      const currentSnapshot = this.undoStack.pop()!;
+      this.redoStack.push(currentSnapshot);
+      const previousSnapshot = this.undoStack.pop()!;
+      this.restoreSnapshot(previousSnapshot);
+
+    }    
+  }
+
+  redo() {
+    if(this.redoStack.length > 0 ){
+      this.pushSnapshotToUndo();
+      const redoSnapshot = this.redoStack.pop()!;
+      this.restoreSnapshot(redoSnapshot);
+    }
+  }
+
+  restoreSnapshot(snapshot: AutomataSnapshot) {
+    this.states = snapshot.states;
+    this.transitions = snapshot.transitions;
+    this.initialState = snapshot.initialState;
+    this.finalStates = snapshot.finalStates;
+  }
+
+
   clearAutomata(){
     this.states = [];
     this.transitions = [];
     this.initialState = null;
     this.finalStates = [];
+    this.undoStack = []
+    this.redoStack = [];
   }
 
   /* Initial state */
-  setInitialState(newState: State | null) {
+  setInitialState(newState: State | null, saveSnapshot: boolean = true) {
+    if(saveSnapshot){
+      this.pushSnapshotToUndo();
+      this.redoStack = [];
+    }
+
     const initialStates = this.states.filter(state => state.isInitial);
 
     for (const state of initialStates) {
@@ -74,12 +139,14 @@ export class Automata {
     states.forEach((state) => {
       state.isFinal = !state.isFinal;
     });
-
+    
     let finalStates = this.getStates().filter((state) => state.isFinal);
     this.setFinalStates(finalStates);
   }
-
+  
   setFinalStates(finalStates: State[]) {
+    this.pushSnapshotToUndo();
+    this.redoStack = [];
     this.finalStates = finalStates;
   }
 
@@ -93,6 +160,8 @@ export class Automata {
   }
 
   addState(id: string, x: number, y: number, color: string, secondaryColor: string, isInitial: boolean = false, isFinal: boolean = false, label: string = ""): void {
+    this.pushSnapshotToUndo();
+    this.redoStack = [];
     if(!isInitial) 
       isInitial = this.states.length === 0;
     
@@ -118,7 +187,12 @@ export class Automata {
     this.states.push(newState);
   }
 
-  deleteState(state: State): void {
+  deleteState(state: State, saveSnapshot: boolean = true): void {
+    if(saveSnapshot){
+      this.pushSnapshotToUndo();
+      this.redoStack = [];
+    }
+
     const index = this.states.findIndex((s) => s.id === state.id);
     if (index !== -1) {
       this.states.splice(index, 1);
@@ -126,7 +200,7 @@ export class Automata {
 
     // Att estado inicial
     if (state.isInitial) {
-      this.setInitialState(null);
+      this.setInitialState(null, false);
     }
 
     // Att estado final
@@ -154,11 +228,14 @@ export class Automata {
       color,
       textColor,
     };
+    this.pushSnapshotToUndo();
+    this.redoStack = [];
     this.transitions.push(newTransition);
   }
 
   deleteTransition(transition: Transition): void {
-    const index = this.transitions.findIndex((t) => t.from === transition.from && t.to === transition.to && t.label == transition.label);
+    this.pushSnapshotToUndo();
+    const index = this.transitions.findIndex((t) => t.from === transition.from && t.to === transition.to && t.label === transition.label);
     if (index !== -1) {
       this.transitions.splice(index, 1);
     }

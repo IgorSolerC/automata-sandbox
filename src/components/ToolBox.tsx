@@ -105,7 +105,7 @@ const Toolbox: React.FC<ToolboxProps> = ({ currentCanvasToolRef }) => {
           id="redo"
           className="canvas-button navbar-button redo"
           onClick={() => {
-            console.log("do Clicado");
+            console.log("redo Clicado");
           }}
           title="Redo"
         >

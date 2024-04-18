@@ -134,7 +134,7 @@ const Canvas: React.FC = () => {
   let currentTranslateX = globalTranslateX; // Initialize with current translation X
   let currentTranslateY = globalTranslateY; // Initialize with current translation Y
 
-
+  let undoInterval: any = null;
 
   const getMouseXScaled = (p: p5) => {
     return (p.mouseX / cameraZoom)
@@ -902,7 +902,8 @@ const Canvas: React.FC = () => {
 
                   // Set estado atual como "Movendo estado"
                   currentCanvasAction = CanvasActions.MOVING_STATE;
-
+                  automataRef.current.pushSnapshotToUndo()
+                  automataRef.current.redoStack = [];
                   // Muda cursor para "grap" cursor
                   window.document.body.style.cursor = 'grab';
                 } 
@@ -950,8 +951,16 @@ const Canvas: React.FC = () => {
 
         p.mouseReleased = () => {
           window.document.body.style.cursor = 'default';
+          console.log(automataRef.current.undoStack)
+          console.log(automataRef.current.redoStack);
+          
+          if(currentCanvasAction === CanvasActions.MOVING_STATE)
+          {
+            automataRef.current.pushSnapshotToUndo();
+            automataRef.current.redoStack = [];
+          }
 
-          if (clickedState) {
+          if (clickedState) {            
             const endState = automataRef.current.getStates().find((state) => {
               return (
                 p.dist(state.x, state.y, getMouseX(p), getMouseY(p)) <
@@ -1001,8 +1010,9 @@ const Canvas: React.FC = () => {
                 selectedStates = [clickedState!];
             
               if(selectedStates[0] !== null){
-                selectedStates.forEach((state) => {
-                  automataRef.current.deleteState(state);
+                selectedStates.forEach((state, index) => {
+                  const isFirstState = index === 0;
+                  automataRef.current.deleteState(state, isFirstState);
                 });
                 selectedStates = [];
               }
@@ -1011,6 +1021,20 @@ const Canvas: React.FC = () => {
               automataRef.current.deleteTransition(clickedTransition);
             }
             validadeAllInputs()
+          }
+
+          /* Undo e Redo */
+          if (p.keyIsDown(p.CONTROL) && (p.key === 'Z' || p.key === 'z') && !undoInterval) {
+            automataRef.current.undo();
+            undoInterval = setInterval(() => {
+              automataRef.current.undo();
+            }, 200);  // Repeat undo every 200 ms
+          }
+          if (p.keyIsDown(p.CONTROL) && (p.key === 'Y' || p.key === 'y') && !undoInterval) {
+            automataRef.current.redo();
+            undoInterval = setInterval(() => {
+              automataRef.current.redo();
+            }, 200); 
           }
 
           /* Seleciona tool */
@@ -1039,6 +1063,14 @@ const Canvas: React.FC = () => {
           /* Debug */
           if (p.key === "!") {
             automataRef.current.printInfo();
+          }
+        };
+
+        p.keyReleased = () => {
+          // Stop Undo when Z is released
+          if ((p.key === 'Z' || p.key === 'z' || p.key === 'Y' || p.key === 'y') && undoInterval) {
+            clearInterval(undoInterval);
+            undoInterval = null;
           }
         };
       });
