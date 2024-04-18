@@ -383,9 +383,25 @@ const Canvas: React.FC = () => {
             hideContextMenu();
             validadeAllInputs()
           });
+          
+          let option4 = p.createDiv("Change State Name");
+          option4.mouseClicked(() => {
+            if(selectedStates.length > 1) {
+              alert("Selecione um estado por vez para alterar seu nome.")
+            }
+            else{
+              let label = prompt("Digite o novo nome: ");
+              if(label)
+                selectedStates[0].label = label!;
+              else
+                alert("O nome não pode estar vazio.");
+            }
+            hideContextMenu();
+          });
 
           contextMenu.child(option2);
           contextMenu.child(option3);
+          contextMenu.child(option4);
         }; 
 
         p.draw = () => {
@@ -657,9 +673,6 @@ const Canvas: React.FC = () => {
               p.strokeWeight(0)
 
               // Titulo do estado
-              p.fill(255);
-              p.text(state.label, state.x - 5, state.y + 5);
-
               // Marcador de "IsFinal"
               if (state.isFinal) {
                 // Draw an inner circle with only its outline
@@ -670,6 +683,11 @@ const Canvas: React.FC = () => {
                 p.ellipse(state.x, state.y, innerDiameter);
               }
 
+              p.fill(255);
+              p.textAlign(p.CENTER, p.CENTER);
+              p.strokeWeight(0)
+              wrapText(p, state.label, state.x, state.y, state.diameter, 12);
+              
               p.fill(0);
               p.stroke(0);
               p.strokeWeight(2);
@@ -1075,6 +1093,37 @@ const Canvas: React.FC = () => {
     simulationTransitionsRef.current = newSimulationTransitions;
     console.log("Updated States", newSimulationStates);
     console.log("Updated Transitions", newSimulationTransitions);
+  }
+
+  function wrapText(p: p5, text: string, x: number, y: number, maxDiameter: number, textSize: number): void {
+    p.textAlign(p.CENTER, p.CENTER); // Ensure text is centered
+    p.textSize(textSize);
+    let words = text.split(' ');
+    let tempLine = '';
+    let lines = [];
+  
+    for (let i = 0; i < words.length; i++) {
+      let testLine = tempLine + words[i] + ' ';
+      let metrics = p.textWidth(testLine);
+      if (metrics > maxDiameter - 10) { // 10 is a margin
+        lines.push(tempLine);
+        tempLine = words[i] + ' ';
+      } else {
+        tempLine = testLine;
+      }
+    }
+    lines.push(tempLine); // Push the last line
+  
+    // Check if text height exceeds the circle's diameter
+    if (lines.length * textSize > maxDiameter) {
+      textSize -= 1; // Decrease text size
+      return wrapText(p, text, x, y, maxDiameter, textSize); // Recursively adjust until it fits
+    } else {
+      // Draw each line centered in the circle
+      for (let i = 0; i < lines.length; i++) {
+        p.text(lines[i], x, y - (textSize * (lines.length - 1) / 2) + (textSize * i));
+      }
+    }
   }
   
   function showContextMenu(x: number, y: number) {
