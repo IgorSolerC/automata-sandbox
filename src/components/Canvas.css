@@ -159,8 +159,10 @@ html{
 .canvas-button > svg{
     fill:var(--tool-icon);
     stroke:var(--tool-icon);
-    width: 80%;
-    height: 80%;
+
+    height: 70%;
+    width: auto;
+    margin: 3px;
 }
 
 .canvas-button{
@@ -176,10 +178,19 @@ html{
     transition: background-color 0.3s ease;
 }
 
-.disabled-button-class {
+.canvas-button:disabled > svg{
+    fill: var(--button-icon-disabled);
+    stroke: var(--button-icon-disabled);
+}
+
+.canvas-button:disabled:hover{
+    background-color: var(--button-bg);
+}
+
+/* .disabled-button-class {
     opacity: 0.6;
     cursor: not-allowed;
-}
+} */
 
 .automata-input:focus{
     border: 0px solid;
@@ -224,6 +235,18 @@ html{
     margin-right: 0px;
 } */
 
+.navbar-button{
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+    /* transition: width 0.5s; */
+}
+
+.navbar-button:hover{
+    /* width: 90px; */
+}
+
 .navbar-button.selected{
     background-color: var(--selected-tool);
 }
@@ -238,13 +261,6 @@ html{
 .navbar-button > svg{
     fill: var(--tool-icon);
     stroke: var(--tool-icon);
-}
-
-.navbar-button.selected:hover > svg{
-
-}
-.navbar-button:hover > svg{
-
 }
 
 .rotateicon180 > svg{
@@ -317,17 +333,17 @@ display: none;
   }
 
 .simulation-message {
-    font-size: 20px;
-    color: var(--error-message-div);
-    text-shadow:
-    -1px -1px 0 #000,  
-     1px -1px 0 #000,
-    -1px  1px 0 #000,
-     1px  1px 0 #000;
+    width: max-content;
+    font-size: 17px;
+    vertical-align: middle;
+    padding: 4px;
+    padding-left: 15px;
+    padding-right: 15px;
+    color: var(--error-message);
+    background-color: var(--error-message-div);
+    border-radius: 5px;
     text-align: center;
     margin-bottom: 10px;
-    width: 100%;
-    animation: pulseAnimation 2s infinite;
   }
 
 #simulation-controller-div{
@@ -339,6 +355,7 @@ display: none;
     justify-content: center;
     flex-direction: column;
     align-items: center;
+
     animation-name: slideup;
     animation-duration: 0.7s;
     animation-timing-function: cubic-bezier();

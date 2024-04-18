@@ -1261,7 +1261,7 @@ const Canvas: React.FC = () => {
       {/* Step by Step simulation controls */}
       <div id="simulation-controller-div">
       {simulationMessage && (
-          <div className={`simulation-message ${simulationMessage && 'animate-message'}`}>
+          <div className={`simulation-message`}>
             {simulationMessage}
           </div>
         )}
@@ -1270,9 +1270,7 @@ const Canvas: React.FC = () => {
               id="beginning"
               disabled={isBackSimulationButtonsDisabled}
               className={
-                `canvas-button simulation-controller-button rotateicon180 ${
-                    !isBackSimulationButtonsDisabled ? "enabled-button-class" : "disabled-button-class"
-                }`
+                `canvas-button simulation-controller-button rotateicon180`
             }
               title="Beginning"
               onClick={() => {
@@ -1285,9 +1283,7 @@ const Canvas: React.FC = () => {
               id="next"
               disabled={isBackSimulationButtonsDisabled}
               className={
-                `canvas-button simulation-controller-button ${
-                  !isBackSimulationButtonsDisabled ? "enabled-button-class" : "disabled-button-class"
-              }`
+                `canvas-button simulation-controller-button`
               }
               title="Next"
               onClick={() => {
@@ -1312,9 +1308,7 @@ const Canvas: React.FC = () => {
               id="next"
               disabled={isNextSimulationButtonsDisabled}
               className={
-                `canvas-button simulation-controller-button ${
-                  !isNextSimulationButtonsDisabled ? "enabled-button-class" : "disabled-button-class"
-              }`
+                `canvas-button simulation-controller-button`
               }
               title="Next"
               onClick={() => {
@@ -1327,9 +1321,7 @@ const Canvas: React.FC = () => {
               id="fastforward"
               disabled={isNextSimulationButtonsDisabled}
               className={
-                `canvas-button simulation-controller-button ${
-                  !isNextSimulationButtonsDisabled ? "enabled-button-class" : "disabled-button-class"
-              }`
+                `canvas-button simulation-controller-button`
               }
               title="Fastforward"
               onClick={() => {
