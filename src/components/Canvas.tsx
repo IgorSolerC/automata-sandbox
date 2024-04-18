@@ -6,23 +6,12 @@ import Toolbox from "./ToolBox";
 import AutomataInput from "./AutomataInput";
 
 // Google Material Icons
-import CursorIcon from "../symbols/cursor_icon";
-import TrashIcon from "../symbols/trash_icon";
-import UndoIcon from "../symbols/undo_icon";
-import RedoIcon from "../symbols/redo_icon";
-import MoveIcon from "../symbols/move_icon";
-import TransitionIcon from "../symbols/transition_icon";
-import CheckIcon from "../symbols/check_icon";
-import WarningIcon from "../symbols/warning_icon";
 import NextIcon from "../symbols/next_icon";
 import PrevIcon from "../symbols/prev_icon";
 import FastforwardIcon from "../symbols/fastforward_icon";
-import PauseIcon from "../symbols/pause_icon";
 import PlayIcon from "../symbols/play_icon";
-import ErrorIcon from "../symbols/error_icon";
 import PlusIcon from "../symbols/plus_icon";
 import MinusIcon from "../symbols/minus_icon";
-import AddCircleIcon from "../symbols/add_circle_icon";
 
 // Libaries
 import React, { useRef, useEffect, useState } from "react";
@@ -37,7 +26,6 @@ import { Transition } from "../models/Transition";
 // Enums
 import { CanvasActions } from "../enums/CanvasActionsEnum";
 import { CanvasTools } from "../enums/CanvasToolsEnum";
-import { AutomataInputResultsEnum } from "../enums/AutomataInputEnum";
 
 // Constants
 import { CanvasColors } from "../Constants/CanvasConstants";
@@ -388,7 +376,7 @@ const Canvas: React.FC = () => {
             validadeAllInputs()
           });
           
-          let option4 = p.createDiv("Change State Name");
+          let option4 = p.createDiv("Rename");
           option4.mouseClicked(() => {
             if(selectedStates.length > 1) {
               alert("Selecione um estado por vez para alterar seu nome.")
@@ -1305,7 +1293,7 @@ const Canvas: React.FC = () => {
       {/* Step by Step simulation controls */}
       <div id="simulation-controller-div">
       {simulationMessage && (
-          <div className={`simulation-message ${simulationMessage && 'animate-message'}`}>
+          <div className={`simulation-message`}>
             {simulationMessage}
           </div>
         )}
@@ -1314,9 +1302,7 @@ const Canvas: React.FC = () => {
               id="beginning"
               disabled={isBackSimulationButtonsDisabled}
               className={
-                `canvas-button simulation-controller-button rotateicon180 ${
-                    !isBackSimulationButtonsDisabled ? "enabled-button-class" : "disabled-button-class"
-                }`
+                `canvas-button simulation-controller-button rotateicon180`
             }
               title="Beginning"
               onClick={() => {
@@ -1329,9 +1315,7 @@ const Canvas: React.FC = () => {
               id="next"
               disabled={isBackSimulationButtonsDisabled}
               className={
-                `canvas-button simulation-controller-button ${
-                  !isBackSimulationButtonsDisabled ? "enabled-button-class" : "disabled-button-class"
-              }`
+                `canvas-button simulation-controller-button`
               }
               title="Next"
               onClick={() => {
@@ -1356,9 +1340,7 @@ const Canvas: React.FC = () => {
               id="next"
               disabled={isNextSimulationButtonsDisabled}
               className={
-                `canvas-button simulation-controller-button ${
-                  !isNextSimulationButtonsDisabled ? "enabled-button-class" : "disabled-button-class"
-              }`
+                `canvas-button simulation-controller-button`
               }
               title="Next"
               onClick={() => {
@@ -1371,9 +1353,7 @@ const Canvas: React.FC = () => {
               id="fastforward"
               disabled={isNextSimulationButtonsDisabled}
               className={
-                `canvas-button simulation-controller-button ${
-                  !isNextSimulationButtonsDisabled ? "enabled-button-class" : "disabled-button-class"
-              }`
+                `canvas-button simulation-controller-button`
               }
               title="Fastforward"
               onClick={() => {
@@ -1422,18 +1402,23 @@ const AutomataInputList: React.FC<AutomataInputListProps> = (
 ) => {
   const { aumataInputResults, removeInput, addInput } = useAutomataInputContext();
 
+  const MIN_INPUT_NUMBER = 1
+  const MAX_INPUT_NUMBER = 10
+
   return(
     <div id='automata-input-div'>
       <div id='automata-input-adder-div' className="canvas-button ">
         <button
           className="automata-input-adder-button mais"
           onClick={() => {addInput(automataRef)}}
+          disabled={aumataInputResults.length >= MAX_INPUT_NUMBER}
         >
           <PlusIcon/>
         </button>
         <button
           className="automata-input-adder-button menos"
           onClick={removeInput}
+          disabled={aumataInputResults.length <= MIN_INPUT_NUMBER}
         >
           <MinusIcon/>
         </button>
