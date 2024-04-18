@@ -41,6 +41,13 @@ interface AutomataInputProps {
     let simulationResult = aumataInputResults[index].result
     let errorMessage = aumataInputResults[index].message
   
+    // Function to prevent CTRL+Z
+    const preventUndo = (event: React.KeyboardEvent) => {
+      if (event.ctrlKey && event.key === 'z') {
+        event.preventDefault();
+      }
+    };
+
     return (
       <div id="automata-input-div">
         <input
@@ -66,6 +73,7 @@ interface AutomataInputProps {
             aumataInputResultsAux[index].message = message
             setAumataInputResults(aumataInputResultsAux)
           }}
+          onKeyDown={preventUndo}
         ></input>
         <button
           id="validation"
