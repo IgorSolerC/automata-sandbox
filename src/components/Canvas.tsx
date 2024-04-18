@@ -36,7 +36,7 @@ import { CanvasTools } from "../enums/CanvasToolsEnum";
 import { AutomataInputResultsEnum } from "../enums/AutomataInputEnum";
 
 // Constants
-import { CanvasColors } from "../Constants/CanvasConstants";
+import { CanvasColors } from "../constants/CanvasConstants";
 
 // Contexts
 import { ToolboxProvider, useToolboxContext } from "../contexts/ToolboxContext";
