@@ -1,40 +1,3 @@
-/* Light Theme */
-:root {
-    /* Geral */
-    --gui-default-size: 60px;
-
-    /* Buttons */
-    --button-bg: #ccc;
-    --button-bg-hover: #ddd;
-
-    /* Tools */
-    --tool-icon: #000;
-    --selected-tool-icon: #fff;
-    --selected-tool: #7b2cbf;
-    --selected-tool-hover: #9d4edd;
-    
-    /* Input Box */
-    --accepted: #3dc521;
-    --accepted-hover: #62d84b;
-    --accepted-icon: #fff;
-    --warning: #eed962;
-    --warning-hover: #f3e17b;
-    --warning-icon: #fff;
-    --rejected: #f53434;
-    --rejected-hover: #fc6161;
-    --rejected-icon: #fff;
-    --error-message: #816e00;
-
-    /* Context Menu */
-    --context-menu-bg: #fff;
-    --context-menu-border: #f6f6f6;
-    --context-menu-bg-hover: #f6f6f6;
-
-    /* Html */
-    --html-bg: #ebebeb;
-
-}
-
 /* Dark Theme */
 :root {
     /* Geral */
@@ -45,6 +8,7 @@
     --button-bg: #343A40;
     --button-bg-hover: #495057;
     --button-icon: #ADB5BD;
+    --button-icon-disabled: #4f565e;
 
     /* Tools */
     --tool-icon: #ced4da;
@@ -432,5 +396,13 @@ display: none;
 
 .automata-input-adder-button:hover{
     background-color: var(--button-bg-hover);
+}
 
+.automata-input-adder-button:disabled > svg{
+    fill: var(--button-icon-disabled);
+    stroke: var(--button-icon-disabled);
+}
+
+.automata-input-adder-button:disabled:hover{
+    background-color: var(--button-bg);
 }
