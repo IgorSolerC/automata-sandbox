@@ -40,7 +40,7 @@ import { CanvasTools } from "../enums/CanvasToolsEnum";
 import { AutomataInputResultsEnum } from "../enums/AutomataInputEnum";
 
 // Constants
-import { CanvasColors } from "../constants/CanvasConstants";
+import { CanvasColors } from "../Constants/CanvasConstants";
 
 // Contexts
 import { ToolboxProvider, useToolboxContext } from "../contexts/ToolboxContext";
@@ -996,9 +996,9 @@ const Canvas: React.FC = () => {
 
           /* Deleta estado(s) */
           if (p.key === "Delete") {
-            if(clickedState){
+            if(clickedState || selectedStates.length !== 0){
               if (selectedStates.length === 0) 
-              selectedStates = [clickedState!];
+                selectedStates = [clickedState!];
             
               if(selectedStates[0] !== null){
                 selectedStates.forEach((state) => {
