@@ -363,6 +363,7 @@ const Canvas: React.FC = () => {
           contextMenu.addClass("hidden");
 
           let option2 = p.createDiv("Initial");
+          option2.id("ContextMenu-Initial")
           option2.mouseClicked(() => {
             toggleInitial(p);
             hideContextMenu();
@@ -370,6 +371,7 @@ const Canvas: React.FC = () => {
             });
 
           let option3 = p.createDiv("Final");
+          option3.id("ContextMenu-Final")
           option3.mouseClicked(() => {
             automataRef.current.toggleFinal(selectedStates);
             hideContextMenu();
@@ -377,6 +379,7 @@ const Canvas: React.FC = () => {
           });
           
           let option4 = p.createDiv("Rename");
+          option4.id("ContextMenu-Rename");
           option4.mouseClicked(() => {
             if(selectedStates.length > 1) {
               alert("Selecione um estado por vez para alterar seu nome.")
@@ -808,6 +811,10 @@ const Canvas: React.FC = () => {
         };
 
         p.mousePressed = (event: any) => {
+          //Se o click não foi no próprio contextMenu, ocultar o menu.
+          if (event.target.id && !event.target.id.includes('ContextMenu')) {
+            hideContextMenu();
+          }
           //Gambiarra para não executar a tool selecionada ao clicar em botões
           if ((event.target instanceof HTMLButtonElement || event.target instanceof HTMLInputElement || event.target.nodeName === 'svg' || event.target.nodeName === 'path')) {
             return;
