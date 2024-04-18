@@ -70,17 +70,6 @@ const Toolbox: React.FC<ToolboxProps> = ({ currentCanvasToolRef }) => {
           <AddCircleIcon />
         </button>
         <button
-          id="move"
-          className={
-            "canvas-button navbar-button " +
-            (selectedToolState === CanvasTools.MOVE ? "selected" : "")
-          }
-          onClick={() => handleToolButtonClick(CanvasTools.MOVE)}
-          title="Move"
-        >
-          <MoveIcon/>
-        </button>
-        <button
           id="eraser"
           className={
             "canvas-button navbar-button " +
@@ -90,6 +79,17 @@ const Toolbox: React.FC<ToolboxProps> = ({ currentCanvasToolRef }) => {
           title="Eraser"
         >
           <TrashIcon />
+        </button>
+        <button
+          id="move"
+          className={
+            "canvas-button navbar-button " +
+            (selectedToolState === CanvasTools.MOVE ? "selected" : "")
+          }
+          onClick={() => handleToolButtonClick(CanvasTools.MOVE)}
+          title="Move"
+        >
+          <MoveIcon/>
         </button>
         <button
           id="undo"
