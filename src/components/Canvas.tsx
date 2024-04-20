@@ -28,12 +28,11 @@ import { CanvasActions } from "../enums/CanvasActionsEnum";
 import { CanvasTools } from "../enums/CanvasToolsEnum";
 
 // Constants
-import { CanvasColors } from "../Constants/CanvasConstants";
+import { CanvasColors } from "../constants/CanvasConstants";
 
 // Contexts
 import { ToolboxProvider, useToolboxContext } from "../contexts/ToolboxContext";
 import { AutomataInputProvider, useAutomataInputContext } from "../contexts/AutamataInputContext";
-import { json } from "body-parser";
 
 // let canvasObject: p5 | null = null; // Variável para armazenar o sketch
 
@@ -1018,18 +1017,29 @@ const Canvas: React.FC = () => {
             validadeAllInputs()
           }
 
-          /* Undo e Redo */
-          if (p.keyIsDown(p.CONTROL) && (p.key === 'Z' || p.key === 'z') && !undoInterval) {
-            automataRef.current.undo();
-            undoInterval = setInterval(() => {
-              automataRef.current.undo();
-            }, 200);  // Repeat undo every 200 ms
-          }
-          if (p.keyIsDown(p.CONTROL) && (p.key === 'Y' || p.key === 'y') && !undoInterval) {
+          /*
+            Undo e Redo 
+          */
+
+          // Undo
+          if (
+            !undoInterval && (
+              (p.keyIsDown(p.CONTROL) && (p.key === 'Y' || p.key === 'y')) // CTRL + Y
+              || (p.keyIsDown(p.CONTROL) && p.keyIsDown(p.SHIFT) && (p.key === 'Z' || p.key === 'Z')) // CTRL + SHIFT + Z
+            )
+          ) {
             automataRef.current.redo();
             undoInterval = setInterval(() => {
               automataRef.current.redo();
             }, 200); 
+          }
+
+          // Redo
+          else if (p.keyIsDown(p.CONTROL) && (p.key === 'Z' || p.key === 'z') && !undoInterval) {
+            automataRef.current.undo();
+            undoInterval = setInterval(() => {
+              automataRef.current.undo();
+            }, 200);  // Repeat undo every 200 ms
           }
 
           /* Seleciona tool */
@@ -1047,12 +1057,12 @@ const Canvas: React.FC = () => {
             setSelectedToolState(CanvasTools.ADD_STATE)
           }
           else if (p.key === "4") {
-            currentCanvasToolRef.current = CanvasTools.MOVE;
-            setSelectedToolState(CanvasTools.MOVE)
-          }
-          else if (p.key === "5") {
             currentCanvasToolRef.current = CanvasTools.ERASER;
             setSelectedToolState(CanvasTools.ERASER)
+          }
+          else if (p.key === "5") {
+            currentCanvasToolRef.current = CanvasTools.MOVE;
+            setSelectedToolState(CanvasTools.MOVE)
           }
 
           /* Debug */
