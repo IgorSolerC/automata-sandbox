@@ -254,7 +254,7 @@ html{
 
 .canvas-button.no-background{
     border: 1px solid var(--button-bg);
-    background-color: #00000000;
+    background-color: var(--html-bg);
     box-shadow: none;
 }
 .canvas-button.no-background > svg{
@@ -262,7 +262,7 @@ html{
     transition: stroke 0.3s ease, fill 0.3s ease;
 }
 .canvas-button.no-background:hover{
-    background-color: #00000000;
+    background-color: var(--html-bg);
 }
 .canvas-button.no-background:hover > svg{
     fill: #fff;

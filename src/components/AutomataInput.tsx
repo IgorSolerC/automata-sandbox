@@ -28,6 +28,7 @@ interface AutomataInputProps {
     automataRef: React.MutableRefObject<Automata>;
     calculateSteps: any;
     isSimulating: boolean;
+    simulationIndex: number;
     stopSimulation: () => void;
   }
   const AutomataInput: React.FC<AutomataInputProps> = (
@@ -36,6 +37,7 @@ interface AutomataInputProps {
       automataRef,
       calculateSteps,
       isSimulating,
+      simulationIndex,
       stopSimulation,
     }
   ) => {

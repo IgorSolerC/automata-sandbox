@@ -711,7 +711,7 @@ const Canvas: React.FC = () => {
             p.stroke(0);
             p.rect(note.x, note.y, note.width, note.height);
             p.fill(0)
-            wrapTextInRectangle(p, note.text, note.x, note.y, note.width, note.height, 12);
+            wrapTextInRectangle(p, note.text, note.x, note.y, note.width, note.height, 12, 4);
           })
 
           // Desenha caixa de seleção
@@ -1193,38 +1193,72 @@ const Canvas: React.FC = () => {
     }
   }
 
-  function wrapTextInRectangle(p: p5, text: string, x: number, y: number, maxWidth: number, maxHeight: number, textSize: number): void {
-    p.textAlign(p.CENTER, p.TOP); // Text is centered horizontally and aligned to the top vertically
+  function wrapTextInRectangle(p: p5, text: string, x: number, y: number, maxWidth: number, maxHeight: number, textSize: number, padding: number) {
+    p.textAlign(p.LEFT, p.TOP); // Align text to the left and top
     p.textSize(textSize);
+    p.fill("#FFFFFF")
     let words = text.split(' ');
     let tempLine = '';
     let lines = [];
     let lineHeight = textSize * 1.2; // Calculate line height as 1.2 times the text size for some vertical spacing
 
+    // Adjust the maximum width and height for padding
+    maxWidth -= (padding * 2);
+    maxHeight -= (padding * 2);
+
     // Build lines of text that fit within maxWidth
     for (let i = 0; i < words.length; i++) {
-        let testLine = tempLine + words[i] + ' ';
-        let metrics = p.textWidth(testLine);
-        if (metrics > maxWidth) { // Check if adding another word exceeds the max width
-            lines.push(tempLine);
-            tempLine = words[i] + ' ';
-        } else {
-            tempLine = testLine;
-        }
-    }
-    lines.push(tempLine); // Add the last line
+      let word = words[i];
+      let wordWidth = p.textWidth(word);
+  
+      // If a single word is wider than maxWidth, break the word
+      while (wordWidth > maxWidth) {
+          // Find the substring of the word that fits, and add a hyphen
+          let subWord = word;
+          while (p.textWidth(subWord + '-') > maxWidth) {
+              // Trim the subWord until it fits
+              subWord = subWord.substring(0, subWord.length - 1);
+          }
+          subWord += '-'; // Add a hyphen to indicate a break
+  
+          // If there is text in tempLine, push it to lines and reset tempLine
+          if (tempLine !== '') {
+              lines.push(tempLine);
+              tempLine = '';
+          }
+  
+          // Push the subWord to lines and prepare the remaining part of the word for the next line
+          lines.push(subWord);
+          word = word.substring(subWord.length - 1); // Exclude the hyphen from the remaining part
+          wordWidth = p.textWidth(word);
+      }
+  
+      // Continue processing the remaining part of the word or the next word
+      let testLine = tempLine + word + ' ';
+      if (p.textWidth(testLine) > maxWidth) {
+          lines.push(tempLine);
+          tempLine = word + ' ';
+      } else {
+          tempLine = testLine;
+      }
+  }
+  if (tempLine) {
+      lines.push(tempLine.trim());
+  }
 
-    // Check if total text height exceeds maxHeight and adjust text size if necessary
-    if (lines.length * lineHeight > maxHeight) {
-        textSize -= 1; // Decrease text size
-        if (textSize > 0) { // Prevent infinite recursion with a sensible minimum text size
-            return wrapTextInRectangle(p, text, x, y, maxWidth, maxHeight, textSize); // Recursively adjust until it fits
+    // Draw each line, adjusting vertical position to start at the top and fill downwards
+    let contentHeight = lines.length * lineHeight;
+    if (contentHeight > maxHeight) {
+        // If the text doesn't fit vertically, reduce text size and try again
+        textSize -= 1;
+        if (textSize > 0) {
+            wrapTextInRectangle(p, text, x, y, maxWidth + (padding * 2), maxHeight + (padding * 2), textSize, padding);
         }
     } else {
-        // Draw each line, adjusting vertical position to distribute lines within the rectangle
-        let startY = y + (maxHeight - (lines.length * lineHeight)) / 2; // Start y position centered vertically
+        // Calculate the starting Y position to add padding
+        let startY = y + padding;
         for (let i = 0; i < lines.length; i++) {
-            p.text(lines[i], x, startY + (lineHeight * i));
+            p.text(lines[i], x + padding, startY + (lineHeight * i));
         }
     }
   }
@@ -1458,6 +1492,7 @@ const Canvas: React.FC = () => {
           calculateSteps = {calculateSteps}
           simulationInputId = {simulationInputId}
           stopSimulation = {stopSimulation}
+          simulationIndex= {simulationIndex}
         />
       </div>
 
@@ -1560,6 +1595,7 @@ interface AutomataInputListProps {
   automataRef: React.MutableRefObject<Automata>;
   calculateSteps: any;
   simulationInputId: number | null;
+  simulationIndex: number;
   stopSimulation: () => void;
 }
 const AutomataInputList: React.FC<AutomataInputListProps> = (
@@ -1567,6 +1603,7 @@ const AutomataInputList: React.FC<AutomataInputListProps> = (
     automataRef,
     calculateSteps,
     simulationInputId,
+    simulationIndex,
     stopSimulation,
   }
 ) => {
@@ -1600,6 +1637,7 @@ const AutomataInputList: React.FC<AutomataInputListProps> = (
             automataRef = {automataRef}
             calculateSteps = {calculateSteps}
             isSimulating = {index === simulationInputId}
+            simulationIndex = {simulationIndex}
             stopSimulation = {stopSimulation}
           />
           ))}
