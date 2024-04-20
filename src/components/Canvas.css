@@ -185,6 +185,7 @@ html{
 
 .canvas-button:disabled:hover{
     background-color: var(--button-bg);
+    cursor: default;
 }
 
 /* .disabled-button-class {
@@ -442,6 +443,7 @@ display: none;
 
 .automata-input-adder-button:hover{
     background-color: var(--button-bg-hover);
+    cursor: pointer;
 }
 
 .automata-input-adder-button:disabled > svg{
@@ -451,6 +453,7 @@ display: none;
 
 .automata-input-adder-button:disabled:hover{
     background-color: var(--button-bg);
+    cursor: default;
 }
 
 .navbar-row{

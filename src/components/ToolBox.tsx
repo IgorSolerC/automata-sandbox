@@ -59,7 +59,7 @@ const Toolbox: React.FC<ToolboxProps> = ({ currentCanvasToolRef, handleImportFil
             <CursorIcon />
           </button>
           {isExpanded &&
-            <button id="save" title="Save File"
+            <button id="save" title="Save File" disabled
               className={
                 "canvas-button navbar-button extra-option "
                 // + (selectedToolState === CanvasTools.POINTER ? "selected" : "")
@@ -99,7 +99,7 @@ const Toolbox: React.FC<ToolboxProps> = ({ currentCanvasToolRef, handleImportFil
         <div
           className='navbar-row'
         >
-          <button id="add_state" title="Add State"
+          <button id="add_state" title="Add State" 
             className={
               "canvas-button navbar-button " +
               (selectedToolState === CanvasTools.ADD_STATE ? "selected" : "")
@@ -109,7 +109,7 @@ const Toolbox: React.FC<ToolboxProps> = ({ currentCanvasToolRef, handleImportFil
             <AddCircleIcon />
           </button>
           {isExpanded &&
-            <button id="add-note" title="Create Note"
+            <button id="add-note" title="Create Note" disabled
               className={
                 "canvas-button navbar-button extra-option "
                 // + (selectedToolState === CanvasTools.POINTER ? "selected" : "")
@@ -134,7 +134,7 @@ const Toolbox: React.FC<ToolboxProps> = ({ currentCanvasToolRef, handleImportFil
             <TrashIcon />
           </button>
           {isExpanded &&
-            <button id="regex" title="Create from RegEx"
+            <button id="regex" title="Create from RegEx" disabled
               className={
                 "canvas-button navbar-button extra-option "
                 // + (selectedToolState === CanvasTools.POINTER ? "selected" : "")
@@ -159,7 +159,7 @@ const Toolbox: React.FC<ToolboxProps> = ({ currentCanvasToolRef, handleImportFil
             <MoveIcon/>
           </button>
           {isExpanded &&
-            <button id="minimeze-automara" title="Minimeze Automata"
+            <button id="minimeze-automara" title="Minimeze Automata" disabled
               className={
                 "canvas-button navbar-button extra-option "
                 // + (selectedToolState === CanvasTools.POINTER ? "selected" : "")
