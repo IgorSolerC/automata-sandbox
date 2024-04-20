@@ -32,9 +32,12 @@ import NextIcon from "../symbols/next_icon";
 interface ToolboxProps {
     currentCanvasToolRef: React.MutableRefObject<number>;
     handleImportFile: () => void;
+    handleSaveFile: () => void;
+    Undo: () => void;
+    Redo: () => void;
 }
 
-const Toolbox: React.FC<ToolboxProps> = ({ currentCanvasToolRef, handleImportFile }) => {
+const Toolbox: React.FC<ToolboxProps> = ({ currentCanvasToolRef, handleImportFile, handleSaveFile, Undo, Redo }) => {
     const { selectedToolState, setSelectedToolState } = useToolboxContext();
     const [isExpanded, setIsExpanded] = useState(false)
 
@@ -59,12 +62,12 @@ const Toolbox: React.FC<ToolboxProps> = ({ currentCanvasToolRef, handleImportFil
             <CursorIcon />
           </button>
           {isExpanded &&
-            <button id="save" title="Save File" disabled
+            <button id="save" title="Save File"
               className={
                 "canvas-button navbar-button extra-option "
                 // + (selectedToolState === CanvasTools.POINTER ? "selected" : "")
               }
-              onClick={() => {}}
+              onClick={handleSaveFile}
             >
               <SaveIcon/>
             </button>
@@ -159,7 +162,7 @@ const Toolbox: React.FC<ToolboxProps> = ({ currentCanvasToolRef, handleImportFil
             <MoveIcon/>
           </button>
           {isExpanded &&
-            <button id="minimeze-automara" title="Minimeze Automata" disabled
+            <button id="minimize-automara" title="Minimize Automata" disabled
               className={
                 "canvas-button navbar-button extra-option "
                 // + (selectedToolState === CanvasTools.POINTER ? "selected" : "")
@@ -173,18 +176,14 @@ const Toolbox: React.FC<ToolboxProps> = ({ currentCanvasToolRef, handleImportFil
 
         <button id="undo" title="Undo"
           className="canvas-button navbar-button undo"
-          onClick={() => {
-            console.log("Undo Clicado");
-          }}
+          onClick={Undo}
         >
           <UndoIcon />
         </button>
 
         <button id="redo" title="Redo"
           className="canvas-button navbar-button redo"
-          onClick={() => {
-            console.log("redo Clicado");
-          }}
+          onClick={Redo}
         >
           <RedoIcon />
         </button>

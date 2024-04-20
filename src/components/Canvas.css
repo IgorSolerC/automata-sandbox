@@ -95,7 +95,7 @@ html{
 
 #automata-input-div{
     float: right;
-    margin-right: 5px; /* Não entedi pq precisa disso, mas precisa  */
+    margin-right: 5px;
 }
 
 .input-button.accepted{
@@ -122,7 +122,9 @@ html{
     background-color: var(--warning);
 }
 .input-button.warning:hover{
-    background-color: var(--warning-hover);
+    /* background-color: var(--warning-hover); */
+    background-color: var(--warning);
+    cursor: default;
 }
 .input-button.warning > svg{
     fill: var(--warning-icon);

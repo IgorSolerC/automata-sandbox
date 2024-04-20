@@ -17,6 +17,7 @@ import MinusIcon from "../symbols/minus_icon";
 import React, { useRef, useEffect, useState } from "react";
 import p5 from "p5";
 import { XMLParser } from 'fast-xml-parser';
+import builder from 'xmlbuilder';
 
 // Objects
 import { Automata } from "../models/Automata";
@@ -79,13 +80,14 @@ const Canvas: React.FC = () => {
   const currentCanvasToolRef = useRef(CanvasTools.POINTER);
   
   const [simulationMessage, setSimulationMessage] = useState('');
-  const [isBackSimulationButtonsDisabled, setIsBackSimulationButtonsDisabled] = React.useState(false);
-  const [isNextSimulationButtonsDisabled, setIsNextSimulationButtonsDisabled] = React.useState(false);
+  const [isBackSimulationButtonsDisabled, setIsBackSimulationButtonsDisabled] = useState(false);
+  const [isNextSimulationButtonsDisabled, setIsNextSimulationButtonsDisabled] = useState(false);
 
   const [simulationStates, setSimulationStates] = useState<State[]>([]);
   const simulationStatesRef = useRef(simulationStates);
   
   const [simulationTransitions, setSimulationTransitions] = useState<(Transition | null)[]>([]);
+  console.log("simulationTransitions", simulationTransitions)
   const simulationTransitionsRef = useRef(simulationTransitions);
   
   const [simulationIndex, setSimulationIndex] = useState<number>();
@@ -167,18 +169,22 @@ const Canvas: React.FC = () => {
       }
       
       id = `q${id_number}`;
-      while (allStates.some(state => state.id === id || state.label === id)) {
+      while (allStates.some(state => state.id === id_number.toString() || state.label === id)) {
         id_number++;
         id = `q${id_number}`;
       }
       // Cria novo estado
       automataRef.current.addState(
-        id,
+        id_number.toString(),
         getMouseX(p),
         getMouseY(p),
         CanvasColors.DEFAULT_STATE,
         CanvasColors.DEFAULT_STATE_SECONDARY,
+        false,
+        false,
+        id
       );
+      console.log(automataRef.current.states);
     }
   }
 
@@ -323,14 +329,14 @@ const Canvas: React.FC = () => {
       aumataInputResultsAux[i].message = message
     }
 
-    calculateSteps();
+    // calculateSteps();
 
-      // Simulate automata again
+    // Simulate automata again
     setAumataInputResults(aumataInputResultsAux)
   }
 
   useEffect(() => {
-    calculateSteps();
+    // calculateSteps();
     if(!automataRef.current){
       automataRef.current = new Automata(); 
     }
@@ -405,56 +411,58 @@ const Canvas: React.FC = () => {
           p.strokeCap(p.PROJECT);
           p.translate(globalTranslateX, globalTranslateY)
           
-          var input = (document.getElementsByClassName("automata-input")[0] as HTMLInputElement)?.value;
-          let currentIndex = simulationIndexRef.current;
-          if (input && (currentIndex || currentIndex === 0)) {
-            let x = - (input.length * 12) / 2; // Adjust starting x position relative to the center
+          /* 🎬🎬🎬 TEXTO DA SIMULAÇÃO DO AUTOMATO */
+          // var input = (document.getElementsByClassName("automata-input")[0] as HTMLInputElement)?.value;
+          // let currentIndex = simulationIndexRef.current;
+          // if (input && (currentIndex || currentIndex === 0)) {
+          //   let x = - (input.length * 12) / 2; // Adjust starting x position relative to the center
 
-            p.push(); // Save current transformation state
-            p.resetMatrix(); // Reset transformations or adjust according to the camera
+          //   p.push(); // Save current transformation state
+          //   p.resetMatrix(); // Reset transformations or adjust according to the camera
 
-            // Drawing the text at the top of the canvas
-            if(currentIndex < simulationStatesRef.current.length - 1){
+          //   // Drawing the text at the top of the canvas
+          //   if(currentIndex < simulationStatesRef.current.length - 1){
 
-              for (let i = 0; i < input.length; i++) {
-                let char = input[i];
-                if (i < currentIndex) {
-                    p.fill('gray');
-                  } else if (i === currentIndex) {
-                    p.fill('red');
-                    p.textSize(30);
-                } else {
-                    p.fill(CanvasColors.DEFAULT_TRANSITION_TEXT);
-                    p.textSize(20);
-                }
+          //     for (let i = 0; i < input.length; i++) {
+          //       let char = input[i];
+          //       if (i < currentIndex) {
+          //           p.fill('gray');
+          //         } else if (i === currentIndex) {
+          //           p.fill('red');
+          //           p.textSize(30);
+          //       } else {
+          //           p.fill(CanvasColors.DEFAULT_TRANSITION_TEXT);
+          //           p.textSize(20);
+          //       }
                 
-                p.textAlign(p.CENTER, p.CENTER);
-                p.strokeWeight(0.1);
-                p.text(char, x + (window.innerWidth / 2), 20); // Position the text at the top
-                x += 18; // Increment x for the next character
-              }
+          //       p.textAlign(p.CENTER, p.CENTER);
+          //       p.strokeWeight(0.1);
+          //       p.text(char, x + (window.innerWidth / 2), 20); // Position the text at the top
+          //       x += 18; // Increment x for the next character
+          //     }
 
-              p.pop(); // Restore previous transformation state
-            } else { //Finalizou por completo a simulação
-              for (let i = 0; i < input.length; i++) {
-                let char = input[i];
-                let lastState = simulationStatesRef.current[simulationIndexRef.current!]
-                if (lastState && lastState.isFinal) {
-                    p.fill('green');
-                } else {
-                    p.fill('red');
-                  }
-                p.textSize(30);
+          //     p.pop(); // Restore previous transformation state
+          //   } else { //Finalizou por completo a simulação
+          //     for (let i = 0; i < input.length; i++) {
+          //       let char = input[i];
+          //       let lastState = simulationStatesRef.current[simulationIndexRef.current!]
+          //       if (lastState && lastState.isFinal) {
+          //           p.fill('green');
+          //       } else {
+          //           p.fill('red');
+          //         }
+          //       p.textSize(30);
                 
-                p.textAlign(p.CENTER, p.CENTER);
-                p.strokeWeight(0.1);
-                p.text(char, x + (window.innerWidth / 2), 20); // Position the text at the top
-                x += 20; // Increment x for the next character
-              }
+          //       p.textAlign(p.CENTER, p.CENTER);
+          //       p.strokeWeight(0.1);
+          //       p.text(char, x + (window.innerWidth / 2), 20); // Position the text at the top
+          //       x += 20; // Increment x for the next character
+          //     }
 
-              p.pop(); // Restore previous transformation state
-            }
-          } 
+          //     p.pop(); // Restore previous transformation state
+          //   }
+          // } 
+          /* 🎬🎬🎬 TEXTO DA SIMULAÇÃO DO AUTOMATO */
           
           const arrowWeight = 5; 
 
@@ -945,8 +953,6 @@ const Canvas: React.FC = () => {
 
         p.mouseReleased = () => {
           window.document.body.style.cursor = 'default';
-          console.log(automataRef.current.undoStack)
-          console.log(automataRef.current.redoStack);
           
           if(currentCanvasAction === CanvasActions.MOVING_STATE)
           {
@@ -1088,9 +1094,9 @@ const Canvas: React.FC = () => {
     }; 
   }, []);
 
-  function calculateSteps() {
+  function calculateSteps(input_id: number) {
     currentCanvasAction = CanvasActions.SIMULATING;
-    var input = (document.getElementsByClassName("automata-input")[0] as HTMLInputElement).value;
+    var input = (document.getElementById("automata-input-id-"+input_id) as HTMLInputElement).value;
     let newSimulationStates = [];
     let newSimulationTransitions = [];
     setSimulationIndex(0);
@@ -1208,23 +1214,23 @@ const Canvas: React.FC = () => {
     if(change === 0 || newIndex === 0){
       newIndex = 0;
       setSimulationMessage("");
-      setIsBackSimulationButtonsDisabled(false);
-      setIsNextSimulationButtonsDisabled(false);
+      // setIsBackSimulationButtonsDisabled(false);
+      // setIsNextSimulationButtonsDisabled(false);
     }
     else if (newIndex < 0) {
       newIndex = 0;
       setSimulationMessage("A Simulação já está em seu estado inicial");
-      setIsBackSimulationButtonsDisabled(true);
-      setIsNextSimulationButtonsDisabled(false);
+      // setIsBackSimulationButtonsDisabled(true);
+      // setIsNextSimulationButtonsDisabled(false);
     } else if (newIndex >= simulationStatesRef.current.length) {
       newIndex = simulationStatesRef.current.length - 1;
       setSimulationMessage("A Simulação já chegou ao fim");
-      setIsBackSimulationButtonsDisabled(false);
-      setIsNextSimulationButtonsDisabled(true);
+      // setIsBackSimulationButtonsDisabled(false);
+      // setIsNextSimulationButtonsDisabled(true);
     } else {
       setSimulationMessage("");
-      setIsBackSimulationButtonsDisabled(false);
-      setIsNextSimulationButtonsDisabled(false);
+      // setIsBackSimulationButtonsDisabled(false);
+      // setIsNextSimulationButtonsDisabled(false);
     }
   
     setSimulationIndex(newIndex);
@@ -1233,6 +1239,68 @@ const Canvas: React.FC = () => {
     setZoomTarget(targetState);
     zoomTargetRef.current = targetState;
   }
+
+  const createXMLData = () => {
+    const root = builder.create('structure');
+    root.ele('type').text('fa');
+    
+    const automaton = root.ele('automaton');
+  
+    // Add states
+    automataRef.current.states.forEach(state => {
+      const stateEle = automaton.ele('state', { id: state.id, name: state.label });
+      const ScaleReducer = 1.6;
+      stateEle.ele('x').text((state.x/ScaleReducer).toString());
+      stateEle.ele('y').text((state.y/ScaleReducer).toString());
+      if (state.isInitial) stateEle.ele('initial');
+      if (state.isFinal) stateEle.ele('final');
+    });
+  
+    // Add transitions
+    automataRef.current.transitions.forEach(transition  => {
+      const transitionEle = automaton.ele('transition');
+      transitionEle.ele('from').text(transition.from.id);
+      transitionEle.ele('to').text(transition.to.id);
+      if (transition.label !== undefined) {
+        transitionEle.ele('read').text(transition.label === "λ" ? "" : transition.label);
+      } else {
+        transitionEle.ele('read');
+      }
+    });
+  
+    return root.end({ pretty: true });
+  };
+
+  const saveDataToFile = (data: any, defaultFileName: any) => {
+    // Create a Blob from the data
+    const blob = new Blob([data], { type: 'text/xml' });
+  
+    // Create a link element
+    const link = document.createElement('a');
+  
+    // Use the URL.createObjectURL() method to create a URL for the Blob
+    link.href = URL.createObjectURL(blob);
+  
+    // Set the download attribute with a default file name
+    link.download = defaultFileName;
+  
+    // Append the link to the body, trigger the download, and then remove the link
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+  
+  const clickSaveFile = () => {
+    // Data to save
+    const dataToSave = createXMLData();  // Replace this with the actual data you want to save
+    
+    // Default file name
+    const defaultFileName = "myAutomaton.jff";  // You can prompt the user for a file name if needed
+  
+    // Call the save function
+    saveDataToFile(dataToSave, defaultFileName);
+  };
+
 
   const handleFileSelection = (event: any) => {
     const file = event.target.files[0];
@@ -1313,6 +1381,9 @@ const Canvas: React.FC = () => {
         <Toolbox
           currentCanvasToolRef={currentCanvasToolRef}
           handleImportFile={clickImportFile}
+          handleSaveFile={clickSaveFile}
+          Undo={() => automataRef.current.undo()}
+          Redo={() => automataRef.current.redo()}
         />
 
         {/* Lado Direito */}
@@ -1439,9 +1510,9 @@ const AutomataInputList: React.FC<AutomataInputListProps> = (
       <div id='automata-input-list'>
         {aumataInputResults.map((results, index) => (
           <AutomataInput
-          index = {index}
-          automataRef = {automataRef}
-          calculateSteps = {calculateSteps}
+            index = {index}
+            automataRef = {automataRef}
+            calculateSteps = {calculateSteps}
           />
           ))}
       </div>

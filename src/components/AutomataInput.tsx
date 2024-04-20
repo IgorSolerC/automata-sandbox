@@ -52,7 +52,9 @@ interface AutomataInputProps {
       <div id="automata-input-div">
         <input
           placeholder="Input automato" 
-          className={"automata-input " + (index === 0 ? '' : 'small')}
+          className={"automata-input"}
+          id={"automata-input-id-"+index}
+          autoComplete="off"
           // onFocus={() => {setInputFocused(true);}}
           // onBlur={() => {
           //   setInputFocused(false);
@@ -61,8 +63,10 @@ interface AutomataInputProps {
             let aumataInputResultsAux = [...aumataInputResults]
             let newInput = event.target.value
             
+            /*
             // Um pouco gambiarrado, mas foi o jeito que encontrei de "resetar" os valores de simulação
-            calculateSteps()
+            // calculateSteps()
+            */
   
             // Simulate automata again
             const { result, message } = automataRef.current.validate(newInput);
@@ -76,7 +80,7 @@ interface AutomataInputProps {
           onKeyDown={preventUndo}
         ></input>
         <button
-          id="validation"
+          id={"automata-button-id-"+index}
           className={
             "canvas-button input-button " + (
               (simulationResult === AutomataInputResultsEnum.ACCEPTED) ? 
@@ -86,8 +90,10 @@ interface AutomataInputProps {
                 'rejected '
             ) + (index === 0 ? '' : 'small')
           }
-          onClick={() => {
-            calculateSteps();
+          onClick={(e) => {
+            if (simulationResult !== AutomataInputResultsEnum.WARNING){
+              calculateSteps(index);
+            }
           }}
           title="Simular passo-a-passo"
         >
