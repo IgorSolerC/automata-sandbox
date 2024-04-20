@@ -219,7 +219,14 @@ html{
     color: var(--input-palceholder);
 }
 
+.automata-input.is-simulating{
+    border-left: 8px solid var(--error-message-div);
+    padding-left: 12px;
+}
+
 /* .automata-input.small{
+    .automata-input{
+    
     height: 40px;
     font-size: 17px;
 }
@@ -245,18 +252,19 @@ html{
     animation-duration: 0.3s;
 }
 
-.navbar-button.expand-button{
+.canvas-button.no-background{
+    border: 1px solid var(--button-bg);
     background-color: #00000000;
     box-shadow: none;
 }
-.navbar-button.expand-button > svg{
+.canvas-button.no-background > svg{
     transform: rotateZ(-90deg);
     transition: stroke 0.3s ease, fill 0.3s ease;
 }
-.navbar-button.expand-button:hover{
+.canvas-button.no-background:hover{
     background-color: #00000000;
 }
-.navbar-button.expand-button:hover > svg{
+.canvas-button.no-background:hover > svg{
     fill: #fff;
     stroke: #fff;
 }

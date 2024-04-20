@@ -1,10 +1,10 @@
 // Models
 import { State } from "../models/State";
 import { Transition } from "../models/Transition";
+import { Note } from "../models/Note";
 
 // Enums
 import { AutomataInputResultsEnum } from "../enums/AutomataInputEnum";
-import { urlToHttpOptions } from "url";
 
 interface AutomataSnapshot {
   states: State[];
@@ -16,6 +16,7 @@ interface AutomataSnapshot {
 export class Automata {
   states: State[];
   transitions: Transition[];
+  notes: Note[];
   initialState: State | null;
   finalStates: State[];
   undoStack: AutomataSnapshot[];
@@ -24,6 +25,7 @@ export class Automata {
   constructor() {
     this.states = [];
     this.transitions = [];
+    this.notes = [];
     this.initialState = null;
     this.finalStates = [];
     this.undoStack = [];
@@ -106,6 +108,7 @@ export class Automata {
     this.transitions = [];
     this.initialState = null;
     this.finalStates = [];
+    this.notes = [];
     this.undoStack = []
     this.redoStack = [];
   }
@@ -157,6 +160,25 @@ export class Automata {
   /* States */
   getStates(): State[] {
     return this.states;
+  }
+
+  getNotes(): Note[] {
+    return this.notes;
+  }
+
+  addNote(id: number, x: number, y: number, text: string, width: number, height: number, color: string, secondaryColor: string){
+    const newNote: Note = {
+      id,
+      x,
+      y,
+      text,
+      width,
+      height,
+      color,
+      secondaryColor,
+    }
+
+    this.notes.push(newNote);
   }
 
   addState(id: string, x: number, y: number, color: string, secondaryColor: string, isInitial: boolean = false, isFinal: boolean = false, label: string = ""): void {

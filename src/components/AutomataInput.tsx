@@ -27,12 +27,16 @@ interface AutomataInputProps {
     index: number;
     automataRef: React.MutableRefObject<Automata>;
     calculateSteps: any;
+    isSimulating: boolean;
+    stopSimulation: () => void;
   }
   const AutomataInput: React.FC<AutomataInputProps> = (
     {
       index,
       automataRef,
-      calculateSteps
+      calculateSteps,
+      isSimulating,
+      stopSimulation,
     }
   ) => {
     const { aumataInputResults, setAumataInputResults } = useAutomataInputContext();
@@ -52,7 +56,7 @@ interface AutomataInputProps {
       <div id="automata-input-div">
         <input
           placeholder="Input automato" 
-          className={"automata-input"}
+          className={"automata-input " + (isSimulating && 'is-simulating')}
           id={"automata-input-id-"+index}
           autoComplete="off"
           // onFocus={() => {setInputFocused(true);}}
@@ -60,6 +64,10 @@ interface AutomataInputProps {
           //   setInputFocused(false);
           // }} 
           onChange={(event) => {
+            if (isSimulating){
+              stopSimulation()
+            }
+
             let aumataInputResultsAux = [...aumataInputResults]
             let newInput = event.target.value
             

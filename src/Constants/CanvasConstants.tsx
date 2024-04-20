@@ -21,4 +21,12 @@ export const CanvasColors = {
     // Selecion
     SELECTION: "#495057" + '55',
     SELECTION_BORDER: "#495057" + 'AA',
+
+    // Notes
+    NOTES: "#495057" + '55',
+    NOTES_SECONDARY: "#495057" + 'AA',
+    NOTES_TEXT: "#E9ECEF",
+    NOTES_CLICKED: "#0b63de",
+    NOTES_CLICKED_SECONDARY: "#4b9cf9",
+    NOTES_CLICKED_TEXT: "#E9ECEF",
 };

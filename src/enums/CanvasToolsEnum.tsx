@@ -4,4 +4,5 @@ export enum CanvasTools {
     MOVE,
     TRANSITION,
     ADD_STATE,
+    NOTE,
   }

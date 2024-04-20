@@ -112,12 +112,12 @@ const Toolbox: React.FC<ToolboxProps> = ({ currentCanvasToolRef, handleImportFil
             <AddCircleIcon />
           </button>
           {isExpanded &&
-            <button id="add-note" title="Create Note" disabled
+            <button id="add-note" title="Create Note"
               className={
                 "canvas-button navbar-button extra-option "
-                // + (selectedToolState === CanvasTools.POINTER ? "selected" : "")
+                + (selectedToolState === CanvasTools.NOTE ? "selected" : "")
               }
-              onClick={() => {}}
+              onClick={() => handleToolButtonClick(CanvasTools.NOTE)}
             >
               <NewNoteIcon/>
             </button>
@@ -189,7 +189,7 @@ const Toolbox: React.FC<ToolboxProps> = ({ currentCanvasToolRef, handleImportFil
         </button>
 
         <button id="expand-menu" title={isExpanded ? "Minimize Menu" : "Expand Menu"}
-          className="canvas-button navbar-button expand-button"
+          className="canvas-button navbar-button no-background"
           onClick={() => {
             setIsExpanded(!isExpanded)
           }}

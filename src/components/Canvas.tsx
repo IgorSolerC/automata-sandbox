@@ -12,6 +12,7 @@ import FastforwardIcon from "../symbols/fastforward_icon";
 import PlayIcon from "../symbols/play_icon";
 import PlusIcon from "../symbols/plus_icon";
 import MinusIcon from "../symbols/minus_icon";
+import ErrorIcon from "../symbols/error_icon";
 
 // Libaries
 import React, { useRef, useEffect, useState } from "react";
@@ -34,6 +35,7 @@ import { CanvasColors } from "../constants/CanvasConstants";
 // Contexts
 import { ToolboxProvider, useToolboxContext } from "../contexts/ToolboxContext";
 import { AutomataInputProvider, useAutomataInputContext } from "../contexts/AutamataInputContext";
+import { Note } from "../models/Note";
 
 // let canvasObject: p5 | null = null; // Variável para armazenar o sketch
 
@@ -80,17 +82,18 @@ const Canvas: React.FC = () => {
   const currentCanvasToolRef = useRef(CanvasTools.POINTER);
   
   const [simulationMessage, setSimulationMessage] = useState('');
-  const [isBackSimulationButtonsDisabled, setIsBackSimulationButtonsDisabled] = useState(false);
-  const [isNextSimulationButtonsDisabled, setIsNextSimulationButtonsDisabled] = useState(false);
+  // const [isBackSimulationButtonsDisabled, setIsBackSimulationButtonsDisabled] = useState(false);
+  // const [isNextSimulationButtonsDisabled, setIsNextSimulationButtonsDisabled] = useState(false);
 
   const [simulationStates, setSimulationStates] = useState<State[]>([]);
   const simulationStatesRef = useRef(simulationStates);
   
+  const [simulationInputId, setSimulationInputId] = useState<(number | null)>(null);
+  const [simulationInputText, setSimulationInputText] = useState<(string)>("");
   const [simulationTransitions, setSimulationTransitions] = useState<(Transition | null)[]>([]);
-  console.log("simulationTransitions", simulationTransitions)
   const simulationTransitionsRef = useRef(simulationTransitions);
   
-  const [simulationIndex, setSimulationIndex] = useState<number>();
+  const [simulationIndex, setSimulationIndex] = useState<number>(0);
   const simulationIndexRef = useRef(simulationIndex);
 
   const [zoomTarget, setZoomTarget] = useState<State>();
@@ -184,7 +187,15 @@ const Canvas: React.FC = () => {
         false,
         id
       );
-      console.log(automataRef.current.states);
+    }
+  }
+
+  const createNewNote = (p: p5) => {
+    let text = prompt("Digite o texto da nota: ");
+    if(text)
+      automataRef.current.addNote(0, getMouseX(p), getMouseY(p), text, 200, 200, CanvasColors.NOTES, CanvasColors.NOTES_SECONDARY);
+    else{
+      alert("??????????????.");
     }
   }
 
@@ -695,6 +706,14 @@ const Canvas: React.FC = () => {
               p.strokeWeight(2);
             });
 
+          automataRef.current.getNotes().forEach((note: Note, index: number) => {
+            p.fill(note.color);
+            p.stroke(0);
+            p.rect(note.x, note.y, note.width, note.height);
+            p.fill(0)
+            wrapTextInRectangle(p, note.text, note.x, note.y, note.width, note.height, 12);
+          })
+
           // Desenha caixa de seleção
           if (currentCanvasAction === CanvasActions.CREATING_SELECTION) {
             p.push(); // Start a new drawing state
@@ -947,6 +966,9 @@ const Canvas: React.FC = () => {
               /* Cria estado */
             } else if (currentCanvasToolRef.current === CanvasTools.ADD_STATE) {
               createNewState(allStates, p)
+              /* Cria Note */
+            } else if (currentCanvasToolRef.current === CanvasTools.NOTE){
+              createNewNote(p)              
             }
           }
         };
@@ -1094,9 +1116,9 @@ const Canvas: React.FC = () => {
     }; 
   }, []);
 
-  function calculateSteps(input_id: number) {
+  function calculateSteps(inputId: number) {
     currentCanvasAction = CanvasActions.SIMULATING;
-    var input = (document.getElementById("automata-input-id-"+input_id) as HTMLInputElement).value;
+    var inputText = (document.getElementById("automata-input-id-"+inputId) as HTMLInputElement).value;
     let newSimulationStates = [];
     let newSimulationTransitions = [];
     setSimulationIndex(0);
@@ -1107,13 +1129,13 @@ const Canvas: React.FC = () => {
 
     newSimulationStates.push(estadoAtual)
     const allTransitions = automataRef.current.getTransitions();
-    for(let i = 0; i < input.length; i++) {
-      let result = automataRef.current.testTransition(input, estadoAtual, i);
+    for(let i = 0; i < inputText.length; i++) {
+      let result = automataRef.current.testTransition(inputText, estadoAtual, i);
 
       if(i === 0)
         newSimulationTransitions.push(null);
       else{
-        newSimulationTransitions.push(allTransitions.find(x => x.from === estadoAnterior && x.label === input[i - 1])!);
+        newSimulationTransitions.push(allTransitions.find(x => x.from === estadoAnterior && x.label === inputText[i - 1])!);
       }
       
 
@@ -1127,19 +1149,17 @@ const Canvas: React.FC = () => {
     }
 
     if(estadoAnterior)
-      newSimulationTransitions.push(allTransitions.find(x => x.from === estadoAnterior && x.label === input[input.length - 1])!);
+      newSimulationTransitions.push(allTransitions.find(x => x.from === estadoAnterior && x.label === inputText[inputText.length - 1])!);
     
-      if(automataRef.current.getFinalStates().some(x => x === simulationStates[simulationStates.length - 1])){
-      console.log("ACEITO"); 
-    } else{
-      console.log("REJEITADO");
-    }
+    setSimulationInputId(inputId)
+    setSimulationInputText(inputText)
     setSimulationStates(newSimulationStates);
     simulationStatesRef.current = newSimulationStates;
     setSimulationTransitions(newSimulationTransitions)
     simulationTransitionsRef.current = newSimulationTransitions;
     console.log("Updated States", newSimulationStates);
     console.log("Updated Transitions", newSimulationTransitions);
+    console.log("Updated inputText", inputText);
   }
 
   function wrapText(p: p5, text: string, x: number, y: number, maxDiameter: number, textSize: number): void {
@@ -1172,6 +1192,43 @@ const Canvas: React.FC = () => {
       }
     }
   }
+
+  function wrapTextInRectangle(p: p5, text: string, x: number, y: number, maxWidth: number, maxHeight: number, textSize: number): void {
+    p.textAlign(p.CENTER, p.TOP); // Text is centered horizontally and aligned to the top vertically
+    p.textSize(textSize);
+    let words = text.split(' ');
+    let tempLine = '';
+    let lines = [];
+    let lineHeight = textSize * 1.2; // Calculate line height as 1.2 times the text size for some vertical spacing
+
+    // Build lines of text that fit within maxWidth
+    for (let i = 0; i < words.length; i++) {
+        let testLine = tempLine + words[i] + ' ';
+        let metrics = p.textWidth(testLine);
+        if (metrics > maxWidth) { // Check if adding another word exceeds the max width
+            lines.push(tempLine);
+            tempLine = words[i] + ' ';
+        } else {
+            tempLine = testLine;
+        }
+    }
+    lines.push(tempLine); // Add the last line
+
+    // Check if total text height exceeds maxHeight and adjust text size if necessary
+    if (lines.length * lineHeight > maxHeight) {
+        textSize -= 1; // Decrease text size
+        if (textSize > 0) { // Prevent infinite recursion with a sensible minimum text size
+            return wrapTextInRectangle(p, text, x, y, maxWidth, maxHeight, textSize); // Recursively adjust until it fits
+        }
+    } else {
+        // Draw each line, adjusting vertical position to distribute lines within the rectangle
+        let startY = y + (maxHeight - (lines.length * lineHeight)) / 2; // Start y position centered vertically
+        for (let i = 0; i < lines.length; i++) {
+            p.text(lines[i], x, startY + (lineHeight * i));
+        }
+    }
+  }
+
   
   function showContextMenu(x: number, y: number) {
     contextMenu.position(x, y);
@@ -1206,6 +1263,15 @@ const Canvas: React.FC = () => {
     } else {
       automataRef.current.setInitialState(null);
     }
+  }
+
+  function stopSimulation(){
+    setSimulationMessage("");
+    setSimulationIndex(0)
+    setSimulationTransitions([])
+    setSimulationStates([])
+    setSimulationInputText("")
+    setSimulationInputId(null)
   }
 
   function handleSimulationButtonClick(change: number) {
@@ -1390,83 +1456,99 @@ const Canvas: React.FC = () => {
         <AutomataInputList
           automataRef = {automataRef}
           calculateSteps = {calculateSteps}
+          simulationInputId = {simulationInputId}
+          stopSimulation = {stopSimulation}
         />
       </div>
 
       {/* Step by Step simulation controls */}
-      <div id="simulation-controller-div">
-      {simulationMessage && (
-          <div className={`simulation-message`}>
-            {simulationMessage}
+      { simulationInputId !== null &&
+        <div id="simulation-controller-div">
+        {simulationMessage && (
+            <div className={`simulation-message`}>
+              {simulationMessage}
+            </div>
+          )}
+          <div className='simulation-controller-buttons-div'>
+            <button
+                id="close"
+                className={
+                  `canvas-button simulation-controller-button no-background`
+              }
+                title="Stop Simulation"
+                onClick={() => {
+                  stopSimulation();
+                }}
+              >
+                <ErrorIcon/>
+            </button>
+            <button
+                id="beginning"
+                disabled={simulationIndex <= 0}
+                className={
+                  `canvas-button simulation-controller-button rotateicon180`
+              }
+                title="Beginning"
+                onClick={() => {
+                  handleSimulationButtonClick(0);
+                }}
+              >
+                <FastforwardIcon/>
+            </button>
+            <button
+                id="next"
+                disabled={simulationIndex <= 0}
+                className={
+                  `canvas-button simulation-controller-button`
+                }
+                title="Next"
+                onClick={() => {
+                  handleSimulationButtonClick(-1);
+                }}
+              >
+                <PrevIcon />
+            </button>
+            <button
+                id="play"
+                className={
+                  "canvas-button simulation-controller-button"
+                }
+                title="Play"
+                onClick={() => {
+                  handleSimulationButtonClick(0);
+                }}
+              >
+                <PlayIcon />
+            </button>
+            <button
+                id="next"
+                disabled={simulationIndex >= simulationInputText.length}
+                className={
+                  `canvas-button simulation-controller-button`
+                }
+                title="Next"
+                onClick={() => {
+                  handleSimulationButtonClick(+1);
+                }}
+              >
+                <NextIcon />
+            </button>
+            <button
+                id="fastforward"
+                disabled={simulationIndex >= simulationInputText.length}
+                className={
+                  `canvas-button simulation-controller-button`
+                }
+                title="Fastforward"
+                onClick={() => {
+                  handleSimulationButtonClick(simulationStatesRef.current.length - 1);
+                }}
+              >
+                <FastforwardIcon/>
+            </button>
           </div>
-        )}
-        <div className='simulation-controller-buttons-div'>
-          <button
-              id="beginning"
-              disabled={isBackSimulationButtonsDisabled}
-              className={
-                `canvas-button simulation-controller-button rotateicon180`
-            }
-              title="Beginning"
-              onClick={() => {
-                handleSimulationButtonClick(0);
-              }}
-            >
-              <FastforwardIcon/>
-          </button>
-          <button
-              id="next"
-              disabled={isBackSimulationButtonsDisabled}
-              className={
-                `canvas-button simulation-controller-button`
-              }
-              title="Next"
-              onClick={() => {
-                handleSimulationButtonClick(-1);
-              }}
-            >
-              <PrevIcon />
-          </button>
-          <button
-              id="play"
-              className={
-                "canvas-button simulation-controller-button"
-              }
-              title="Play"
-              onClick={() => {
-                handleSimulationButtonClick(0);
-              }}
-            >
-              <PlayIcon />
-          </button>
-          <button
-              id="next"
-              disabled={isNextSimulationButtonsDisabled}
-              className={
-                `canvas-button simulation-controller-button`
-              }
-              title="Next"
-              onClick={() => {
-                handleSimulationButtonClick(+1);
-              }}
-            >
-              <NextIcon />
-          </button>
-          <button
-              id="fastforward"
-              disabled={isNextSimulationButtonsDisabled}
-              className={
-                `canvas-button simulation-controller-button`
-              }
-              title="Fastforward"
-              onClick={() => {
-                handleSimulationButtonClick(simulationStatesRef.current.length - 1);
-              }}
-            >
-              <FastforwardIcon/>
-          </button>
         </div>
-      </div>
+      }
       
       {/* Canvas */}
       <div ref={canvasRef}></div>
@@ -1477,11 +1559,15 @@ const Canvas: React.FC = () => {
 interface AutomataInputListProps {
   automataRef: React.MutableRefObject<Automata>;
   calculateSteps: any;
+  simulationInputId: number | null;
+  stopSimulation: () => void;
 }
 const AutomataInputList: React.FC<AutomataInputListProps> = (
   {
     automataRef,
-    calculateSteps
+    calculateSteps,
+    simulationInputId,
+    stopSimulation,
   }
 ) => {
   const { aumataInputResults, removeInput, addInput } = useAutomataInputContext();
@@ -1513,6 +1599,8 @@ const AutomataInputList: React.FC<AutomataInputListProps> = (
             index = {index}
             automataRef = {automataRef}
             calculateSteps = {calculateSteps}
+            isSimulating = {index === simulationInputId}
+            stopSimulation = {stopSimulation}
           />
           ))}
       </div>
