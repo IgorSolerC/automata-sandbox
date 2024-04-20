@@ -6,16 +6,23 @@ import RedoIcon from "../symbols/redo_icon";
 import MoveIcon from "../symbols/move_icon";
 import TransitionIcon from "../symbols/transition_icon";
 import AddCircleIcon from "../symbols/add_circle_icon";
+import OpenPanelIcon from "../symbols/open_panel_icon";
+import ClosePanelIcon from "../symbols/close_panel_icon";
+import SaveIcon from "../symbols/save_icon";
+import LoadFileIcon from "../symbols/load_file_icon";
+import RegexIcon from "../symbols/regex_icon";
+import NewNoteIcon from "../symbols/new_note_icon";
+import MinimizeAutomataIcon from "../symbols/minimize_automata_icon";
 
 // Libaries
 import React, { useRef, useEffect, useState } from "react";
-
 
 // Enums
 import { CanvasTools } from "../enums/CanvasToolsEnum";
 
 // Contexts
 import { ToolboxProvider, useToolboxContext } from "../contexts/ToolboxContext";
+import NextIcon from "../symbols/next_icon";
 
 /*
 
@@ -28,7 +35,9 @@ interface ToolboxProps {
 
 const Toolbox: React.FC<ToolboxProps> = ({ currentCanvasToolRef }) => {
     const { selectedToolState, setSelectedToolState } = useToolboxContext();
-  
+    const [isExpanded, setIsExpanded] = useState(false)
+
+
     const handleToolButtonClick = (tool: number) => {
       setSelectedToolState(tool);
       currentCanvasToolRef.current = tool;
@@ -36,80 +45,161 @@ const Toolbox: React.FC<ToolboxProps> = ({ currentCanvasToolRef }) => {
   
     return (
       <div id="toolbox">
-        <button
-          id="pointer"
-          className={
-            "canvas-button navbar-button " +
-            (selectedToolState === CanvasTools.POINTER ? "selected" : "")
-          }
-          onClick={() => handleToolButtonClick(CanvasTools.POINTER)}
-          title="Pointer"
+        <div
+          className='navbar-row'
         >
-          <CursorIcon />
-        </button>
-        <button
-          id="transition"
-          className={
-            "canvas-button navbar-button " +
-            (selectedToolState === CanvasTools.TRANSITION ? "selected" : "")
+          <button id="pointer" title="Pointer"
+            className={
+              "canvas-button navbar-button " +
+              (selectedToolState === CanvasTools.POINTER ? "selected" : "")
+            }
+            onClick={() => handleToolButtonClick(CanvasTools.POINTER)}
+          >
+            <CursorIcon />
+          </button>
+          {isExpanded &&
+            <button id="save" title="Save File"
+              className={
+                "canvas-button navbar-button extra-option "
+                // + (selectedToolState === CanvasTools.POINTER ? "selected" : "")
+              }
+              onClick={() => {}}
+            >
+              <SaveIcon/>
+            </button>
           }
-          onClick={() => handleToolButtonClick(CanvasTools.TRANSITION)}
-          title="Transition"
+        </div>
+
+        <div
+          className='navbar-row'
         >
-          <TransitionIcon />
-        </button>
-        <button
-          id="add_state"
-          className={
-            "canvas-button navbar-button " +
-            (selectedToolState === CanvasTools.ADD_STATE ? "selected" : "")
+          <button id="transition" title="Transition"
+            className={
+              "canvas-button navbar-button " +
+              (selectedToolState === CanvasTools.TRANSITION ? "selected" : "")
+            }
+            onClick={() => handleToolButtonClick(CanvasTools.TRANSITION)}
+            >
+            <TransitionIcon />
+          </button>
+          {isExpanded &&
+            <button id="load" title="Load File"
+              className={
+                "canvas-button navbar-button extra-option "
+                // + (selectedToolState === CanvasTools.POINTER ? "selected" : "")
+              }
+              onClick={() => {}}
+            >
+              <LoadFileIcon/>
+            </button>
           }
-          onClick={() => handleToolButtonClick(CanvasTools.ADD_STATE)}
-          title="Add State"
+        </div>
+
+        <div
+          className='navbar-row'
         >
-          <AddCircleIcon />
-        </button>
-        <button
-          id="eraser"
-          className={
-            "canvas-button navbar-button " +
-            (selectedToolState === CanvasTools.ERASER ? "selected" : "")
+          <button id="add_state" title="Add State"
+            className={
+              "canvas-button navbar-button " +
+              (selectedToolState === CanvasTools.ADD_STATE ? "selected" : "")
+            }
+            onClick={() => handleToolButtonClick(CanvasTools.ADD_STATE)}
+          >
+            <AddCircleIcon />
+          </button>
+          {isExpanded &&
+            <button id="add-note" title="Create Note"
+              className={
+                "canvas-button navbar-button extra-option "
+                // + (selectedToolState === CanvasTools.POINTER ? "selected" : "")
+              }
+              onClick={() => {}}
+            >
+              <NewNoteIcon/>
+            </button>
           }
-          onClick={() => handleToolButtonClick(CanvasTools.ERASER)}
-          title="Eraser"
+        </div>
+
+        <div
+          className='navbar-row'
         >
-          <TrashIcon />
-        </button>
-        <button
-          id="move"
-          className={
-            "canvas-button navbar-button " +
-            (selectedToolState === CanvasTools.MOVE ? "selected" : "")
+          <button id="eraser" title="Eraser"
+            className={
+              "canvas-button navbar-button " +
+              (selectedToolState === CanvasTools.ERASER ? "selected" : "")
+            }
+            onClick={() => handleToolButtonClick(CanvasTools.ERASER)}
+          >
+            <TrashIcon />
+          </button>
+          {isExpanded &&
+            <button id="regex" title="Create from RegEx"
+              className={
+                "canvas-button navbar-button extra-option "
+                // + (selectedToolState === CanvasTools.POINTER ? "selected" : "")
+              }
+              onClick={() => {}}
+            >
+              <RegexIcon/>
+            </button>
           }
-          onClick={() => handleToolButtonClick(CanvasTools.MOVE)}
-          title="Move"
+        </div>
+
+        <div
+          className='navbar-row'
         >
-          <MoveIcon/>
-        </button>
-        <button
-          id="undo"
+          <button id="move" title="Move"
+            className={
+              "canvas-button navbar-button " +
+              (selectedToolState === CanvasTools.MOVE ? "selected" : "")
+            }
+            onClick={() => handleToolButtonClick(CanvasTools.MOVE)}
+          >
+            <MoveIcon/>
+          </button>
+          {isExpanded &&
+            <button id="minimeze-automara" title="Minimeze Automata"
+              className={
+                "canvas-button navbar-button extra-option "
+                // + (selectedToolState === CanvasTools.POINTER ? "selected" : "")
+              }
+              onClick={() => {}}
+            >
+              <MinimizeAutomataIcon/>
+            </button>
+          }
+        </div>
+
+        <button id="undo" title="Undo"
           className="canvas-button navbar-button undo"
           onClick={() => {
             console.log("Undo Clicado");
           }}
-          title="Undo"
         >
           <UndoIcon />
         </button>
-        <button
-          id="redo"
+
+        <button id="redo" title="Redo"
           className="canvas-button navbar-button redo"
           onClick={() => {
             console.log("redo Clicado");
           }}
-          title="Redo"
         >
           <RedoIcon />
+        </button>
+
+        <button id="expand-menu" title="Expand"
+          className="canvas-button navbar-button expand-button"
+          onClick={() => {
+            setIsExpanded(!isExpanded)
+          }}
+        >
+          {isExpanded
+            ?
+            <ClosePanelIcon />
+            :
+            <OpenPanelIcon />
+          }
         </button>
       </div>
     );
