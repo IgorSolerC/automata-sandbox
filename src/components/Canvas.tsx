@@ -1292,12 +1292,27 @@ const Canvas: React.FC = () => {
     });
   };
 
+  const clickImportFile = () => {
+    if (fileInputRef.current){
+      fileInputRef.current.click();
+    }
+  }
+
   return (
     <div>
+      <input
+        type="file"
+        ref={fileInputRef}
+        accept=".jff"
+        style={{ display: 'none' }}
+        onChange={handleFileSelection}
+      />
+
       <div id="navbar-div">
         {/* Lado Esquerdo */}
         <Toolbox
           currentCanvasToolRef={currentCanvasToolRef}
+          handleImportFile={clickImportFile}
         />
 
         {/* Lado Direito */}
@@ -1379,25 +1394,6 @@ const Canvas: React.FC = () => {
             >
               <FastforwardIcon/>
           </button>
-          <button
-            id="Import"
-            className="canvas-button simulation-controller-button rotateicon90"
-            title="Import"
-            onClick={() => {
-              if (fileInputRef.current) {
-                fileInputRef.current.click();
-              }
-            }}
-          >
-            <PlayIcon />
-          </button>
-          <input
-            type="file"
-            ref={fileInputRef}
-            accept=".jff"
-            style={{ display: 'none' }}
-            onChange={handleFileSelection}
-          />
         </div>
       </div>
       

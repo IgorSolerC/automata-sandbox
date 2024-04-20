@@ -31,9 +31,10 @@ import NextIcon from "../symbols/next_icon";
 */
 interface ToolboxProps {
     currentCanvasToolRef: React.MutableRefObject<number>;
+    handleImportFile: () => void;
 }
 
-const Toolbox: React.FC<ToolboxProps> = ({ currentCanvasToolRef }) => {
+const Toolbox: React.FC<ToolboxProps> = ({ currentCanvasToolRef, handleImportFile }) => {
     const { selectedToolState, setSelectedToolState } = useToolboxContext();
     const [isExpanded, setIsExpanded] = useState(false)
 
@@ -88,7 +89,7 @@ const Toolbox: React.FC<ToolboxProps> = ({ currentCanvasToolRef }) => {
                 "canvas-button navbar-button extra-option "
                 // + (selectedToolState === CanvasTools.POINTER ? "selected" : "")
               }
-              onClick={() => {}}
+              onClick={handleImportFile}
             >
               <LoadFileIcon/>
             </button>
@@ -188,7 +189,7 @@ const Toolbox: React.FC<ToolboxProps> = ({ currentCanvasToolRef }) => {
           <RedoIcon />
         </button>
 
-        <button id="expand-menu" title="Expand"
+        <button id="expand-menu" title={isExpanded ? "Minimize Menu" : "Expand Menu"}
           className="canvas-button navbar-button expand-button"
           onClick={() => {
             setIsExpanded(!isExpanded)
