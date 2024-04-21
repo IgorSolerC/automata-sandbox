@@ -503,6 +503,20 @@ const Canvas: React.FC = () => {
             }
           }
 
+          // Renderiza notas
+          automataRef.current.getNotes().forEach((note: Note, index: number) => {
+            p.fill(note.color);
+            p.strokeWeight(0) // p.strokeWeight(2)
+            p.stroke(note.secondaryColor);
+            p.rect(note.x, note.y, note.width, note.height, 5);
+            p.fill(0) // Reinicia cor para preto
+
+            const TEXT_SIZE = 15
+            const PADDING = 10
+            const RESIZE_ON_OVERFLOW = false
+            wrapTextInRectangle(p, note.text, note.x, note.y, note.width, note.height, TEXT_SIZE, PADDING, RESIZE_ON_OVERFLOW);
+          })
+
           if(currentCanvasAction === CanvasActions.CREATING_TRANSITION && clickedState){
             p.stroke(CanvasColors.CLICKED_TRANSITION);
             p.fill(CanvasColors.CLICKED_TRANSITION);
@@ -530,6 +544,7 @@ const Canvas: React.FC = () => {
             simulationTransitionsRef.current[simulationIndexRef.current!]!.textColor = CanvasColors.SIMULATION_STEP_TRANSITION_TEXT;
           }
 
+          // Desenha transições
           allTransitions.forEach((transition) => {
             const start = automataRef.current.findState(transition.from.id);
             const end = automataRef.current.findState(transition.to.id);
@@ -705,14 +720,6 @@ const Canvas: React.FC = () => {
               p.stroke(0);
               p.strokeWeight(2);
             });
-
-          automataRef.current.getNotes().forEach((note: Note, index: number) => {
-            p.fill(note.color);
-            p.stroke(0);
-            p.rect(note.x, note.y, note.width, note.height);
-            p.fill(0)
-            wrapTextInRectangle(p, note.text, note.x, note.y, note.width, note.height, 12, 4);
-          })
 
           // Desenha caixa de seleção
           if (currentCanvasAction === CanvasActions.CREATING_SELECTION) {
@@ -1193,7 +1200,8 @@ const Canvas: React.FC = () => {
     }
   }
 
-  function wrapTextInRectangle(p: p5, text: string, x: number, y: number, maxWidth: number, maxHeight: number, textSize: number, padding: number) {
+  function wrapTextInRectangle(p: p5, text: string, x: number, y: number, maxWidth: number, maxHeight: number, textSize: number, padding: number, resizeOnOverflow=false) {
+    p.strokeWeight(0)
     p.textAlign(p.LEFT, p.TOP); // Align text to the left and top
     p.textSize(textSize);
     p.fill("#FFFFFF")
@@ -1205,6 +1213,8 @@ const Canvas: React.FC = () => {
     // Adjust the maximum width and height for padding
     maxWidth -= (padding * 2);
     maxHeight -= (padding * 2);
+
+    let contentHeight;
 
     // Build lines of text that fit within maxWidth
     for (let i = 0; i < words.length; i++) {
@@ -1220,7 +1230,7 @@ const Canvas: React.FC = () => {
               subWord = subWord.substring(0, subWord.length - 1);
           }
           subWord += '-'; // Add a hyphen to indicate a break
-  
+
           // If there is text in tempLine, push it to lines and reset tempLine
           if (tempLine !== '') {
               lines.push(tempLine);
@@ -1229,30 +1239,35 @@ const Canvas: React.FC = () => {
   
           // Push the subWord to lines and prepare the remaining part of the word for the next line
           lines.push(subWord);
-          word = word.substring(subWord.length - 1); // Exclude the hyphen from the remaining part
+          word = word.substring(subWord.length - 1); // Exclude the hyphen from the remaining part 
           wordWidth = p.textWidth(word);
       }
   
       // Continue processing the remaining part of the word or the next word
       let testLine = tempLine + word + ' ';
       if (p.textWidth(testLine) > maxWidth) {
-          lines.push(tempLine);
+          contentHeight = (lines.length + 2) * lineHeight;
+          if (!(contentHeight > maxHeight)){
+            lines.push(tempLine);
+          }
           tempLine = word + ' ';
       } else {
           tempLine = testLine;
       }
-  }
-  if (tempLine) {
-      lines.push(tempLine.trim());
-  }
+    }
 
+    if (tempLine) {
+      lines.push(tempLine.trim());
+    }
+    
     // Draw each line, adjusting vertical position to start at the top and fill downwards
-    let contentHeight = lines.length * lineHeight;
-    if (contentHeight > maxHeight) {
+    contentHeight = lines.length * lineHeight;
+        
+    if (resizeOnOverflow && contentHeight > maxHeight) {
         // If the text doesn't fit vertically, reduce text size and try again
         textSize -= 1;
         if (textSize > 0) {
-            wrapTextInRectangle(p, text, x, y, maxWidth + (padding * 2), maxHeight + (padding * 2), textSize, padding);
+            wrapTextInRectangle(p, text, x, y, maxWidth + (padding * 2), maxHeight + (padding * 2), textSize, padding, resizeOnOverflow);
         }
     } else {
         // Calculate the starting Y position to add padding
