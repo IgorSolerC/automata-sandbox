@@ -193,8 +193,14 @@ const Canvas: React.FC = () => {
   const createNewNote = (p: p5) => {
     let text = prompt("Digite o texto da nota: ");
     if(text)
-      automataRef.current.addNote(0, getMouseX(p), getMouseY(p), text, 200, 200, CanvasColors.NOTES, CanvasColors.NOTES_SECONDARY);
-    else{
+    {
+      let newNoteId = 0;
+      const allNotes = automataRef.current.getNotes();
+      while (allNotes.some(note => note.id === newNoteId)) {
+        newNoteId++;
+      }
+      automataRef.current.addNote(newNoteId, getMouseX(p), getMouseY(p), text, 200, 200, CanvasColors.NOTES, CanvasColors.NOTES_SECONDARY);
+    } else{
       alert("??????????????.");
     }
   }
@@ -974,9 +980,11 @@ const Canvas: React.FC = () => {
               if (clickedState) {
                 automataRef.current.deleteState(clickedState);
                 validadeAllInputs()
-              } else if(clickedTransition){
+              } else if(clickedTransition) {
                 automataRef.current.deleteTransition(clickedTransition);
                 validadeAllInputs()
+              } else if (clickedNote) {
+                automataRef.current.deleteNote(clickedNote);                
               }
 
               /* Mover */

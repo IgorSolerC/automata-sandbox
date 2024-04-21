@@ -180,6 +180,13 @@ export class Automata {
 
     this.notes.push(newNote);
   }
+  deleteNote(note: Note): void {
+    const index = this.notes.findIndex((n) => n.id === note.id);
+    if (index !== -1) {
+      this.notes.splice(index, 1);
+    }
+  }
+
 
   addState(id: string, x: number, y: number, color: string, secondaryColor: string, isInitial: boolean = false, isFinal: boolean = false, label: string = ""): void {
     this.pushSnapshotToUndo();
