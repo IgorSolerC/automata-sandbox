@@ -75,7 +75,7 @@ const Canvas: React.FC = () => {
   let highlightedState: State | null;
   let selectedTransitions: Transition[] = [];
   let clickedTransition: Transition | null;
-  
+  let clickedNote:  Note | null;
   // Enums
   let currentCanvasAction: number = CanvasActions.NONE;
   // let currentCanvasToolRef.current: number = CanvasTools.POINTER
@@ -508,6 +508,14 @@ const Canvas: React.FC = () => {
             p.fill(note.color);
             p.strokeWeight(0) // p.strokeWeight(2)
             p.stroke(note.secondaryColor);
+            
+            if(clickedNote){
+              if(note.id === clickedNote.id){
+                p.fill(CanvasColors.NOTES_CLICKED);
+                p.stroke(CanvasColors.NOTES_CLICKED_SECONDARY);
+              }
+            }
+
             p.rect(note.x, note.y, note.width, note.height, 5);
             p.fill(0) // Reinicia cor para preto
 
@@ -883,6 +891,15 @@ const Canvas: React.FC = () => {
               selectedTransitions = [clickedTransition] 
             } else {
               selectedTransitions = []
+            }
+
+            const allNotes = automataRef.current.getNotes();
+            
+            if(allNotes.length > 0){
+              clickedNote = allNotes.find((note) => {
+                return getMouseX(p) >= note.x && getMouseX(p) <= note.x + note.width &&
+                       getMouseY(p) >= note.y && getMouseY(p) <= note.y + note.height;
+              }) || null;
             }
 
             // Create new 
