@@ -108,7 +108,7 @@ const Canvas: React.FC = () => {
 
 
   let selectedStateMouseOffset: any; // {'q1': {'x': 10, 'y': -10}, 'q2': {'x': 10, 'y': -10}}
-
+  let selectedNoteMouseOffset: any;
   // Selection box variables
   let selectionStarterY: number = 0; 
   let selectionStarterX: number = 0;
@@ -854,6 +854,9 @@ const Canvas: React.FC = () => {
               //clickedTransition.height += final
               clickedTransition.height = clickedTransition.height;
             }
+          } else if (currentCanvasAction === CanvasActions.MOVING_NOTE){
+            clickedNote!.x = getMouseX(p) + selectedNoteMouseOffset[clickedNote!.id]["x"];
+            clickedNote!.y = getMouseY(p) + selectedNoteMouseOffset[clickedNote!.id]["y"];
           }
         };
 
@@ -935,9 +938,6 @@ const Canvas: React.FC = () => {
               }
               // Left click
               else if (p.mouseButton === p.LEFT) {
-                //Esconde o menu de contexto
-                // hideContextMenu();
-                
                 /* Shift NÃO apertado, clicou em um estado */
                 // Move estado
                 if (clickedState) {
@@ -961,6 +961,15 @@ const Canvas: React.FC = () => {
                 // Criando caixa de seleção
                 else if (clickedTransition){
                   currentCanvasAction = CanvasActions.RESIZING_TRANSITION;
+                }
+                else if (clickedNote){
+                  currentCanvasAction = CanvasActions.MOVING_NOTE;
+                  selectedNoteMouseOffset = {};
+                  selectedNoteMouseOffset[clickedNote.id] = {};
+                  selectedNoteMouseOffset[clickedNote.id]["x"] = clickedNote.x - getMouseX(p);
+                  selectedNoteMouseOffset[clickedNote.id]["y"] = clickedNote.y - getMouseY(p);
+                  // Muda cursor para "grap" cursor
+                  window.document.body.style.cursor = 'grab';
                 }
                 else {
                   // Set state

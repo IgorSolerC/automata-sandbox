@@ -6,4 +6,5 @@ export enum CanvasActions {
     CREATING_SELECTION,
     RESIZING_TRANSITION,
     SIMULATING,
+    MOVING_NOTE,
 }
