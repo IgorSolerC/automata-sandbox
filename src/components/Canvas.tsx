@@ -118,6 +118,7 @@ const Canvas: React.FC = () => {
   let selectionDistanceY: number = 0;
 
   let transitioning = false;
+  let isCursorOverNoteResizeHandle = false;
   let targetZoom: number;
   let targetTranslateX: number;
   let targetTranslateY: number;
@@ -510,6 +511,7 @@ const Canvas: React.FC = () => {
           }
 
           // Renderiza notas
+          isCursorOverNoteResizeHandle = false; // Flag to track cursor over the resize handle
           automataRef.current.getNotes().forEach((note: Note, index: number) => {
             p.fill(note.color);
             p.strokeWeight(0) // p.strokeWeight(2)
@@ -529,7 +531,46 @@ const Canvas: React.FC = () => {
             const PADDING = 10
             const RESIZE_ON_OVERFLOW = false
             wrapTextInRectangle(p, note.text, note.x, note.y, note.width, note.height, TEXT_SIZE, PADDING, RESIZE_ON_OVERFLOW);
-          })
+
+            // Draw resize handle
+            const HANDLE_SIZE_X = note.width/12;
+            const HANDLE_SIZE_Y = note.height/12;
+            
+            const handleX = note.x + note.width - HANDLE_SIZE_X;
+            const handleY = note.y + note.height - HANDLE_SIZE_Y;
+            p.fill(CanvasColors.NOTES);
+            p.stroke(CanvasColors.NOTES_CLICKED_SECONDARY); 
+            p.rect(handleX, handleY, HANDLE_SIZE_X, HANDLE_SIZE_Y);
+
+            // Draw diagonal grip lines
+            p.strokeWeight(2); // Visible lines
+            const numLines = 3; // Number of diagonal lines
+            const lineSpacingX = HANDLE_SIZE_X / (numLines + 1);
+            const lineSpacingY = HANDLE_SIZE_Y / (numLines + 1);
+
+            for (let i = 1; i <= numLines; i++) {
+              p.line(
+                note.x + note.width - i * lineSpacingX, 
+                note.y + note.height,
+                note.x + note.width,
+                note.y + note.height - i * lineSpacingY
+              );
+            }
+
+            // Check if the mouse is over the resize handle
+            if (getMouseX(p) >= handleX && getMouseX(p) <= handleX + HANDLE_SIZE_X &&
+                getMouseY(p) >= handleY && getMouseY(p) <= handleY + HANDLE_SIZE_Y) {
+              isCursorOverNoteResizeHandle = true;
+            }
+          });
+
+          if (isCursorOverNoteResizeHandle) {
+            window.document.body.style.cursor = 'nwse-resize';
+          } else {
+            //Isso faz com que os cursor 'grab' por ai fiquem bugados. 
+            //Talvez seja melhor fazermos uma variavel responsavel de controlar o estado do cursor atual.
+            window.document.body.style.cursor = 'default';
+          }
 
           if(currentCanvasAction === CanvasActions.CREATING_TRANSITION && clickedState){
             p.stroke(CanvasColors.CLICKED_TRANSITION);
@@ -857,6 +898,23 @@ const Canvas: React.FC = () => {
           } else if (currentCanvasAction === CanvasActions.MOVING_NOTE){
             clickedNote!.x = getMouseX(p) + selectedNoteMouseOffset[clickedNote!.id]["x"];
             clickedNote!.y = getMouseY(p) + selectedNoteMouseOffset[clickedNote!.id]["y"];
+          } else if (currentCanvasAction ===  CanvasActions.RESIZING_NOTE){
+            const MIN_NOTE_WIDTH = 50; 
+            const MIN_NOTE_HEIGHT = 50;
+            const MAX_NOTE_WIDTH = 400;
+            const MAX_NOTE_HEIGHT = 300;
+            const mouseX = getMouseX(p);
+            const mouseY = getMouseY(p);
+
+            // Assume resize starts from the bottom-right corner of the note
+            let newWidth = Math.max(10, mouseX - clickedNote!.x);
+            let newHeight = Math.max(10, mouseY - clickedNote!.y);
+
+            newWidth = Math.max(MIN_NOTE_WIDTH, Math.min(newWidth, MAX_NOTE_WIDTH));
+            newHeight = Math.max(MIN_NOTE_HEIGHT, Math.min(newHeight, MAX_NOTE_HEIGHT));          
+
+            clickedNote!.width = newWidth;
+            clickedNote!.height = newHeight;
           }
         };
 
@@ -955,7 +1013,7 @@ const Canvas: React.FC = () => {
                   currentCanvasAction = CanvasActions.MOVING_STATE;
                   automataRef.current.pushSnapshotToUndo()
                   automataRef.current.redoStack = [];
-                  // Muda cursor para "grap" cursor
+                  // Muda cursor para "grab" cursor
                   window.document.body.style.cursor = 'grab';
                 } 
                 // Criando caixa de seleção
@@ -963,13 +1021,18 @@ const Canvas: React.FC = () => {
                   currentCanvasAction = CanvasActions.RESIZING_TRANSITION;
                 }
                 else if (clickedNote){
-                  currentCanvasAction = CanvasActions.MOVING_NOTE;
-                  selectedNoteMouseOffset = {};
-                  selectedNoteMouseOffset[clickedNote.id] = {};
-                  selectedNoteMouseOffset[clickedNote.id]["x"] = clickedNote.x - getMouseX(p);
-                  selectedNoteMouseOffset[clickedNote.id]["y"] = clickedNote.y - getMouseY(p);
-                  // Muda cursor para "grap" cursor
-                  window.document.body.style.cursor = 'grab';
+                  if(isCursorOverNoteResizeHandle){
+                    currentCanvasAction = CanvasActions.RESIZING_NOTE
+                  }
+                  else {
+                    currentCanvasAction = CanvasActions.MOVING_NOTE;
+                    selectedNoteMouseOffset = {};
+                    selectedNoteMouseOffset[clickedNote.id] = {};
+                    selectedNoteMouseOffset[clickedNote.id]["x"] = clickedNote.x - getMouseX(p);
+                    selectedNoteMouseOffset[clickedNote.id]["y"] = clickedNote.y - getMouseY(p);
+                    // Muda cursor para "grab" cursor
+                    window.document.body.style.cursor = 'grab';
+                  }
                 }
                 else {
                   // Set state
@@ -999,7 +1062,7 @@ const Canvas: React.FC = () => {
               /* Mover */
             } else if (currentCanvasToolRef.current === CanvasTools.MOVE) {
               currentCanvasAction = CanvasActions.MOVING_CANVAS;
-              // Muda cursor para "grap" cursor
+              // Muda cursor para "grab" cursor
               window.document.body.style.cursor = 'grab';
               /* Cria transição */
             } else if (currentCanvasToolRef.current === CanvasTools.TRANSITION) {

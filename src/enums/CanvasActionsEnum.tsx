@@ -7,4 +7,5 @@ export enum CanvasActions {
     RESIZING_TRANSITION,
     SIMULATING,
     MOVING_NOTE,
+    RESIZING_NOTE,
 }
