@@ -428,8 +428,7 @@ const Canvas: React.FC = () => {
           
           /* 🎬🎬🎬 TEXTO DA SIMULAÇÃO DO AUTOMATO */
           var input = (document.getElementById("automata-input-id-"+simulationInputIdRef.current) as HTMLInputElement)?.value;
-          console.log(input)
-          
+         
           let currentIndex = simulationIndexRef.current;
           if (input && (currentIndex || currentIndex === 0) && (simulationInputIdRef.current !== null)) {
             let TEXT_SIZE = 25
@@ -517,14 +516,17 @@ const Canvas: React.FC = () => {
             p.rect(note.x, note.y, note.width, note.height, 5);
             p.fill(0) // Reinicia cor para preto
             
-            const TEXT_SIZE = 15
-            const PADDING = 10
-            const RESIZE_ON_OVERFLOW = false
+
+            if(note.textLines.length === 1 && note.textLines[0] === ""){
+              calculateNoteLines(note, p);
+            }
+
             p.strokeWeight(0)
             p.textAlign(p.LEFT, p.TOP); // Align text to the left and top
             p.textSize(note.textSize);
             p.fill("#FFFFFF")
     
+            
             note.textLines.forEach((linha, i) => {
               p.text(linha, note.x + 10, note.y + 10 + i * (note.textSize * 1.2)); // Calculate line height based on text size
             });
@@ -931,8 +933,20 @@ const Canvas: React.FC = () => {
             clickedNote!.width = newWidth;
             clickedNote!.height = newHeight;
 
-            if(p.frameCount % 20 === 0)
+            const textLength = clickedNote!.textLines.length;
+            if (textLength < 3) {
               calculateNoteLines(clickedNote!, p)
+            } else if (textLength < 5 && p.frameCount % 3 === 0) {
+              calculateNoteLines(clickedNote!, p)
+            } else if (textLength < 8 && p.frameCount % 5 === 0) {
+              calculateNoteLines(clickedNote!, p)
+            } else if (textLength < 10 && p.frameCount % 8 === 0) {
+              calculateNoteLines(clickedNote!, p)
+            } else if (textLength < 12 && p.frameCount % 11 === 0) {
+              calculateNoteLines(clickedNote!, p)
+            } else if (textLength >= 13 && p.frameCount % 14 === 0){
+              calculateNoteLines(clickedNote!, p)
+            }
           }
         };
 
@@ -1633,7 +1647,7 @@ const Canvas: React.FC = () => {
         noteX,
         noteY,
         noteText,
-        100,
+        200,
         100,
         [""],
         16,
