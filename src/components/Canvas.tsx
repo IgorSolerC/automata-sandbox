@@ -202,7 +202,7 @@ const Canvas: React.FC = () => {
       }
       automataRef.current.addNote(newNoteId, getMouseX(p), getMouseY(p), text, 200, 200, CanvasColors.NOTES, CanvasColors.NOTES_SECONDARY);
     } else{
-      alert("??????????????.");
+      alert("????.");
     }
   }
 
@@ -430,56 +430,46 @@ const Canvas: React.FC = () => {
           p.translate(globalTranslateX, globalTranslateY)
           
           /* 🎬🎬🎬 TEXTO DA SIMULAÇÃO DO AUTOMATO */
-          // var input = (document.getElementsByClassName("automata-input")[0] as HTMLInputElement)?.value;
-          // let currentIndex = simulationIndexRef.current;
-          // if (input && (currentIndex || currentIndex === 0)) {
-          //   let x = - (input.length * 12) / 2; // Adjust starting x position relative to the center
+          var input = (document.getElementsByClassName("automata-input")[0] as HTMLInputElement)?.value;
+          let currentIndex = simulationIndexRef.current;
+          if (input && (currentIndex || currentIndex === 0)) {
+            let x = - (input.length * 12) / 2; // Adjust starting x position relative to the center
 
-          //   p.push(); // Save current transformation state
-          //   p.resetMatrix(); // Reset transformations or adjust according to the camera
+            p.push(); // Save current transformation state
+            p.resetMatrix(); // Reset transformations or adjust according to the camera
 
-          //   // Drawing the text at the top of the canvas
-          //   if(currentIndex < simulationStatesRef.current.length - 1){
+            // Drawing the text at the top of the canvas
+            let TEXT_SIZE = 20
+            p.textSize(TEXT_SIZE);
+            for (let i = 0; i < input.length; i++) {
+              let char = input[i];
 
-          //     for (let i = 0; i < input.length; i++) {
-          //       let char = input[i];
-          //       if (i < currentIndex) {
-          //           p.fill('gray');
-          //         } else if (i === currentIndex) {
-          //           p.fill('red');
-          //           p.textSize(30);
-          //       } else {
-          //           p.fill(CanvasColors.DEFAULT_TRANSITION_TEXT);
-          //           p.textSize(20);
-          //       }
-                
-          //       p.textAlign(p.CENTER, p.CENTER);
-          //       p.strokeWeight(0.1);
-          //       p.text(char, x + (window.innerWidth / 2), 20); // Position the text at the top
-          //       x += 18; // Increment x for the next character
-          //     }
+              if(currentIndex < simulationStatesRef.current.length - 1){
+                if (i < currentIndex) {
+                  p.fill(CanvasColors.DEFAULT_TRANSITION);
+                } else if (i === currentIndex) {
+                  p.fill(CanvasColors.DEFAULT_STATE);
+                } else {
+                  p.fill(CanvasColors.DEFAULT_TRANSITION_TEXT);
+                }
 
-          //     p.pop(); // Restore previous transformation state
-          //   } else { //Finalizou por completo a simulação
-          //     for (let i = 0; i < input.length; i++) {
-          //       let char = input[i];
-          //       let lastState = simulationStatesRef.current[simulationIndexRef.current!]
-          //       if (lastState && lastState.isFinal) {
-          //           p.fill('green');
-          //       } else {
-          //           p.fill('red');
-          //         }
-          //       p.textSize(30);
-                
-          //       p.textAlign(p.CENTER, p.CENTER);
-          //       p.strokeWeight(0.1);
-          //       p.text(char, x + (window.innerWidth / 2), 20); // Position the text at the top
-          //       x += 20; // Increment x for the next character
-          //     }
+              } else { //Finalizou por completo a simulação
+                let lastState = simulationStatesRef.current[simulationIndexRef.current!]
+                if (lastState && lastState.isFinal) {
+                  p.fill(CanvasColors.INFO_SUCCESS);
+                } else {
+                  p.fill(CanvasColors.INFO_ERROR);
+                }
+              }
 
-          //     p.pop(); // Restore previous transformation state
-          //   }
-          // } 
+              p.textAlign(p.CENTER, p.CENTER);
+              p.strokeWeight(0.1);
+              p.text(char, x + (window.innerWidth / 2), TEXT_SIZE); // Position the text at the top
+              x += TEXT_SIZE; // Increment x for the next character
+
+            }
+            p.pop(); // Restore previous transformation state
+          } 
           /* 🎬🎬🎬 TEXTO DA SIMULAÇÃO DO AUTOMATO */
           
           const arrowWeight = 5; 
@@ -832,7 +822,7 @@ const Canvas: React.FC = () => {
           // globalTranslateY = (getMouseYScaled(p) - (p.mouseY - globalTranslateY));
           // ☠️☠️☠️☠️☠️☠️☠️☠️
           
-          // 🕯️🕯️🕯️🕯️🕯️🕯️🕯️🕯️
+          // 🕯️🕯️🕯️🕯️🕯️🕯️🕯️🕯️ Só deus sabe como funciona
           const mouseXWorld = getMouseXScaled(p);
           const mouseYWorld = getMouseYScaled(p);
           
@@ -843,7 +833,7 @@ const Canvas: React.FC = () => {
           // Update globalTranslateX and globalTranslateY to keep the mouse's world coordinates the same
           globalTranslateX += mouseXWorld - mouseXWorldScaled;
           globalTranslateY += mouseYWorld - mouseYWorldScaled;
-          // 🕯️🕯️🕯️🕯️🕯️🕯️🕯️🕯️
+          // 🕯️🕯️🕯️🕯️🕯️🕯️🕯️🕯️ Só deus sabe como funciona
         }
         
         p.mouseDragged = () => {

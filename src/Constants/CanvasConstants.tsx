@@ -29,4 +29,9 @@ export const CanvasColors = {
     NOTES_CLICKED: "#0b63de",
     NOTES_CLICKED_SECONDARY: "#4b9cf9",
     NOTES_CLICKED_TEXT: "#E9ECEF",
+
+    // Other
+    INFO_SUCCESS: "#00C853",
+    INFO_WARNING: "#FFD600",
+    INFO_ERROR: "#eb022f",
 };
