@@ -166,12 +166,20 @@ export class Automata {
     return this.notes;
   }
 
-  addNote(id: number, x: number, y: number, text: string, width: number, height: number, color: string, secondaryColor: string){
+  addNote(x: number, y: number, text: string, width: number, height: number, textLines: string[], textSize: number, color: string, secondaryColor: string) {
+    let newNoteId = 0;
+    const allNotes = this.getNotes();
+    while (allNotes.some(note => note.id === newNoteId)) {
+      newNoteId++;
+    }
+
     const newNote: Note = {
-      id,
+      id: newNoteId,
       x,
       y,
       text,
+      textLines,
+      textSize,
       width,
       height,
       color,
@@ -179,6 +187,7 @@ export class Automata {
     }
 
     this.notes.push(newNote);
+    return newNote
   }
   deleteNote(note: Note): void {
     const index = this.notes.findIndex((n) => n.id === note.id);

@@ -24,6 +24,7 @@ import builder from 'xmlbuilder';
 import { Automata } from "../models/Automata";
 import { State } from "../models/State";
 import { Transition } from "../models/Transition";
+import { Note } from "../models/Note";
 
 // Enums
 import { CanvasActions } from "../enums/CanvasActionsEnum";
@@ -35,7 +36,6 @@ import { CanvasColors } from "../constants/CanvasConstants";
 // Contexts
 import { ToolboxProvider, useToolboxContext } from "../contexts/ToolboxContext";
 import { AutomataInputProvider, useAutomataInputContext } from "../contexts/AutamataInputContext";
-import { Note } from "../models/Note";
 
 // let canvasObject: p5 | null = null; // Variável para armazenar o sketch
 
@@ -89,6 +89,7 @@ const Canvas: React.FC = () => {
   const simulationStatesRef = useRef(simulationStates);
   
   const [simulationInputId, setSimulationInputId] = useState<(number | null)>(null);
+  const simulationInputIdRef = useRef(simulationInputId);
   const [simulationInputText, setSimulationInputText] = useState<(string)>("");
   const [simulationTransitions, setSimulationTransitions] = useState<(Transition | null)[]>([]);
   const simulationTransitionsRef = useRef(simulationTransitions);
@@ -195,14 +196,10 @@ const Canvas: React.FC = () => {
     let text = prompt("Digite o texto da nota: ");
     if(text)
     {
-      let newNoteId = 0;
-      const allNotes = automataRef.current.getNotes();
-      while (allNotes.some(note => note.id === newNoteId)) {
-        newNoteId++;
-      }
-      automataRef.current.addNote(newNoteId, getMouseX(p), getMouseY(p), text, 200, 200, CanvasColors.NOTES, CanvasColors.NOTES_SECONDARY);
+      let note = automataRef.current.addNote(getMouseX(p), getMouseY(p), text, 200, 100, [""], 16, CanvasColors.NOTES, CanvasColors.NOTES_SECONDARY);
+      calculateNoteLines(note, p)
     } else{
-      alert("????.");
+      alert("A nota não pode estar vazia.");
     }
   }
 
@@ -430,16 +427,19 @@ const Canvas: React.FC = () => {
           p.translate(globalTranslateX, globalTranslateY)
           
           /* 🎬🎬🎬 TEXTO DA SIMULAÇÃO DO AUTOMATO */
-          var input = (document.getElementsByClassName("automata-input")[0] as HTMLInputElement)?.value;
+          var input = (document.getElementById("automata-input-id-"+simulationInputIdRef.current) as HTMLInputElement)?.value;
+          console.log(input)
+          
           let currentIndex = simulationIndexRef.current;
-          if (input && (currentIndex || currentIndex === 0)) {
-            let x = - (input.length * 12) / 2; // Adjust starting x position relative to the center
+          if (input && (currentIndex || currentIndex === 0) && (simulationInputIdRef.current !== null)) {
+            let TEXT_SIZE = 25
+            let TEXT_HEIGHT = 95 // Bottom-up
+            let x = - ((input.length-1) * TEXT_SIZE) / 2; // Adjust starting x position relative to the center
 
             p.push(); // Save current transformation state
             p.resetMatrix(); // Reset transformations or adjust according to the camera
 
             // Drawing the text at the top of the canvas
-            let TEXT_SIZE = 20
             p.textSize(TEXT_SIZE);
             for (let i = 0; i < input.length; i++) {
               let char = input[i];
@@ -464,7 +464,7 @@ const Canvas: React.FC = () => {
 
               p.textAlign(p.CENTER, p.CENTER);
               p.strokeWeight(0.1);
-              p.text(char, x + (window.innerWidth / 2), TEXT_SIZE); // Position the text at the top
+              p.text(char, x + (window.innerWidth / 2), window.innerHeight - TEXT_HEIGHT); // Position the text at the top
               x += TEXT_SIZE; // Increment x for the next character
 
             }
@@ -516,38 +516,63 @@ const Canvas: React.FC = () => {
 
             p.rect(note.x, note.y, note.width, note.height, 5);
             p.fill(0) // Reinicia cor para preto
-
+            
             const TEXT_SIZE = 15
             const PADDING = 10
             const RESIZE_ON_OVERFLOW = false
-            wrapTextInRectangle(p, note.text, note.x, note.y, note.width, note.height, TEXT_SIZE, PADDING, RESIZE_ON_OVERFLOW);
+            p.strokeWeight(0)
+            p.textAlign(p.LEFT, p.TOP); // Align text to the left and top
+            p.textSize(note.textSize);
+            p.fill("#FFFFFF")
+    
+            note.textLines.forEach((linha, i) => {
+              p.text(linha, note.x + 10, note.y + 10 + i * (note.textSize * 1.2)); // Calculate line height based on text size
+            });
 
-            // Draw resize handle
-            const HANDLE_SIZE_X = note.width/12;
-            const HANDLE_SIZE_Y = note.height/12;
-            
+            /* ***** Draw resize handle ***** */
+            const HANDLE_SIZE_X = 20;
+            const HANDLE_SIZE_Y = 20;
             const handleX = note.x + note.width - HANDLE_SIZE_X;
             const handleY = note.y + note.height - HANDLE_SIZE_Y;
             p.fill(CanvasColors.NOTES);
-            p.stroke(CanvasColors.NOTES_CLICKED_SECONDARY); 
-            p.rect(handleX, handleY, HANDLE_SIZE_X, HANDLE_SIZE_Y);
+            p.stroke(CanvasColors.NOTES_SECONDARY); 
+            // p.rect(handleX, handleY, HANDLE_SIZE_X, HANDLE_SIZE_Y);
+            
+            /* HANDLE ICON 1 */
+            // p.strokeWeight(1); // Visible lines
+            // // // Draw diagonal grip lines
+            // p.strokeCap(p.ROUND);
+            // const numLines = 3; // Number of diagonal lines
+            // const lineSpacingX = HANDLE_SIZE_X / (numLines + 1);
+            // const lineSpacingY = HANDLE_SIZE_Y / (numLines + 1); 
+            // for (let i = 1; i <= numLines; i++) {
+            //   p.line(
+            //     note.x + note.width - i * lineSpacingX, 
+            //     note.y + note.height,
+            //     note.x + note.width,
+            //     note.y + note.height - i * lineSpacingY
+            //   );
+            // }
+            
+            /* HANDLE ICON 2 */
+            let PADDING_HANDLE = 6
+            let HANDLE_LINE_SIZE = 10
+            p.strokeCap(p.ROUND);
+            p.strokeWeight(3); // Visible lines
+            p.line(
+              note.x + note.width - PADDING_HANDLE - HANDLE_LINE_SIZE, 
+              note.y + note.height - PADDING_HANDLE,
+              note.x + note.width - PADDING_HANDLE,
+              note.y + note.height - PADDING_HANDLE
+            );
+            p.line(
+              note.x + note.width - PADDING_HANDLE, 
+              note.y + note.height - PADDING_HANDLE - HANDLE_LINE_SIZE,
+              note.x + note.width - PADDING_HANDLE,
+              note.y + note.height - PADDING_HANDLE
+            );
 
-            // Draw diagonal grip lines
-            p.strokeWeight(2); // Visible lines
-            const numLines = 3; // Number of diagonal lines
-            const lineSpacingX = HANDLE_SIZE_X / (numLines + 1);
-            const lineSpacingY = HANDLE_SIZE_Y / (numLines + 1);
-
-            for (let i = 1; i <= numLines; i++) {
-              p.line(
-                note.x + note.width - i * lineSpacingX, 
-                note.y + note.height,
-                note.x + note.width,
-                note.y + note.height - i * lineSpacingY
-              );
-            }
-
-            // Check if the mouse is over the resize handle
+            // // Check if the mouse is over the resize handle
             if (getMouseX(p) >= handleX && getMouseX(p) <= handleX + HANDLE_SIZE_X &&
                 getMouseY(p) >= handleY && getMouseY(p) <= handleY + HANDLE_SIZE_Y) {
               isCursorOverNoteResizeHandle = true;
@@ -905,6 +930,9 @@ const Canvas: React.FC = () => {
 
             clickedNote!.width = newWidth;
             clickedNote!.height = newHeight;
+
+            if(p.frameCount % 20 === 0)
+              calculateNoteLines(clickedNote!, p)
           }
         };
 
@@ -1074,6 +1102,10 @@ const Canvas: React.FC = () => {
           {
             automataRef.current.pushSnapshotToUndo();
             automataRef.current.redoStack = [];
+          }
+
+          if(currentCanvasAction === CanvasActions.RESIZING_NOTE){
+            calculateNoteLines(clickedNote!, p);
           }
 
           if (clickedState) {            
@@ -1248,6 +1280,7 @@ const Canvas: React.FC = () => {
       newSimulationTransitions.push(allTransitions.find(x => x.from === estadoAnterior && x.label === inputText[inputText.length - 1])!);
     
     setSimulationInputId(inputId)
+    simulationInputIdRef.current = inputId
     setSimulationInputText(inputText)
     setSimulationStates(newSimulationStates);
     simulationStatesRef.current = newSimulationStates;
@@ -1289,83 +1322,78 @@ const Canvas: React.FC = () => {
     }
   }
 
-  function wrapTextInRectangle(p: p5, text: string, x: number, y: number, maxWidth: number, maxHeight: number, textSize: number, padding: number, resizeOnOverflow=false) {
-    p.strokeWeight(0)
+  function wrapTextInRectangle(p: p5, text: string, x: number, y: number, maxWidth: number, maxHeight: number, textSize: number, padding: number, resizeOnOverflow=false): [string[], number] | undefined {
+    p.strokeWeight(0);
     p.textAlign(p.LEFT, p.TOP); // Align text to the left and top
     p.textSize(textSize);
-    p.fill("#FFFFFF")
-    let words = text.split(' ');
-    let tempLine = '';
-    let lines = [];
-    let lineHeight = textSize * 1.2; // Calculate line height as 1.2 times the text size for some vertical spacing
-
+    p.fill("#FFFFFF");
+  
     // Adjust the maximum width and height for padding
     maxWidth -= (padding * 2);
     maxHeight -= (padding * 2);
-
-    let contentHeight;
-
-    // Build lines of text that fit within maxWidth
-    for (let i = 0; i < words.length; i++) {
-      let word = words[i];
-      let wordWidth = p.textWidth(word);
   
-      // If a single word is wider than maxWidth, break the word
-      while (wordWidth > maxWidth) {
-          // Find the substring of the word that fits, and add a hyphen
+    let contentHeight;
+    let lines: string[] = [];
+    let lineHeight = textSize * 1.2; // Calculate line height as 1.2 times the text size for some vertical spacing
+  
+    // Split text into chunks by new lines, then process each chunk
+    let textChunks = text.split('\n');
+    for (let chunk of textChunks) {
+      let words = chunk.split(' ');
+      let tempLine = '';
+  
+      for (let i = 0; i < words.length; i++) {
+        let word = words[i];
+        let wordWidth = p.textWidth(word);
+  
+        // If a single word is wider than maxWidth, break the word
+        while (wordWidth > maxWidth) {
           let subWord = word;
           while (p.textWidth(subWord + '-') > maxWidth) {
-              // Trim the subWord until it fits
-              subWord = subWord.substring(0, subWord.length - 1);
+            subWord = subWord.substring(0, subWord.length - 1);
           }
           subWord += '-'; // Add a hyphen to indicate a break
-
+  
           // If there is text in tempLine, push it to lines and reset tempLine
           if (tempLine !== '') {
-              lines.push(tempLine);
-              tempLine = '';
+            lines.push(tempLine);
+            tempLine = '';
           }
   
           // Push the subWord to lines and prepare the remaining part of the word for the next line
           lines.push(subWord);
           word = word.substring(subWord.length - 1); // Exclude the hyphen from the remaining part 
           wordWidth = p.textWidth(word);
+        }
+  
+        // Continue processing the remaining part of the word or the next word
+        let testLine = tempLine + word + ' ';
+        if (p.textWidth(testLine) > maxWidth) {
+          lines.push(tempLine.trim());
+          tempLine = word + ' ';
+        } else {
+          tempLine = testLine;
+        }
       }
   
-      // Continue processing the remaining part of the word or the next word
-      let testLine = tempLine + word + ' ';
-      if (p.textWidth(testLine) > maxWidth) {
-          contentHeight = (lines.length + 2) * lineHeight;
-          if (!(contentHeight > maxHeight)){
-            lines.push(tempLine);
-          }
-          tempLine = word + ' ';
-      } else {
-          tempLine = testLine;
+      if (tempLine) {
+        lines.push(tempLine.trim());
       }
     }
-
-    if (tempLine) {
-      lines.push(tempLine.trim());
-    }
-    
-    // Draw each line, adjusting vertical position to start at the top and fill downwards
+  
+    // Check and handle text overflow
     contentHeight = lines.length * lineHeight;
-        
     if (resizeOnOverflow && contentHeight > maxHeight) {
-        // If the text doesn't fit vertically, reduce text size and try again
-        textSize -= 1;
-        if (textSize > 0) {
-            wrapTextInRectangle(p, text, x, y, maxWidth + (padding * 2), maxHeight + (padding * 2), textSize, padding, resizeOnOverflow);
-        }
+      // If the text doesn't fit vertically, reduce text size and try again
+      textSize -= 1;
+      if (textSize > 0) {
+        return wrapTextInRectangle(p, text, x, y, maxWidth + (padding * 2), maxHeight + (padding * 2), textSize, padding, resizeOnOverflow);
+      }
     } else {
-        // Calculate the starting Y position to add padding
-        let startY = y + padding;
-        for (let i = 0; i < lines.length; i++) {
-            p.text(lines[i], x + padding, startY + (lineHeight * i));
-        }
+      return [lines, textSize];
     }
   }
+
 
   
   function showContextMenu(x: number, y: number) {
@@ -1410,6 +1438,7 @@ const Canvas: React.FC = () => {
     setSimulationStates([])
     setSimulationInputText("")
     setSimulationInputId(null)
+    simulationInputIdRef.current = null
   }
 
   function handleSimulationButtonClick(change: number) {
@@ -1449,11 +1478,11 @@ const Canvas: React.FC = () => {
     root.ele('type').text('fa');
     
     const automaton = root.ele('automaton');
-  
+    
+    const ScaleReducer = 1.6;
     // Add states
     automataRef.current.states.forEach(state => {
       const stateEle = automaton.ele('state', { id: state.id, name: state.label });
-      const ScaleReducer = 1.6;
       stateEle.ele('x').text((state.x/ScaleReducer).toString());
       stateEle.ele('y').text((state.y/ScaleReducer).toString());
       if (state.isInitial) stateEle.ele('initial');
@@ -1471,7 +1500,14 @@ const Canvas: React.FC = () => {
         transitionEle.ele('read');
       }
     });
-  
+
+    // Add notes
+    automataRef.current.notes.forEach(note => {
+      const noteEle = automaton.ele('note')
+      noteEle.ele('text').text(note.text);
+      noteEle.ele('x').text((note.x/ScaleReducer).toString());
+      noteEle.ele('y').text((note.y/ScaleReducer).toString());
+    })
     return root.end({ pretty: true });
   };
 
@@ -1517,6 +1553,7 @@ const Canvas: React.FC = () => {
           const jsonObj = parser.parse(content);
           createStatesFromXML(jsonObj.structure.automaton.state);
           createTransitionsFromXML(jsonObj.structure.automaton.transition, automataRef.current.states);
+          createNotesFromXML(jsonObj.structure.automaton.note);
           event.target.value = '';
       } else {
         console.error("File content is not a string.");
@@ -1529,6 +1566,13 @@ const Canvas: React.FC = () => {
   };
 
   const createStatesFromXML = (statesXml: any) => {
+    if (!statesXml)
+      return;
+
+    if (!Array.isArray(statesXml)) {
+      statesXml = [statesXml];
+    } 
+
     //Os arquivos do JFLAP possuem uma escala menor, então aumento um pouco as distâncias durante a importação para ter maior semelhança.
     const scaleMultiplier =  1.6;
     return statesXml.map((stateXml: { id: any; name: string; x: string; y: string; initial?: string; final?: string }) => {
@@ -1549,6 +1593,13 @@ const Canvas: React.FC = () => {
   };
 
   const createTransitionsFromXML = (transitionsXml: any, states: State[]) => {
+    if(!transitionsXml)
+      return;
+
+    if (!Array.isArray(transitionsXml)) {
+      transitionsXml = [transitionsXml];
+    }  
+
     return transitionsXml.map((transitionXml: { from: string; to: string; read: string; }) => {
       const fromState = states.find(state => state.id === transitionXml.from.toString())!;
       const toState = states.find(state => state.id === transitionXml.to.toString())!;
@@ -1564,6 +1615,44 @@ const Canvas: React.FC = () => {
     });
   };
 
+  const createNotesFromXML = (notesXml: any) => {
+    if(!notesXml)
+      return;
+    
+    if (!Array.isArray(notesXml)) {
+      notesXml = [notesXml];
+    }
+
+    const scaleMultiplier =  1.6;
+    return notesXml.map((noteXml: { text: string; x: string; y: string; }) => {
+      const noteText = noteXml.text.toString();
+      const noteX = parseFloat(noteXml.x) * scaleMultiplier;
+      const noteY = parseFloat(noteXml.y) * scaleMultiplier;
+      
+      const note = automataRef.current.addNote(
+        noteX,
+        noteY,
+        noteText,
+        100,
+        100,
+        [""],
+        16,
+        CanvasColors.NOTES,
+        CanvasColors.NOTES_SECONDARY,
+      );
+
+      return note;
+    });
+  };
+
+  function calculateNoteLines(note: Note, p: p5){
+    const TEXT_SIZE = 15
+    const PADDING = 10
+    const RESIZE_ON_OVERFLOW = true
+    const result = wrapTextInRectangle(p, note.text, note.x, note.y, note.width, note.height, TEXT_SIZE, PADDING, RESIZE_ON_OVERFLOW);
+    note.textLines = result![0];
+    note.textSize = parseInt(result![1].toString());
+  }
   const clickImportFile = () => {
     if (fileInputRef.current){
       fileInputRef.current.click();

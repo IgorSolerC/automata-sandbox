@@ -7,6 +7,9 @@ export interface Note {
     y: number;
     width: number;
     height: number;
+    textLines: string[];
+    textSize: number;
+
     color: any;
     secondaryColor: any;
 
