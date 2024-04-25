@@ -1131,12 +1131,14 @@ const Canvas: React.FC = () => {
                   automataRef.current.deleteState(state, isFirstState);
                 });
                 selectedStates = [];
+                validadeAllInputs()
               }
-            
             } else if (clickedTransition){
               automataRef.current.deleteTransition(clickedTransition);
+              validadeAllInputs();
+            } else if (clickedNote){
+              automataRef.current.deleteNote(clickedNote);
             }
-            validadeAllInputs()
           }
 
           /*
