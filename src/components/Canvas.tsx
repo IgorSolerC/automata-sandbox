@@ -255,6 +255,33 @@ const Canvas: React.FC = () => {
       if (start && end) {
         // Transições para o mesmo estado
         if (start.id === end.id){
+          const collidePointCircleSegment = (px: number, py: number, cx: number, cy: number, radius: number, startAngle: number, endAngle: number) => {
+            const distX = px - cx;
+            const distY = py - cy;
+            const distance = Math.sqrt(distX * distX + distY * distY);
+            const angle = Math.atan2(distY, distX);
+        
+            // Normalize angles
+            const normalizedStart = startAngle % (2 * Math.PI);
+            const normalizedEnd = endAngle % (2 * Math.PI);
+            const normalizedPointAngle = (angle < 0) ? 2 * Math.PI + angle : angle;
+        
+            return distance <= radius &&
+                   (
+                     (normalizedStart < normalizedEnd) ? 
+                     (normalizedPointAngle >= normalizedStart && normalizedPointAngle <= normalizedEnd) :
+                     (normalizedPointAngle >= normalizedStart || normalizedPointAngle <= normalizedEnd)
+                   );
+          };
+
+          const loopRadius = start.diameter / 2;
+          const cx = start.x;
+          const cy = start.y - loopRadius; // Adjusted center y-coordinate for the loop
+
+          if (collidePointCircleSegment(getMouseX(p), getMouseY(p), cx, cy, loopRadius, Math.PI/2, Math.PI/0.255)) {
+              clickedTransitionTemp = transition;
+              return;
+          }
         }
         else {
           /* 
@@ -425,51 +452,6 @@ const Canvas: React.FC = () => {
           p.scale(cameraZoom)
           p.strokeCap(p.PROJECT);
           p.translate(globalTranslateX, globalTranslateY)
-          
-          /* 🎬🎬🎬 TEXTO DA SIMULAÇÃO DO AUTOMATO */
-          var input = (document.getElementById("automata-input-id-"+simulationInputIdRef.current) as HTMLInputElement)?.value;
-         
-          let currentIndex = simulationIndexRef.current;
-          if (input && (currentIndex || currentIndex === 0) && (simulationInputIdRef.current !== null)) {
-            let TEXT_SIZE = 25
-            let TEXT_HEIGHT = 95 // Bottom-up
-            let x = - ((input.length-1) * TEXT_SIZE) / 2; // Adjust starting x position relative to the center
-
-            p.push(); // Save current transformation state
-            p.resetMatrix(); // Reset transformations or adjust according to the camera
-
-            // Drawing the text at the top of the canvas
-            p.textSize(TEXT_SIZE);
-            for (let i = 0; i < input.length; i++) {
-              let char = input[i];
-
-              if(currentIndex < simulationStatesRef.current.length - 1){
-                if (i < currentIndex) {
-                  p.fill(CanvasColors.DEFAULT_TRANSITION);
-                } else if (i === currentIndex) {
-                  p.fill(CanvasColors.DEFAULT_STATE);
-                } else {
-                  p.fill(CanvasColors.DEFAULT_TRANSITION_TEXT);
-                }
-
-              } else { //Finalizou por completo a simulação
-                let lastState = simulationStatesRef.current[simulationIndexRef.current!]
-                if (lastState && lastState.isFinal) {
-                  p.fill(CanvasColors.INFO_SUCCESS);
-                } else {
-                  p.fill(CanvasColors.INFO_ERROR);
-                }
-              }
-
-              p.textAlign(p.CENTER, p.CENTER);
-              p.strokeWeight(0.1);
-              p.text(char, x + (window.innerWidth / 2), window.innerHeight - TEXT_HEIGHT); // Position the text at the top
-              x += TEXT_SIZE; // Increment x for the next character
-
-            }
-            p.pop(); // Restore previous transformation state
-          } 
-          /* 🎬🎬🎬 TEXTO DA SIMULAÇÃO DO AUTOMATO */
           
           const arrowWeight = 5; 
 
@@ -695,7 +677,7 @@ const Canvas: React.FC = () => {
                 const midY = (start.y + end.y) / 2; 
                 const textOffsetY = -15; // Vertical offset for the text label 
 
-                p.push(); // Start another new drawing state for the tilted text
+                p.push(); // Start another new ing state for the tilted text
                 p.translate(midX, midY);
                 
                 // Corrige textos de cabeça para baixo
@@ -808,6 +790,51 @@ const Canvas: React.FC = () => {
             );
             p.pop();
           }
+
+          /* 🎬🎬🎬 TEXTO DA SIMULAÇÃO DO AUTOMATO */
+          var input = (document.getElementById("automata-input-id-"+simulationInputIdRef.current) as HTMLInputElement)?.value;
+         
+          let currentIndex = simulationIndexRef.current;
+          if (input && (currentIndex || currentIndex === 0) && (simulationInputIdRef.current !== null)) {
+            let TEXT_SIZE = 25
+            let TEXT_HEIGHT = 95 // Bottom-up
+            let x = - ((input.length-1) * TEXT_SIZE) / 2; // Adjust starting x position relative to the center
+
+            p.push(); // Save current transformation state
+            p.resetMatrix(); // Reset transformations or adjust according to the camera
+
+            // Drawing the text at the top of the canvas
+            p.textSize(TEXT_SIZE);
+            for (let i = 0; i < input.length; i++) {
+              let char = input[i];
+
+              if(currentIndex < simulationStatesRef.current.length - 1){
+                if (i < currentIndex) {
+                  p.fill(CanvasColors.DEFAULT_TRANSITION);
+                } else if (i === currentIndex) {
+                  p.fill(CanvasColors.DEFAULT_STATE);
+                } else {
+                  p.fill(CanvasColors.DEFAULT_TRANSITION_TEXT);
+                }
+
+              } else { //Finalizou por completo a simulação
+                let lastState = simulationStatesRef.current[simulationIndexRef.current!]
+                if (lastState && lastState.isFinal) {
+                  p.fill(CanvasColors.INFO_SUCCESS);
+                } else {
+                  p.fill(CanvasColors.INFO_ERROR);
+                }
+              }
+
+              p.textAlign(p.CENTER, p.CENTER);
+              p.strokeWeight(2);
+              p.text(char, x + (window.innerWidth / 2), window.innerHeight - TEXT_HEIGHT); // Position the text at the top
+              x += TEXT_SIZE; // Increment x for the next character
+
+            }
+            p.pop(); // Restore previous transformation state
+          } 
+          /* 🎬🎬🎬 TEXTO DA SIMULAÇÃO DO AUTOMATO */
         };
 
         function startTransition(newTargetX: number, newTargetY: number, newZoom: number) {
@@ -1140,7 +1167,6 @@ const Canvas: React.FC = () => {
                 if (label === "") label = "λ";
                 const labels = label.split(",");
                 labels.forEach(l => l.trim());
-                console.log(labels)
                 automataRef.current.addTransition(
                   clickedState,
                   endState,
