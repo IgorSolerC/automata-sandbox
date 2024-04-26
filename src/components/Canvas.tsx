@@ -565,9 +565,7 @@ const Canvas: React.FC = () => {
 
           if (isCursorOverNoteResizeHandle) {
             window.document.body.style.cursor = 'nwse-resize';
-          } else {
-            //Isso faz com que os cursor 'grab' por ai fiquem bugados. 
-            //Talvez seja melhor fazermos uma variavel responsavel de controlar o estado do cursor atual.
+          } else if(window.document.body.style.cursor === 'nwse-resize') {
             window.document.body.style.cursor = 'default';
           }
 
@@ -926,6 +924,7 @@ const Canvas: React.FC = () => {
                 state.y <= selectionY + selectionDistanceY
               );
             });
+
           } else if (currentCanvasAction === CanvasActions.MOVING_CANVAS){
             const deltaX = getMouseX(p) - getPreviousMouseX(p);
             const deltaY = getMouseY(p) - getPreviousMouseY(p);
