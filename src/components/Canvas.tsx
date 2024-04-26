@@ -1187,8 +1187,10 @@ const Canvas: React.FC = () => {
             } else if (clickedTransition){
               automataRef.current.deleteTransition(clickedTransition);
               validadeAllInputs();
+              clickedTransition = null;
             } else if (clickedNote){
               automataRef.current.deleteNote(clickedNote);
+              clickedNote = null;
             }
           }
 
