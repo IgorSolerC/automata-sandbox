@@ -257,18 +257,30 @@ export class Automata {
     return this.transitions;
   }
 
-  addTransition(from: State, to: State, label: string[], color: any, textColor: any): void {
-    const newTransition: Transition = {
-      from,
-      to,
-      label,
-      height: 0,
-      color,
-      textColor,
-    };
+  addTransition(from: State, to: State, labels: string[], color: any, textColor: any): void {
     this.pushSnapshotToUndo();
     this.redoStack = [];
-    this.transitions.push(newTransition);
+    
+    const transitionExists = this.transitions.find((t) => t.from === from && t.to === to);
+    if (transitionExists) {
+      labels.forEach(label => {
+        if (!transitionExists.label.includes(label)) {
+            transitionExists.label.push(label);
+        }
+      });
+      return;
+    } else {
+      const newTransition: Transition = {
+        from,
+        to,
+        label: labels,
+        height: 0,
+        color,
+        textColor,
+      };
+      this.transitions.push(newTransition);
+    }
+    
   }
 
   deleteTransition(transition: Transition): void {
