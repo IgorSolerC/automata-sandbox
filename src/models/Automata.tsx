@@ -396,4 +396,107 @@ export class Automata {
       };
     }
   }
+
+  minimizeDFA(): Automata {
+    const partition = new Map<string, State[]>();
+    partition.set('final', this.finalStates);
+    partition.set('non-final', this.states.filter(s => !this.finalStates.includes(s)));
+
+    let partitions = [this.finalStates, this.states.filter(s => !this.finalStates.includes(s))];
+    let oldPartitions = [];
+
+    while (partitions.length !== oldPartitions.length) {
+      oldPartitions = partitions;
+      partitions = this.refinePartitions(partitions);
+    }
+    
+    var result = this.buildMinimizedDFA(partitions);
+    this.transitions = result.transitions;
+    this.states = result.states;
+    this.initialState = result.initialState;
+    this.finalStates = result.finalStates;
+    return result
+  }
+
+  refinePartitions(partitions: State[][]): State[][] {
+    let newPartitions: State[][] = [];
+    let isStable = false;
+  
+    // Repeat until no changes occur.
+    while (!isStable) {
+      isStable = true;
+      newPartitions = [];
+  
+      partitions.forEach(partition => {
+        const refined = this.splitPartition(partition, partitions);
+  
+        // Check if partition has been refined.
+        if (refined.length > 1) {
+          isStable = false;
+        }
+  
+        newPartitions.push(...refined);
+      });
+  
+      if (!isStable) {
+        partitions = newPartitions;
+      }
+    }
+  
+    return newPartitions;
+  }
+
+  splitPartition(partition: State[], otherPartitions: State[][]): State[][] {
+    const subgroupMap = new Map<string, State[]>();
+  
+    // Use a map to record transitions for each state.
+    partition.forEach(state => {
+      const transitionKey = this.transitions
+        .filter(t => t.from === state)
+        .map(t => {
+          // Get the partition index for the state where the transition goes to.
+          const partitionIndex = otherPartitions.findIndex(p => p.includes(t.to));
+          // Use the label and the partition index as the key.
+          return `${t.label.join('')}:${partitionIndex}`;
+        })
+        .sort()
+        .join('|'); // '|' is used to delimit different transition keys.
+  
+      if (!subgroupMap.has(transitionKey)) {
+        subgroupMap.set(transitionKey, []);
+      }
+      subgroupMap.get(transitionKey)?.push(state);
+    });
+  
+    return Array.from(subgroupMap.values());
+  }
+
+  buildMinimizedDFA(partitions: State[][]): Automata {
+    const minimizedAutomata = new Automata();
+    const newStates = partitions.map((partition, index) => {
+      const newState = { ...partition[0], id: `S${index}` };
+      minimizedAutomata.states.push(newState);
+      if (partition.some(state => state.isInitial)) {
+        minimizedAutomata.initialState = newState;
+      }
+      if (partition.some(state => state.isFinal)) {
+        minimizedAutomata.finalStates.push(newState);
+      }
+      return newState;
+    });
+
+    partitions.forEach((partition, index) => {
+      console.log(index);
+      partition.forEach(state => {
+        this.transitions.forEach(transition => {
+          if (transition.from === state) {
+            const newStateTo = newStates[partitions.findIndex(p => p.includes(transition.to))];
+            minimizedAutomata.transitions.push(new Transition(newStates[index], newStateTo, transition.label, transition.height, transition.color, transition.textColor));
+          }
+        });
+      });
+    });
+
+    return minimizedAutomata;
+  }
 }

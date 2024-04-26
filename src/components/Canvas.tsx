@@ -1740,6 +1740,7 @@ const Canvas: React.FC = () => {
           handleSaveFile={clickSaveFile}
           Undo={() => automataRef.current.undo()}
           Redo={() => automataRef.current.redo()}
+          MinimizeDFA={() => automataRef.current.minimizeDFA()}
         />
 
         {/* Lado Direito */}
