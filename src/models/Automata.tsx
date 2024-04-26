@@ -293,7 +293,7 @@ export class Automata {
 
   deleteTransitionFromState(state: State): void {
     this.transitions
-      .filter((t) => t.from === state || t.to === state)
+      .filter((t) => t.from.id === state.id || t.to.id === state.id)
       .forEach((transition) => {
         const index = this.transitions.findIndex((t) => t === transition);
         if (index !== -1) {

@@ -642,7 +642,7 @@ const Canvas: React.FC = () => {
                 p.pop();
 
               }
-              // Transições para outros estrados
+              // Transições para outros estados
               else {
                 const angle = Math.atan2(end.y - start.y, end.x - start.x); // angle of line
                 const radius = start.diameter / 2; // diameter of circle
@@ -980,6 +980,11 @@ const Canvas: React.FC = () => {
         };
 
         p.mousePressed = (event: any) => {
+          if(p.mouseButton === p.CENTER){
+            console.log(automataRef.current.states)
+            console.log(automataRef.current.transitions)
+          }
+
           //Se o click não foi no próprio contextMenu, ocultar o menu.
           if (event.target.id && !event.target.id.includes('ContextMenu')) {
             hideContextMenu();
