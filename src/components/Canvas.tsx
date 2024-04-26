@@ -697,11 +697,13 @@ const Canvas: React.FC = () => {
 
                 p.push(); // Start another new drawing state for the tilted text
                 p.translate(midX, midY);
+                
                 // Corrige textos de cabeça para baixo
                 let correctedAngle = angle
                 if(end.x < start.x){
                   correctedAngle += Math.PI
                 }
+
                 p.strokeWeight(0.1);
                 p.stroke(CanvasColors.DEFAULT_TRANSITION_TEXT)
                 p.fill(CanvasColors.DEFAULT_TRANSITION_TEXT)
@@ -1136,10 +1138,13 @@ const Canvas: React.FC = () => {
               let label = prompt("Digite o símbolo de transição: ");
               if (label !== null) {
                 if (label === "") label = "λ";
+                const labels = label.split(",");
+                labels.forEach(l => l.trim());
+                console.log(labels)
                 automataRef.current.addTransition(
                   clickedState,
                   endState,
-                  label,
+                  labels,
                   CanvasColors.DEFAULT_TRANSITION,
                   CanvasColors.DEFAULT_TRANSITION_TEXT,
                 );
@@ -1277,8 +1282,12 @@ const Canvas: React.FC = () => {
       if(i === 0)
         newSimulationTransitions.push(null);
       else{
-        newSimulationTransitions.push(allTransitions.find(x => x.from === estadoAnterior && x.label === inputText[i - 1])!);
-      }
+        newSimulationTransitions.push(
+          allTransitions.find(x => 
+            x.from === estadoAnterior && 
+            x.label.includes(inputText[i - 1])
+          )!
+        );      }
       
 
       newSimulationStates.push(result.nextState!);
@@ -1290,9 +1299,15 @@ const Canvas: React.FC = () => {
       estadoAtual = result.nextState!;
     }
 
-    if(estadoAnterior)
-      newSimulationTransitions.push(allTransitions.find(x => x.from === estadoAnterior && x.label === inputText[inputText.length - 1])!);
-    
+    if (estadoAnterior) {
+      newSimulationTransitions.push(
+        allTransitions.find(x => 
+          x.from === estadoAnterior && 
+          x.label.includes(inputText[inputText.length - 1])
+        )!
+      );
+    }
+      
     setSimulationInputId(inputId)
     simulationInputIdRef.current = inputId
     setSimulationInputText(inputText)
@@ -1505,14 +1520,16 @@ const Canvas: React.FC = () => {
   
     // Add transitions
     automataRef.current.transitions.forEach(transition  => {
-      const transitionEle = automaton.ele('transition');
-      transitionEle.ele('from').text(transition.from.id);
-      transitionEle.ele('to').text(transition.to.id);
-      if (transition.label !== undefined) {
-        transitionEle.ele('read').text(transition.label === "λ" ? "" : transition.label);
-      } else {
-        transitionEle.ele('read');
-      }
+      transition.label.forEach(label => {
+        const transitionEle = automaton.ele('transition');
+        transitionEle.ele('from').text(transition.from.id);
+        transitionEle.ele('to').text(transition.to.id);
+        if (transition.label !== undefined) {
+          transitionEle.ele('read').text(label === "λ" ? "" : label);
+        } else {
+          transitionEle.ele('read');
+        }
+      })
     });
 
     // Add notes
@@ -1621,7 +1638,7 @@ const Canvas: React.FC = () => {
       const transition = automataRef.current.addTransition(
         fromState, 
         toState, 
-        label, 
+        [label], 
         CanvasColors.DEFAULT_TRANSITION, 
         CanvasColors.DEFAULT_TRANSITION_TEXT
       );

@@ -257,7 +257,7 @@ export class Automata {
     return this.transitions;
   }
 
-  addTransition(from: State, to: State, label: string, color: any, textColor: any): void {
+  addTransition(from: State, to: State, label: string[], color: any, textColor: any): void {
     const newTransition: Transition = {
       from,
       to,
@@ -299,16 +299,16 @@ export class Automata {
 
     if (
       !possiveis_transicoes ||
-      !possiveis_transicoes.find((transition) => transition.label === char)
-    ) {
+      !possiveis_transicoes.some((transition) => transition.label.includes(char))
+      ) {
       return {
         isValidTransition: false,
         nextState: null,
       };
     } else {
       estado_atual = possiveis_transicoes.find(
-        (transition) => transition.label === char
-      )!.to;
+        (transition) => transition.label.includes(char)
+        )!.to;
       return {
         isValidTransition: true,
         nextState: estado_atual,
