@@ -418,6 +418,7 @@ const Canvas: React.FC = () => {
           option2.mouseClicked(() => {
             toggleInitial(p);
             hideContextMenu();
+            stopSimulation()
             validadeAllInputs()
             });
 
@@ -426,6 +427,7 @@ const Canvas: React.FC = () => {
           option3.mouseClicked(() => {
             automataRef.current.toggleFinal(selectedStates);
             hideContextMenu();
+            stopSimulation()
             validadeAllInputs()
           });
           
@@ -1123,9 +1125,11 @@ const Canvas: React.FC = () => {
             } else if (currentCanvasToolRef.current === CanvasTools.ERASER) {
               if (clickedState) {
                 automataRef.current.deleteState(clickedState);
+                stopSimulation()
                 validadeAllInputs()
               } else if(clickedTransition) {
                 automataRef.current.deleteTransition(clickedTransition);
+                stopSimulation()
                 validadeAllInputs()
               } else if (clickedNote) {
                 automataRef.current.deleteNote(clickedNote);                
@@ -1185,6 +1189,7 @@ const Canvas: React.FC = () => {
                   CanvasColors.DEFAULT_TRANSITION,
                   CanvasColors.DEFAULT_TRANSITION_TEXT,
                 );
+                stopSimulation()
                 validadeAllInputs()
               }
             }
@@ -1219,10 +1224,12 @@ const Canvas: React.FC = () => {
                   automataRef.current.deleteState(state, isFirstState);
                 });
                 selectedStates = [];
+                stopSimulation()
                 validadeAllInputs()
               }
             } else if (clickedTransition){
               automataRef.current.deleteTransition(clickedTransition);
+              stopSimulation()
               validadeAllInputs();
               clickedTransition = null;
             } else if (clickedNote){
@@ -1618,7 +1625,6 @@ const Canvas: React.FC = () => {
       const reader = new FileReader();
       reader.onload = (e) => {
         automataRef.current.clearAutomata();
-        stopSimulation()
         const content = e.target!.result;
         if (typeof content === "string") {
           const jsonObj = parser.parse(content);
@@ -1626,6 +1632,7 @@ const Canvas: React.FC = () => {
           createTransitionsFromXML(jsonObj.structure.automaton.transition, automataRef.current.states);
           createNotesFromXML(jsonObj.structure.automaton.note);
           event.target.value = '';
+        stopSimulation()
         validadeAllInputs()
       } else {
         console.error("File content is not a string.");
