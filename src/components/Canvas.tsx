@@ -829,7 +829,9 @@ const Canvas: React.FC = () => {
               }
 
               p.textAlign(p.CENTER, p.CENTER);
-              p.strokeWeight(2);
+              p.strokeWeight(7);
+              p.stroke(CanvasColors.BACKGROUND)
+              p.strokeJoin(p.ROUND)
               p.text(char, x + (window.innerWidth / 2), window.innerHeight - TEXT_HEIGHT); // Position the text at the top
               x += TEXT_SIZE; // Increment x for the next character
 
