@@ -1618,6 +1618,7 @@ const Canvas: React.FC = () => {
       const reader = new FileReader();
       reader.onload = (e) => {
         automataRef.current.clearAutomata();
+        stopSimulation()
         const content = e.target!.result;
         if (typeof content === "string") {
           const jsonObj = parser.parse(content);
