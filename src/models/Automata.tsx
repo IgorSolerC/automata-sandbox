@@ -5,6 +5,8 @@ import { Note } from "../models/Note";
 
 // Enums
 import { AutomataInputResultsEnum } from "../enums/AutomataInputEnum";
+import { findByPlaceholderText } from "@testing-library/react";
+import { collapseTextChangeRangesAcrossMultipleVersions } from "typescript";
 
 interface AutomataSnapshot {
   states: State[];
@@ -415,7 +417,11 @@ export class Automata {
     }
     
     var result = this.buildMinimizedDFA(partitions);
-    this.transitions = result.transitions;
+    
+    this.transitions = [];
+    for (const transition of result.transitions)
+      this.addTransition(transition.from, transition.to, transition.label, transition.color, transition.textColor);
+    //this.transitions = result.transitions;
     this.states = result.states;
     this.initialState = result.initialState;
     this.finalStates = result.finalStates;
