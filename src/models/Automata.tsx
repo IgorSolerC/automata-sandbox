@@ -431,16 +431,16 @@ export class Automata {
       isStable = true;
       newPartitions = [];
   
-      partitions.forEach(partition => {
+      for (const partition of partitions) {
         const refined = this.splitPartition(partition, partitions);
-  
+      
         // Check if partition has been refined.
         if (refined.length > 1) {
           isStable = false;
         }
-  
+      
         newPartitions.push(...refined);
-      });
+      }
   
       if (!isStable) {
         partitions = newPartitions;
@@ -478,7 +478,7 @@ export class Automata {
   buildMinimizedDFA(partitions: State[][]): Automata {
     const minimizedAutomata = new Automata();
     const newStates = partitions.map((partition, index) => {
-      const newState = { ...partition[0], id: `S${index}` };
+      const newState = { ...partition[0], id: `${index}` };
       minimizedAutomata.states.push(newState);
       if (partition.some(state => state.isInitial)) {
         minimizedAutomata.initialState = newState;
