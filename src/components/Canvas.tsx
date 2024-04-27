@@ -151,9 +151,6 @@ const Canvas: React.FC = () => {
   }
 
   function roundNumber(num: number, factor: number){
-    console.log('----------')
-    console.log(num)
-    console.log(num - (num % factor))
     return num - (num % factor)
   }
 
