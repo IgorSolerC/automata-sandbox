@@ -421,7 +421,6 @@ export class Automata {
     this.transitions = [];
     for (const transition of result.transitions)
       this.addTransition(transition.from, transition.to, transition.label, transition.color, transition.textColor);
-    //this.transitions = result.transitions;
     this.states = result.states;
     this.initialState = result.initialState;
     this.finalStates = result.finalStates;

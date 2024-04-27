@@ -1293,7 +1293,7 @@ const Canvas: React.FC = () => {
         };
 
         p.keyReleased = () => {
-          // Stop Undo when Z is released
+          // Stop Undo when Z or Y is released
           if ((p.key === 'Z' || p.key === 'z' || p.key === 'Y' || p.key === 'y') && undoInterval) {
             clearInterval(undoInterval);
             undoInterval = null;
@@ -1609,13 +1609,15 @@ const Canvas: React.FC = () => {
   
   const clickSaveFile = () => {
     // Data to save
-    const dataToSave = createXMLData();  // Replace this with the actual data you want to save
+    const dataToSave = createXMLData();
     
-    // Default file name
-    const defaultFileName = "myAutomaton.jff";  // You can prompt the user for a file name if needed
+    const userInputFileName = prompt("Digite o nome do arquivo:", "myAutomaton.jff");
+    const fileName = userInputFileName ?
+        (userInputFileName.endsWith(".jff") ? userInputFileName : userInputFileName + ".jff") :
+        "myAutomaton.jff";  // Default file name if the user presses cancel or inputs nothing
   
     // Call the save function
-    saveDataToFile(dataToSave, defaultFileName);
+    saveDataToFile(dataToSave, fileName);
   };
 
 
