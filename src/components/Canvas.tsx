@@ -150,6 +150,13 @@ const Canvas: React.FC = () => {
     return (p.pmouseY / cameraZoom) - globalTranslateY
   }
 
+  function roundNumber(num: number, factor: number){
+    console.log('----------')
+    console.log(num)
+    console.log(num - (num % factor))
+    return num - (num % factor)
+  }
+
   const createNewState = (allStates: State[], p: p5) => {
     // Check se o novo estado criado estaria overlaping com um estágo exstente
     nearState =
@@ -896,8 +903,8 @@ const Canvas: React.FC = () => {
           if (currentCanvasAction === CanvasActions.MOVING_STATE) {
             // selectedStates.forEach((auxState: automataRef.current.State) => { // <--- deu errado o type
             selectedStates.forEach((state: State) => {
-              state.x = getMouseX(p) + selectedStateMouseOffset[state.id]["x"];
-              state.y = getMouseY(p) + selectedStateMouseOffset[state.id]["y"];
+              state.x = roundNumber(getMouseX(p), 20) + roundNumber(selectedStateMouseOffset[state.id]["x"], 20);
+              state.y = roundNumber(getMouseY(p), 20) + roundNumber(selectedStateMouseOffset[state.id]["y"], 20);
             });
           } else if (currentCanvasAction === CanvasActions.CREATING_SELECTION) {
             // --- Update valor da seleção ---
@@ -1064,14 +1071,15 @@ const Canvas: React.FC = () => {
                 /* Shift NÃO apertado, clicou em um estado */
                 // Move estado
                 if (clickedState) {
+
                   // Set offset, usado para não centralizar com o mouse os estados movidos
                   selectedStateMouseOffset = {};
                   selectedStates.forEach((state) => {
                     selectedStateMouseOffset[state.id] = {};
                     selectedStateMouseOffset[state.id]["x"] =
-                      state.x - getMouseX(p);
+                      state.x - roundNumber(getMouseX(p), 20)
                     selectedStateMouseOffset[state.id]["y"] =
-                      state.y - getMouseY(p);
+                      state.y - roundNumber(getMouseY(p), 20)
                   });
 
                   // Set estado atual como "Movendo estado"
