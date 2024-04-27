@@ -1626,6 +1626,7 @@ const Canvas: React.FC = () => {
           createTransitionsFromXML(jsonObj.structure.automaton.transition, automataRef.current.states);
           createNotesFromXML(jsonObj.structure.automaton.note);
           event.target.value = '';
+        validadeAllInputs()
       } else {
         console.error("File content is not a string.");
       }
