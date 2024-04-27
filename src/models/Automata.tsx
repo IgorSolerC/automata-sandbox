@@ -169,7 +169,9 @@ export class Automata {
   addNote(x: number, y: number, text: string, width: number, height: number, textLines: string[], textSize: number, color: string, secondaryColor: string) {
     let newNoteId = 0;
     const allNotes = this.getNotes();
-    while (allNotes.some(note => note.id === newNoteId)) {
+    const noteIds = new Set(allNotes.map(note => note.id));
+
+    while (noteIds.has(newNoteId)) {
       newNoteId++;
     }
 
@@ -306,7 +308,7 @@ export class Automata {
   testTransition(input: string, estado_atual: State, i: number) {
     const char = input[i];
     let possiveis_transicoes = this.transitions.filter(
-      (transition) => transition.from === estado_atual
+      (transition) => transition.from.id === estado_atual.id
     );
 
     if (
@@ -397,6 +399,8 @@ export class Automata {
     }
   }
 
+
+  /* Minimização de automatos - Algoritmo de Hopcroft*/
   minimizeDFA(): Automata {
     const partition = new Map<string, State[]>();
     partition.set('final', this.finalStates);
@@ -486,7 +490,6 @@ export class Automata {
     });
 
     partitions.forEach((partition, index) => {
-      console.log(index);
       partition.forEach(state => {
         this.transitions.forEach(transition => {
           if (transition.from === state) {
