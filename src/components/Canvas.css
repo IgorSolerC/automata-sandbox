@@ -471,3 +471,34 @@ display: none;
     flex-direction: row;
 }
 
+
+
+
+
+
+/*
+
+    GENERIC POPUP
+
+*/
+#generic-popup-main-div{
+    width: 100vw;
+    height: 100vh;
+    position: fixed;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+#generic-popup{
+    min-width: 300px;
+    min-height: 200px;
+    background-color: var(--button-bg);
+
+    box-shadow: var(--shadow-elevation-medium);
+    border-radius: 5px;
+    border: 0px solid;
+    transition: background-color 0.3s ease;
+
+
+}
+

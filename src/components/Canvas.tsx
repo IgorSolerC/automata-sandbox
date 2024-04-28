@@ -4,6 +4,7 @@ import "./Canvas.css";
 // Components
 import Toolbox from "./ToolBox";
 import AutomataInput from "./AutomataInput";
+import GenericPopup from "./GenericPopup";
 
 // Google Material Icons
 import NextIcon from "../symbols/next_icon";
@@ -487,7 +488,7 @@ const Canvas: React.FC = () => {
             }
           }
 
-          // Renderiza notas
+          // #region Renderiza notas
           isCursorOverNoteResizeHandle = false; // Flag to track cursor over the resize handle
           automataRef.current.getNotes().forEach((note: Note, index: number) => {
             p.fill(note.color);
@@ -569,6 +570,8 @@ const Canvas: React.FC = () => {
             }
           });
 
+          // #endregion
+
           if (isCursorOverNoteResizeHandle) {
             window.document.body.style.cursor = 'nwse-resize';
           } else if(window.document.body.style.cursor === 'nwse-resize') {
@@ -602,7 +605,22 @@ const Canvas: React.FC = () => {
             simulationTransitionsRef.current[simulationIndexRef.current!]!.textColor = CanvasColors.SIMULATION_STEP_TRANSITION_TEXT;
           }
 
-          // Desenha transições
+
+          function getControlPointOffset(start: State, end: State, distance: number) {
+            const angle = Math.atan2(end.y - start.y, end.x - start.x) + Math.PI / 2;
+            return {
+              x: Math.cos(angle) * distance,
+              y: Math.sin(angle) * distance
+            };
+          }
+
+          function transitionIsReversed(startId: string, endId: string, allTransitions: Transition[]) {
+            // Check if there is a transition that goes from the 'end' state to the 'start' state
+            return allTransitions.some(transition => transition.from.id === endId && transition.to.id === startId);
+          }
+
+
+          // #region Desenha transições
           allTransitions.forEach((transition) => {
             const start = automataRef.current.findState(transition.from.id);
             const end = automataRef.current.findState(transition.to.id);
@@ -648,59 +666,74 @@ const Canvas: React.FC = () => {
               }
               // Transições para outros estados
               else {
-                const angle = Math.atan2(end.y - start.y, end.x - start.x); // angle of line
-                const radius = start.diameter / 2; // diameter of circle
-                const offsetX = radius * Math.cos(angle);
-                const offsetY = radius * Math.sin(angle);
-
-                // Draw line from the edge of the start circle to the edge of the end circle
-                p.push(); // Start a new drawing state
-                p.strokeWeight(arrowWeight);
-                p.noFill()
-                const middleX = (start.x + end.x) / 2
-                const middleY = (start.y + end.y) / 2
+                const angle = Math.atan2(end.y - start.y, end.x - start.x);
+                const radius = start.diameter / 2;
+                const offsetRadius = 30; // additional radius to avoid overlap
+          
+                let offsetX = radius * Math.cos(angle);
+                let offsetY = radius * Math.sin(angle);
+          
+                let curveOffsetX = offsetRadius * Math.cos(angle + Math.PI / 2); // perpendicular to the line
+                let curveOffsetY = offsetRadius * Math.sin(angle + Math.PI / 2);
+          
+                let middleX = (start.x + end.x) / 2 + curveOffsetX;
+                let middleY = (start.y + end.y) / 2 + curveOffsetY;
+          
+                // Check if there is a reverse transition
+                const reverseExists = allTransitions.some(t => t.from.id === end.id && t.to.id === start.id);
+                let angleOffset = 0;
+              
+                if (reverseExists) {
+                  curveOffsetX *= -1; // Invert the curve direction for one of the transitions
+                  curveOffsetY *= -1;
+                  angleOffset = 0.0;
+                } else {
+                  middleX -= curveOffsetX;
+                  middleY -= curveOffsetY;
+                  curveOffsetX = 0;
+                  curveOffsetY = 0;
+                }
+          
+                // Draw curved line
+                p.push();
+                p.noFill();
                 p.bezier(
-                  start.x, start.y,
-                  middleX, middleY,
-                  middleX, middleY,
-                  end.x, end.y,
-                )
-                p.pop()
-
-                // Draw an arrowhead at the edge of the end circle
-                p.push(); // Start a new drawing state
-                const arrowWidth = 15; // length of arrowhead
-                const arrowHeight = 9; // length of arrowhead
-                p.translate(end.x - offsetX, end.y - offsetY);
-                p.rotate(angle);
-                // Arrow tip
-                p.triangle(0, 0, -arrowWidth, +arrowHeight, -arrowWidth, -arrowHeight);
-                p.pop(); // Restore original state
-
-                const midX = (start.x + end.x) / 2;
-                const midY = (start.y + end.y) / 2; 
-                const textOffsetY = -15; // Vertical offset for the text label 
-
-                p.push(); // Start another new ing state for the tilted text
-                p.translate(midX, midY);
-                
-                // Corrige textos de cabeça para baixo
+                  start.x + offsetX, start.y + offsetY,
+                  start.x + offsetX + curveOffsetX, start.y + offsetY + curveOffsetY,
+                  end.x - offsetX + curveOffsetX, end.y - offsetY + curveOffsetY,
+                  end.x - offsetX, end.y - offsetY
+                );
+                p.pop();
+          
+                // Draw an arrowhead
+                p.push();
+                const arrowX = end.x - offsetX + curveOffsetX / 3; // Adjust the arrow position
+                const arrowY = end.y - offsetY + curveOffsetY / 3;
+                p.translate(arrowX, arrowY);
+                p.rotate(angle + angleOffset);
+                p.triangle(0, 0, -15, 9, -15, -9);
+                p.pop();
+          
+                // Label
                 let correctedAngle = angle
-                if(end.x < start.x){
+                if(end.x < start.x && !reverseExists){
                   correctedAngle += Math.PI
                 }
-
-                p.strokeWeight(0.1);
-                p.stroke(CanvasColors.DEFAULT_TRANSITION_TEXT)
-                p.fill(CanvasColors.DEFAULT_TRANSITION_TEXT)
-                p.rotate(correctedAngle);
-                p.textAlign(p.CENTER, p.CENTER); // Center the text relative to the point
+                
+                p.push();
+                p.strokeWeight(0.1)
+                p.translate(middleX, middleY);
+                p.rotate(correctedAngle + (reverseExists ? Math.PI : 0));
+                p.textAlign(p.CENTER, p.CENTER);
+                p.stroke(transition.textColor);
+                p.fill(transition.textColor);
                 p.textSize(20);
-                p.text(transition.label, 0, textOffsetY);
-                p.pop(); // Restore original state
+                p.text(transition.label, 0, -15); // Adjust label offset
+                p.pop();
               }
             }
           });
+          // #endregion
 
           // Colore todos os estados para DEFAULT color
           const allStates = automataRef.current.getStates();
@@ -723,7 +756,7 @@ const Canvas: React.FC = () => {
             }
           );
             
-          // ----Desenha estados
+          // #region ----Desenha estados
           // .slice() cria uma copia shallow
           // .reverse() desenhar mostrando o primeiro como acima, visto que é o primeiro a ser selecionado quando clica-se em estados stackados
           automataRef.current
@@ -780,6 +813,7 @@ const Canvas: React.FC = () => {
               p.stroke(0);
               p.strokeWeight(2);
             });
+          // #endregion
 
           // Desenha caixa de seleção
           if (currentCanvasAction === CanvasActions.CREATING_SELECTION) {
@@ -795,7 +829,7 @@ const Canvas: React.FC = () => {
             p.pop();
           }
 
-          /* 🎬🎬🎬 TEXTO DA SIMULAÇÃO DO AUTOMATO */
+          // #region 🎬🎬🎬 TEXTO DA SIMULAÇÃO DO AUTOMATO
           var input = (document.getElementById("automata-input-id-"+simulationInputIdRef.current) as HTMLInputElement)?.value;
          
           let currentIndex = simulationIndexRef.current;
@@ -840,7 +874,7 @@ const Canvas: React.FC = () => {
             }
             p.pop(); // Restore previous transformation state
           } 
-          /* 🎬🎬🎬 TEXTO DA SIMULAÇÃO DO AUTOMATO */
+          // #endregion 🎬🎬🎬 TEXTO DA SIMULAÇÃO DO AUTOMATO
         };
 
         function startTransition(newTargetX: number, newTargetY: number, newZoom: number) {
@@ -1742,6 +1776,7 @@ const Canvas: React.FC = () => {
 
   return (
     <div>
+      {/* Invisível. Usado para importar .jiff de automatos */}
       <input
         type="file"
         ref={fileInputRef}
@@ -1749,6 +1784,8 @@ const Canvas: React.FC = () => {
         style={{ display: 'none' }}
         onChange={handleFileSelection}
       />
+
+      {/* <GenericPopup></GenericPopup> */}
 
       <div id="navbar-div">
         {/* Lado Esquerdo */}

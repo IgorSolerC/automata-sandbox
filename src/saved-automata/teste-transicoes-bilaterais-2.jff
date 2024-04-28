@@ -1,0 +1,117 @@
+<?xml version="1.0"?>
+<structure>
+  <type>fa</type>
+  <automaton>
+    <state id="0" name="q0">
+      <x>162.5</x>
+      <y>-25</y>
+      <initial/>
+    </state>
+    <state id="1" name="q1">
+      <x>300</x>
+      <y>-25</y>
+    </state>
+    <state id="2" name="q2">
+      <x>162.5</x>
+      <y>100</y>
+    </state>
+    <state id="3" name="q3">
+      <x>637.5</x>
+      <y>100</y>
+    </state>
+    <state id="4" name="q4">
+      <x>162.5</x>
+      <y>-137.5</y>
+    </state>
+    <state id="5" name="q5">
+      <x>300</x>
+      <y>-137.5</y>
+    </state>
+    <state id="6" name="q6">
+      <x>412.5</x>
+      <y>-137.5</y>
+    </state>
+    <state id="7" name="q7">
+      <x>500</x>
+      <y>-137.5</y>
+    </state>
+    <state id="8" name="q8">
+      <x>2025</x>
+      <y>225</y>
+    </state>
+    <state id="9" name="q9">
+      <x>162.5</x>
+      <y>225</y>
+    </state>
+    <transition>
+      <from>0</from>
+      <to>1</to>
+      <read>1</read>
+    </transition>
+    <transition>
+      <from>1</from>
+      <to>0</to>
+      <read>1</read>
+    </transition>
+    <transition>
+      <from>2</from>
+      <to>3</to>
+      <read>1</read>
+    </transition>
+    <transition>
+      <from>3</from>
+      <to>2</to>
+      <read>1</read>
+    </transition>
+    <transition>
+      <from>5</from>
+      <to>4</to>
+      <read>1</read>
+    </transition>
+    <transition>
+      <from>6</from>
+      <to>7</to>
+      <read>1</read>
+    </transition>
+    <transition>
+      <from>7</from>
+      <to>6</to>
+      <read>1</read>
+    </transition>
+    <transition>
+      <from>9</from>
+      <to>8</to>
+      <read>1</read>
+    </transition>
+    <transition>
+      <from>8</from>
+      <to>9</to>
+      <read>1</read>
+    </transition>
+    <note>
+      <text>Comum</text>
+      <x>-7.481892094142175</x>
+      <y>-167.35862880414084</y>
+    </note>
+    <note>
+      <text>Small</text>
+      <x>540.5947351023792</x>
+      <y>-167.60416379094954</y>
+    </note>
+    <note>
+      <text>Middle</text>
+      <x>-7.318201763077603</x>
+      <y>-57.03124831896279</y>
+    </note>
+    <note>
+      <text>Big</text>
+      <x>-6.7452869337033405</x>
+      <y>69.01041702729533</y>
+    </note>
+    <note>
+      <text>Huge</text>
+      <x>-5.8767308132372875</x>
+      <y>194.46875035073617</y>
+    </note>
+  </automaton>
+</structure>

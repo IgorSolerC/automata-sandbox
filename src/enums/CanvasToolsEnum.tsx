@@ -1,8 +1,8 @@
 export enum CanvasTools {
-    POINTER,
-    ERASER,
-    MOVE,
-    TRANSITION,
-    ADD_STATE,
-    NOTE,
-  }
+  POINTER,
+  ERASER,
+  MOVE,
+  TRANSITION,
+  ADD_STATE,
+  NOTE,
+}
