@@ -4,13 +4,6 @@ import ErrorIcon from "../../symbols/error_icon";
 // Libaries
 import React, { useRef, useEffect, useState } from "react";
 
-// Enums
-import { CanvasTools } from "../../enums/CanvasToolsEnum";
-
-// Contexts
-import { ToolboxProvider, useToolboxContext } from "../../contexts/ToolboxContext";
-import NextIcon from "../../symbols/next_icon";
-
 // Components
 import GenericPopup from "../GenericPopup"; 
 import "./CreateTransitionPopup.css"; 
@@ -41,12 +34,25 @@ const CreateTransitionPopup: React.FC<CreateTransitionPopupProps> = ({
     }, [inputValue])
 
     useEffect(() => {
+        const handleKeyPress = (e: KeyboardEvent) => {
+            if (e.keyCode === 13) { // Enter key
+                const createButton = document.querySelector('.generic-popup-button') as HTMLElement;
+                if (createButton) {
+                    createButton.click();
+                }
+            }
+        };
+        document.addEventListener('keydown', handleKeyPress);
+
         // Initialize an empty ref for each input
         // Auto-focus logic from previous solutions:
         const lastInputIndex = inputValue.length - 1;
         if (inputRefs.current[lastInputIndex]) {
             inputRefs.current[lastInputIndex].current?.focus();                
         }
+        return () => { 
+            document.removeEventListener('keydown', handleKeyPress);
+        };
     }, [triggerRerender])
 
     function handleInputChange(
