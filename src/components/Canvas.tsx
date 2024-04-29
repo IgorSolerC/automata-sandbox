@@ -2,9 +2,9 @@
 import "./Canvas.css";
 
 // Components
-import Toolbox from "./ToolBox";
+import Toolbox from "./ToolBox"; 
 import AutomataInput from "./AutomataInput";
-import GenericPopup from "./GenericPopup";
+import CreateTransitionPopup from "./popups/CreateTransitionPopup";
 
 // Google Material Icons
 import NextIcon from "../symbols/next_icon";
@@ -30,6 +30,7 @@ import { Note } from "../models/Note";
 // Enums
 import { CanvasActions } from "../enums/CanvasActionsEnum";
 import { CanvasTools } from "../enums/CanvasToolsEnum";
+import { PopupType } from "../enums/PopupEnum";
 
 // Constants
 import { CanvasColors } from "../constants/CanvasConstants";
@@ -83,8 +84,6 @@ const Canvas: React.FC = () => {
   const currentCanvasToolRef = useRef(CanvasTools.POINTER);
   
   const [simulationMessage, setSimulationMessage] = useState('');
-  // const [isBackSimulationButtonsDisabled, setIsBackSimulationButtonsDisabled] = useState(false);
-  // const [isNextSimulationButtonsDisabled, setIsNextSimulationButtonsDisabled] = useState(false);
 
   const [simulationStates, setSimulationStates] = useState<State[]>([]);
   const simulationStatesRef = useRef(simulationStates);
@@ -97,6 +96,9 @@ const Canvas: React.FC = () => {
   
   const [simulationIndex, setSimulationIndex] = useState<number>(0);
   const simulationIndexRef = useRef(simulationIndex);
+
+  const [openPopup, setOpenPopup] = useState<PopupType>(PopupType.NONE);
+  const [popupInput, setPopupInput] = useState<any>();
 
   const [zoomTarget, setZoomTarget] = useState<State>();
   const zoomTargetRef = useRef(zoomTarget);
@@ -194,6 +196,8 @@ const Canvas: React.FC = () => {
         false,
         id
       );
+      stopSimulation()
+      validadeAllInputs()
     }
   }
 
@@ -382,6 +386,19 @@ const Canvas: React.FC = () => {
     setAumataInputResults(aumataInputResultsAux)
   }
 
+  function addNewTransition(labels: string[], clickedState: State, endState: State){
+    labels.forEach(l => l.trim());
+    automataRef.current.addTransition(
+      clickedState,
+      endState,
+      labels,
+      CanvasColors.DEFAULT_TRANSITION,
+      CanvasColors.DEFAULT_TRANSITION_TEXT,
+    );
+    stopSimulation()
+    validadeAllInputs()
+  }
+
   useEffect(() => {
     // calculateSteps();
     if(!automataRef.current){
@@ -410,9 +427,9 @@ const Canvas: React.FC = () => {
           // slider.position(10, 80);
 
           // Create custom context menu
-          contextMenu = p.createDiv(" ");
-          contextMenu.id("contextMenu");
-          contextMenu.addClass("hidden");
+          contextMenu = p.createDiv(" "); 
+          contextMenu.id("contextMenu"); 
+          contextMenu.addClass("hidden"); 
 
           let option2 = p.createDiv("Initial");
           option2.id("ContextMenu-Initial")
@@ -1211,21 +1228,17 @@ const Canvas: React.FC = () => {
               endState &&
               currentCanvasAction === CanvasActions.CREATING_TRANSITION
             ) {
-              let label = prompt("Digite o símbolo de transição: ");
-              if (label !== null) {
-                if (label === "") label = "λ";
-                const labels = label.split(",");
-                labels.forEach(l => l.trim());
-                automataRef.current.addTransition(
-                  clickedState,
-                  endState,
-                  labels,
-                  CanvasColors.DEFAULT_TRANSITION,
-                  CanvasColors.DEFAULT_TRANSITION_TEXT,
-                );
-                stopSimulation()
-                validadeAllInputs()
-              }
+              // let label = prompt("Digite o símbolo de transição: ");
+              // addNewTransition(label, clickedState, endState)             
+              setOpenPopup(PopupType.CREATE_TRANSITION)
+
+              let clickedStateAux = clickedState
+              let endStateAux = endState;
+              let currentLabelsAux = automataRef.current.getTransitions().find(t => t.from.id === clickedStateAux.id && t.to.id === endStateAux.id)
+              let currentLabels = currentLabelsAux ? currentLabelsAux.label : ['']
+              
+              const onSubmit = (labels: string[]) => addNewTransition(labels, clickedStateAux, endStateAux)
+              setPopupInput({onSubmit, previousLabels:currentLabels})
             }
           }
           currentCanvasAction = CanvasActions.NONE;
@@ -1234,7 +1247,7 @@ const Canvas: React.FC = () => {
 
         p.keyPressed = () => {
           // Está bugado!
-          // Não reconhece numero, a não ser q alt ou cntrl estejam apertados
+          // Não reconhece numero, a não ser q alt ou ctrl estejam apertados
 
           const allStates = automataRef.current.getStates();
 
@@ -1283,17 +1296,17 @@ const Canvas: React.FC = () => {
               || (p.keyIsDown(p.CONTROL) && p.keyIsDown(p.SHIFT) && (p.key === 'Z' || p.key === 'Z')) // CTRL + SHIFT + Z
             )
           ) {
-            automataRef.current.redo();
+            Redo()
             undoInterval = setInterval(() => {
-              automataRef.current.redo();
+              Redo()
             }, 200); 
           }
 
           // Redo
           else if (p.keyIsDown(p.CONTROL) && (p.key === 'Z' || p.key === 'z') && !undoInterval) {
-            automataRef.current.undo();
+            Undo();
             undoInterval = setInterval(() => {
-              automataRef.current.undo();
+              Undo()
             }, 200);  // Repeat undo every 200 ms
           }
 
@@ -1364,7 +1377,7 @@ const Canvas: React.FC = () => {
       else{
         newSimulationTransitions.push(
           allTransitions.find(x => 
-            x.from === estadoAnterior && 
+            x.from.id === estadoAnterior.id && 
             x.label.includes(inputText[i - 1])
           )!
         );      }
@@ -1556,23 +1569,15 @@ const Canvas: React.FC = () => {
     if(change === 0 || newIndex === 0){
       newIndex = 0;
       setSimulationMessage("");
-      // setIsBackSimulationButtonsDisabled(false);
-      // setIsNextSimulationButtonsDisabled(false);
     }
     else if (newIndex < 0) {
       newIndex = 0;
       setSimulationMessage("A Simulação já está em seu estado inicial");
-      // setIsBackSimulationButtonsDisabled(true);
-      // setIsNextSimulationButtonsDisabled(false);
     } else if (newIndex >= simulationStatesRef.current.length) {
       newIndex = simulationStatesRef.current.length - 1;
       setSimulationMessage("A Simulação já chegou ao fim");
-      // setIsBackSimulationButtonsDisabled(false);
-      // setIsNextSimulationButtonsDisabled(true);
     } else {
       setSimulationMessage("");
-      // setIsBackSimulationButtonsDisabled(false);
-      // setIsNextSimulationButtonsDisabled(false);
     }
   
     setSimulationIndex(newIndex);
@@ -1654,6 +1659,10 @@ const Canvas: React.FC = () => {
     saveDataToFile(dataToSave, fileName);
   };
 
+  const clickRegexToDFA = () => {
+    const regexInput = prompt("Digite o nome do arquivo:", "(a|b)*")!;
+    automataRef.current.convertRegexToDFA(regexInput);
+  }
 
   const handleFileSelection = (event: any) => {
     const file = event.target.files[0];
@@ -1774,6 +1783,17 @@ const Canvas: React.FC = () => {
     }
   }
 
+  const Undo = () => {
+    automataRef.current.undo()
+    stopSimulation()
+    validadeAllInputs()
+  }
+  const Redo = () => {
+    automataRef.current.redo()
+    stopSimulation()
+    validadeAllInputs()
+  }
+
   return (
     <div>
       {/* Invisível. Usado para importar .jiff de automatos */}
@@ -1785,7 +1805,12 @@ const Canvas: React.FC = () => {
         onChange={handleFileSelection}
       />
 
-      {/* <GenericPopup></GenericPopup> */}
+      {openPopup === PopupType.CREATE_TRANSITION &&
+        <CreateTransitionPopup 
+          onClose={() => setOpenPopup(PopupType.NONE)}
+          popupInput={popupInput}
+        />
+      }
 
       <div id="navbar-div">
         {/* Lado Esquerdo */}
@@ -1793,9 +1818,10 @@ const Canvas: React.FC = () => {
           currentCanvasToolRef={currentCanvasToolRef}
           handleImportFile={clickImportFile}
           handleSaveFile={clickSaveFile}
-          Undo={() => automataRef.current.undo()}
-          Redo={() => automataRef.current.redo()}
+          Undo={Undo}
+          Redo={Redo}
           MinimizeDFA={() => automataRef.current.minimizeDFA()}
+          RegexToDFA={clickRegexToDFA}
         />
 
         {/* Lado Direito */}
@@ -1903,6 +1929,7 @@ const Canvas: React.FC = () => {
   );
 };
 
+// #region Input List
 interface AutomataInputListProps {
   automataRef: React.MutableRefObject<Automata>;
   calculateSteps: any;
@@ -1957,6 +1984,7 @@ const AutomataInputList: React.FC<AutomataInputListProps> = (
     </div>
     )
 }
+// #endregion
 
 export default Canvas;
 

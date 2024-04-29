@@ -36,9 +36,10 @@ interface ToolboxProps {
     Undo: () => void;
     Redo: () => void;
     MinimizeDFA: () => void;
+    RegexToDFA: () => void;
 }
 
-const Toolbox: React.FC<ToolboxProps> = ({ currentCanvasToolRef, handleImportFile, handleSaveFile, Undo, Redo, MinimizeDFA }) => {
+const Toolbox: React.FC<ToolboxProps> = ({ currentCanvasToolRef, handleImportFile, handleSaveFile, Undo, Redo, MinimizeDFA, RegexToDFA }) => {
     const { selectedToolState, setSelectedToolState } = useToolboxContext();
     const [isExpanded, setIsExpanded] = useState(false)
 
@@ -138,12 +139,12 @@ const Toolbox: React.FC<ToolboxProps> = ({ currentCanvasToolRef, handleImportFil
             <TrashIcon />
           </button>
           {isExpanded &&
-            <button id="regex" title="Create from RegEx" disabled
+            <button id="regex" title="Create from RegEx"
               className={
                 "canvas-button navbar-button extra-option "
                 // + (selectedToolState === CanvasTools.POINTER ? "selected" : "")
               }
-              onClick={() => {}}
+              onClick={RegexToDFA}
             >
               <RegexIcon/>
             </button>

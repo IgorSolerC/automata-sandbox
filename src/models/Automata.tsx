@@ -3,8 +3,10 @@ import { State } from "../models/State";
 import { Transition } from "../models/Transition";
 import { Note } from "../models/Note";
 
+
 // Enums
 import { AutomataInputResultsEnum } from "../enums/AutomataInputEnum";
+
 import { findByPlaceholderText } from "@testing-library/react";
 import { collapseTextChangeRangesAcrossMultipleVersions } from "typescript";
 
@@ -14,6 +16,8 @@ interface AutomataSnapshot {
   initialState: State | null;
   finalStates: State[];
 }
+
+let StateIdNFA = 0;  // Global or static variable to keep track of state IDs
 
 export class Automata {
   states: State[];
@@ -284,7 +288,6 @@ export class Automata {
       };
       this.transitions.push(newTransition);
     }
-    
   }
 
   deleteTransition(transition: Transition): void {
@@ -506,5 +509,305 @@ export class Automata {
     });
 
     return minimizedAutomata;
+  }
+
+  isCharacter(token: string): boolean {
+    // Define what you consider as a character. 
+    // For simplicity, assume everything that is not an operator or a parenthesis is a character.
+    return !['|', '*', '(', ')', '.'].includes(token);
+  }
+
+  regexToPostfix(regex: string): string {
+    const precedence: Record<string, number> = { '|': 1, '.': 2, '*': 3 };
+    const operators: Set<string> = new Set(['|', '*', '.']);
+    const output: string[] = [];
+    const stack: string[] = [];
+  
+    // Function to determine if a character is an operand or a special regex character.
+    const isOperand = (c: string) => !['|', '*', '(', ')', '.'].includes(c);
+  
+    let formattedRegex = '';
+  
+    // First pass to insert explicit concatenation operators
+    for (let i = 0; i < regex.length; i++) {
+      const c = regex[i];
+      formattedRegex += c;
+  
+      if (c === '(' || c === ')') {
+        continue;
+      }
+  
+      if (i < regex.length - 1) {
+        const lookahead = regex[i + 1];
+        if (isOperand(c) && (isOperand(lookahead) || lookahead === '(')) {
+          formattedRegex += '.';
+        } else if (c === ')' && (isOperand(lookahead) || lookahead === '(')) {
+          formattedRegex += '.';
+        } else if (c === '*' && (isOperand(lookahead) || lookahead === '(')) {
+          if (i < regex.length - 2 && !operators.has(regex[i + 2])) {
+            formattedRegex += '.';
+          }
+        }
+      }
+    }
+  
+    // Second pass to convert to postfix
+    for (const c of formattedRegex) {
+      if (isOperand(c)) {
+        output.push(c);
+      } else if (c === '(') {
+        stack.push(c);
+      } else if (c === ')') {
+        while (stack.length > 0 && stack[stack.length - 1] !== '(') {
+          output.push(stack.pop()!);
+        }
+        stack.pop(); // Remove '('
+        if (stack.length > 0 && stack[stack.length - 1] === '*') {
+          output.push(stack.pop()!);
+        }
+      } else {
+        while (stack.length > 0 && precedence[c] <= precedence[stack[stack.length - 1]]) {
+          output.push(stack.pop()!);
+        }
+        stack.push(c);
+      }
+    }
+  
+    while (stack.length > 0) {
+      output.push(stack.pop()!);
+    }
+  
+    return output.join('');
+  }
+  
+  
+  regexToNFA(postfixRegex: string): Automata {
+    const automataStack: Automata[] = [];
+  
+    function createBasicAutomata(symbol: string): Automata {
+      const automata = new Automata();
+      const start = { 
+        id: `s${StateIdNFA++}`, 
+        label: `s${StateIdNFA}`, 
+        x: 0 + 200 * (StateIdNFA - 1), 
+        y: 0, 
+        diameter: 80, 
+        color: 'blue', 
+        secondaryColor: 'lightblue', 
+        isInitial: StateIdNFA === 1, 
+        isFinal: false 
+      };
+    
+      const end = { 
+        id: `s${StateIdNFA++}`, 
+        label: `s${StateIdNFA}`, 
+        x: 200 + 200 * (StateIdNFA - 1), 
+        y: 0, 
+        diameter: 80, 
+        color: 'green', 
+        secondaryColor: 'lightgreen', 
+        isInitial: false, 
+        isFinal: true 
+      };
+    
+      automata.states.push(start, end);
+      automata.transitions.push(new Transition(start, end, [symbol], 1, 'black', 'white'));
+      automata.initialState = start;
+      automata.finalStates.push(end);
+      return automata;
+    }
+
+    function applyKleeneStar(automata: Automata): Automata {
+      const oldInitial = automata.initialState!;
+      const oldFinal = automata.finalStates[0]; // Assume single final state for simplicity
+      
+      const start = {
+        id: `s${StateIdNFA++}`,
+        label: `s${StateIdNFA}`,
+        x: oldInitial.x,
+        y: oldInitial.y - 400,
+        diameter: 80,
+        color: 'blue',
+        secondaryColor: 'lightblue',
+        isInitial: true,
+        isFinal: false
+      };
+    
+      const end = {
+        id: `s${StateIdNFA++}`,
+        label: `s${StateIdNFA}`,
+        x: oldFinal.x,
+        y: oldFinal.y - 400,
+        diameter: 80,
+        color: 'green',
+        secondaryColor: 'lightgreen',
+        isInitial: false,
+        isFinal: true
+      };
+    
+      
+      automata.states.forEach(s => {
+        s.isInitial = false
+        s.isFinal = false;
+      })
+      automata.states.push(start, end);
+      
+      // StateIdNFA  += 2
+      automata.transitions.push(new Transition(start, oldInitial, ['λ'], 1, 'black', 'white'));
+      automata.transitions.push(new Transition(oldFinal, oldInitial, ['λ'], 1, 'black', 'white'));
+      automata.transitions.push(new Transition(oldFinal, end, ['λ'], 1, 'black', 'white'));
+      automata.transitions.push(new Transition(end, start, ['λ'], 1, 'black', 'white'));
+    
+      automata.initialState = start;
+      automata.finalStates = [end];
+    
+      return automata;
+    }
+
+    function applyAlternation(automata1: Automata, automata2: Automata): Automata {
+      let resultAutomata = new Automata();
+      
+      let biggerLengthAutomata = automata1.states.length 
+      let smallerAutomata = automata2;
+      if(automata2.states.length > biggerLengthAutomata){
+        biggerLengthAutomata = automata2.states.length
+        smallerAutomata = automata1;
+      }
+
+      const newStart = {
+        id: `s${StateIdNFA++}`,
+        label: `s${StateIdNFA}`,
+        x: 0,
+        y: 0,
+        diameter: 80,
+        color: 'blue',
+        secondaryColor: 'lightblue',
+        isInitial: true,
+        isFinal: false
+      };
+    
+      const newFinal = {
+        id: `s${StateIdNFA++}`,
+        label: `s${StateIdNFA}`,
+        x: 200 + 200 * biggerLengthAutomata + 1,
+        y: 0,
+        diameter: 80,
+        color: 'green',
+        secondaryColor: 'lightgreen',
+        isInitial: false,
+        isFinal: true
+      };
+    
+      let counter = 1
+      automata1.states.forEach(s => {
+        s.isInitial = false
+        s.isFinal = false;
+        s.y += 200;
+        s.x = newStart.x + 200 * counter
+        counter++;
+      })
+
+      counter = 1
+      automata2.states.forEach(s => {
+        s.isInitial = false
+        s.isFinal = false;
+        s.y -= 200;
+        s.x = newStart.x + 200 * counter
+        counter++;
+      })
+
+      const centerLineX = newStart.x + ( 200 * (biggerLengthAutomata + 1) / 2);
+
+      counter = 1;
+      smallerAutomata.states.forEach(s => {
+        s.x = centerLineX + 200 * (counter - (smallerAutomata.states.length + 1) / 2);
+        counter++;
+      });
+
+      // StateIdNFA  += 2
+      // Add the new states to the result automaton
+      resultAutomata.states.push(newStart, newFinal);
+
+      // Add all states and transitions from automata1 and automata2 to the result automaton
+      resultAutomata.states = resultAutomata.states.concat(automata1.states, automata2.states);
+      resultAutomata.transitions = resultAutomata.transitions.concat(automata1.transitions, automata2.transitions);
+      // Add epsilon transitions from the new start to the initial states of both automata
+      resultAutomata.transitions.push(new Transition(newStart, automata1.initialState!, ['λ'], 1, 'black', 'white'));
+      resultAutomata.transitions.push(new Transition(newStart, automata2.initialState!, ['λ'], 1, 'black', 'white'));
+
+      // Add epsilon transitions from each automaton's final states to the new final state
+      automata1.finalStates.forEach(finalState => resultAutomata.transitions.push(new Transition(finalState, newFinal, ['λ'], 1, 'black', 'white')));
+      automata2.finalStates.forEach(finalState => resultAutomata.transitions.push(new Transition(finalState, newFinal, ['λ'], 1, 'black', 'white')));
+
+      // Set the new initial and final states for the result automaton
+      resultAutomata.initialState = newStart;
+      resultAutomata.finalStates = [newFinal];
+
+      return resultAutomata;
+    }
+
+    function applyConcatenation(automata1: Automata, automata2: Automata): Automata {
+      automata1.states = automata1.states.concat(automata2.states);
+      automata1.transitions = automata1.transitions.concat(automata2.transitions);
+    
+      const oldFinals = automata1.finalStates;
+      const newStart = automata2.initialState!;
+
+      // Connect all final states of automata1 to the initial state of automata2
+      oldFinals.forEach(finalState => {
+        automata1.transitions.push(new Transition(finalState, newStart, ['λ'], 1, 'black', 'white'));
+        // This ensures the old final states are no longer final unless the new start is also final
+        finalState.isFinal = newStart.isFinal;
+      });
+
+      // The final states of the resulting automaton are those of automata2
+      automata1.finalStates = automata2.finalStates;
+
+      return automata1;
+    }
+    
+
+    for (const symbol of postfixRegex) {
+    console.log(symbol)
+    switch (symbol) {
+      case '*': {
+        const automata = automataStack.pop()!;
+        automataStack.push(applyKleeneStar(automata));
+        break;
+      }
+      case '|': {
+        const automata2 = automataStack.pop()!;
+        const automata1 = automataStack.pop()!;
+        automataStack.push(applyAlternation(automata1, automata2));
+        break;
+      }
+      case '.': {
+        const automata2 = automataStack.pop()!;
+        const automata1 = automataStack.pop()!;
+        automataStack.push(applyConcatenation(automata1, automata2));
+        break;
+      }
+      default: // For any other symbol, assume it's a basic character in the regex
+        automataStack.push(createBasicAutomata(symbol));
+        break;
+    }
+  }
+
+  // Assuming only one automata should be left if regex is well-formed
+  return automataStack.length > 0 ? automataStack.pop()! : new Automata();
+}
+
+  convertRegexToDFA(regex: string) {
+    StateIdNFA = 0;
+    console.log(regex);
+    const postfix = this.regexToPostfix(regex);
+    console.log(postfix)
+    const nfa = this.regexToNFA(postfix);
+    this.transitions = [];
+    for (const transition of nfa.transitions)
+      this.addTransition(transition.from, transition.to, transition.label, transition.color, transition.textColor);
+    this.states = nfa.states;
+    this.initialState = nfa.initialState;
+    this.finalStates = nfa.finalStates;
   }
 }
