@@ -392,6 +392,7 @@ export class Automata {
     }
 
     estado_atual = this.getStates().find(s => s.id === estado_atual.id)!
+
     if (estado_atual.isFinal) {
       return {
         result: AutomataInputResultsEnum.ACCEPTED,
@@ -405,6 +406,13 @@ export class Automata {
     }
   }
 
+  containsObject(obj: any, list: any[]) {
+    return list.some(element => JSON.stringify(element) === JSON.stringify(obj));
+  }
+  
+  containsId(obj: any, list: any[]) {
+    return list.some(element => element.id === obj.id);
+  }
 
   /* Minimização de automatos - Algoritmo de Hopcroft*/
   minimizeDFA(): Automata {
@@ -415,7 +423,7 @@ export class Automata {
     partition.set('final', this.finalStates);
     partition.set('non-final', this.states.filter(s => !this.finalStates.includes(s)));
 
-    let partitions = [this.finalStates, this.states.filter(s => !this.finalStates.includes(s))];
+    let partitions = [this.finalStates, this.states.filter(s => !this.containsId(s, this.finalStates))];
     let oldPartitions = [];
 
     while (partitions.length !== oldPartitions.length) {
