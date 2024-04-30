@@ -7,6 +7,7 @@ import AutomataInput from "./AutomataInput";
 import CreateTransitionPopup from "./popups/CreateTransitionPopup";
 import RenameStatePopup from "./popups/RenameStatePopup";
 import CreateNotePopup from "./popups/CreateNotePopup";
+import SaveAutomataFilePopup from "./popups/SaveAutomataFilePopup";
 
 // Google Material Icons
 import NextIcon from "../symbols/next_icon";
@@ -416,8 +417,6 @@ const Canvas: React.FC = () => {
 
   function hasOpenPopup(): boolean{
     let result = (openPopupRef.current !== PopupType.NONE)
-    console.log('Has open popup:')
-    console.log(result)
     return result
   }
 
@@ -762,18 +761,28 @@ const Canvas: React.FC = () => {
                 // Label
                 let correctedAngle = angle
                 if(end.x < start.x && !reverseExists){
+                // if(end.x < start.x){
+                  correctedAngle += Math.PI
+                }
+
+                if (reverseExists && end.x < start.x){
                   correctedAngle += Math.PI
                 }
                 
                 p.push();
                 p.strokeWeight(0.1)
                 p.translate(middleX, middleY);
-                p.rotate(correctedAngle + (reverseExists ? Math.PI : 0));
+                // p.rotate(correctedAngle + (reverseExists ? Math.PI : 0));
+                p.rotate(correctedAngle);
                 p.textAlign(p.CENTER, p.CENTER);
                 p.stroke(transition.textColor);
                 p.fill(transition.textColor);
                 p.textSize(20);
-                p.text(transition.label, 0, -15); // Adjust label offset
+                if (reverseExists){
+                  p.text(transition.label, 0, curveOffsetY > 0 ? 70 : -70); // Adjust label offset
+                } else {
+                  p.text(transition.label, 0, -15); // Adjust label offset
+                }
                 p.pop();
               }
             }
@@ -1688,16 +1697,26 @@ const Canvas: React.FC = () => {
   };
   
   const clickSaveFile = () => {
-    // Data to save
-    const dataToSave = createXMLData();
+    // // Data to save
+    // const dataToSave = createXMLData();
     
-    const userInputFileName = prompt("Digite o nome do arquivo:", "myAutomaton.jff");
-    const fileName = userInputFileName ?
-        (userInputFileName.endsWith(".jff") ? userInputFileName : userInputFileName + ".jff") :
-        "myAutomaton.jff";  // Default file name if the user presses cancel or inputs nothing
+    // const userInputFileName = prompt("Digite o nome do arquivo:", "myAutomaton.jff");
+    // const fileName = userInputFileName ?
+    //     (userInputFileName.endsWith(".jff") ? userInputFileName : userInputFileName + ".jff") :
+    //     "myAutomaton.jff";  // Default file name if the user presses cancel or inputs nothing
   
-    // Call the save function
-    saveDataToFile(dataToSave, fileName);
+    // // Call the save function
+    // saveDataToFile(dataToSave, fileName);
+
+    setOpenPopup(PopupType.SAVE_FILE)
+    openPopupRef.current = PopupType.SAVE_FILE
+
+    const dataToSave = createXMLData();
+    const onSubmit = (fileName: string) => {
+      saveDataToFile(dataToSave, fileName);
+    }
+    setPopupInput({onSubmit})
+
   };
 
   const clickRegexToDFA = () => {
@@ -1861,6 +1880,12 @@ const Canvas: React.FC = () => {
         : openPopup === PopupType.CREATE_NOTE
         ?
         <CreateNotePopup 
+          onClose={closePopup}
+          popupInput={popupInput}
+        />
+        : openPopup === PopupType.SAVE_FILE
+        ?
+        <SaveAutomataFilePopup 
           onClose={closePopup}
           popupInput={popupInput}
         />

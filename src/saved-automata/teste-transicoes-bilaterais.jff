@@ -4,7 +4,7 @@
   <automaton>
     <state id="S0" name="q1">
       <x>525</x>
-      <y>412.5</y>
+      <y>400</y>
       <final/>
     </state>
     <state id="S1" name="q0">
@@ -13,38 +13,38 @@
       <initial/>
     </state>
     <state id="2" name="q2">
-      <x>675</x>
+      <x>662.5</x>
       <y>262.5</y>
       <final/>
     </state>
     <state id="3" name="q3">
-      <x>375</x>
+      <x>387.5</x>
       <y>262.5</y>
       <final/>
     </state>
     <state id="4" name="q4">
       <x>525</x>
-      <y>112.5</y>
+      <y>125</y>
       <final/>
     </state>
     <state id="5" name="q5">
-      <x>712.5</x>
-      <y>87.5</y>
+      <x>687.5</x>
+      <y>100</y>
       <final/>
     </state>
     <state id="6" name="q6">
-      <x>350</x>
+      <x>362.5</x>
       <y>425</y>
       <final/>
     </state>
     <state id="7" name="q7">
-      <x>700</x>
-      <y>437.5</y>
+      <x>687.5</x>
+      <y>425</y>
       <final/>
     </state>
     <state id="8" name="q8">
-      <x>350</x>
-      <y>87.5</y>
+      <x>362.5</x>
+      <y>100</y>
       <final/>
     </state>
     <transition>
