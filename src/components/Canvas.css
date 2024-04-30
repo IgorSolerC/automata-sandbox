@@ -562,10 +562,6 @@ display: none;
     stroke:var(--tool-icon);
 }
 
-.generic-popup-input{
-
-}
-
 .generic-popup-input-submit-button{
     width: 100%;
     display: flex;
@@ -587,7 +583,7 @@ display: none;
     background-color: var(--selected-tool-hover);
 }
 
-.generic-popup-input:focus{
+.generic-popup-input:focus, .generic-popup-textarea:focus{
     border: 0px solid;
     outline: 0px solid;
     background-color: var(--popup-button-bg);
@@ -611,6 +607,22 @@ display: none;
     padding-right: 10px;
     box-sizing: border-box;
     text-align:center
+}
+
+.generic-popup-textarea{
+    min-height: 200px;
+    max-height: calc(100vh - 200px);
+    min-width: 300px;
+    max-width: calc(100vw - 200px);
+    width: 200px;
+    box-shadow: var(--shadow-elevation-low);
+    border-radius: 5px;
+    border: 0px solid;
+    background-color: var(--popup-button-bg);
+    font-size: 18px;
+    padding-left: 10px;
+    padding-right: 10px;
+    box-sizing: border-box;
 }
 
 .generic-popup-input::placeholder{

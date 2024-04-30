@@ -6,6 +6,7 @@ import Toolbox from "./ToolBox";
 import AutomataInput from "./AutomataInput";
 import CreateTransitionPopup from "./popups/CreateTransitionPopup";
 import RenameStatePopup from "./popups/RenameStatePopup";
+import CreateNotePopup from "./popups/CreateNotePopup";
 
 // Google Material Icons
 import NextIcon from "../symbols/next_icon";
@@ -205,14 +206,25 @@ const Canvas: React.FC = () => {
   }
 
   const createNewNote = (p: p5) => {
-    let text = prompt("Digite o texto da nota: ");
-    if(text)
-    {
-      let note = automataRef.current.addNote(getMouseX(p), getMouseY(p), text, 200, 100, [""], 16, CanvasColors.NOTES, CanvasColors.NOTES_SECONDARY);
+    // let text = prompt("Digite o texto da nota: ");
+    // if(text)
+    // {
+    //   let note = automataRef.current.addNote(getMouseX(p), getMouseY(p), text, 200, 100, [""], 16, CanvasColors.NOTES, CanvasColors.NOTES_SECONDARY);
+    //   calculateNoteLines(note, p)
+    // } else{
+    //   alert("A nota não pode estar vazia.");
+    // }
+
+    setOpenPopup(PopupType.CREATE_NOTE)
+    openPopupRef.current = PopupType.CREATE_NOTE
+
+    const onSubmit = (noteText: string) => {
+      let note = automataRef.current.addNote(getMouseX(p), getMouseY(p), noteText, 200, 100, [""], 16, CanvasColors.NOTES, CanvasColors.NOTES_SECONDARY);
       calculateNoteLines(note, p)
-    } else{
-      alert("A nota não pode estar vazia.");
     }
+    setPopupInput({onSubmit, previousText:''})
+
+
   }
 
   // Check colision
@@ -1830,7 +1842,7 @@ const Canvas: React.FC = () => {
 
   return (
     <div>
-      {/* Invisível. Usado para importar .jiff de automatos */}
+      {/* Invisível. Usado para importar .jff de automatos */}
       <input
         type="file"
         ref={fileInputRef}
@@ -1839,9 +1851,16 @@ const Canvas: React.FC = () => {
         onChange={handleFileSelection}
       />
 
+      {/* Renderiza Popups */}
       {openPopup === PopupType.CREATE_TRANSITION
         ?
         <CreateTransitionPopup 
+          onClose={closePopup}
+          popupInput={popupInput}
+        />
+        : openPopup === PopupType.CREATE_NOTE
+        ?
+        <CreateNotePopup 
           onClose={closePopup}
           popupInput={popupInput}
         />
