@@ -39,7 +39,7 @@ const RenameStatePopup: React.FC<RenameStatePopupProps> = ({
     return (
         <GenericPopup onClose={onClose} title='Renomear Estado'>
             <input  className='generic-popup-input'
-                placeholder="RegEx (Opcional)"
+                placeholder="Rótulo do Estado"
                 value={inputValue}
                 onChange={(e) => setInputValue(e.target.value)}
             />
