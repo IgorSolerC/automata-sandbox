@@ -23,6 +23,7 @@ const CreateTransitionPopup: React.FC<CreateTransitionPopupProps> = ({
     const inputRefs = useRef([React.createRef()] as React.RefObject<HTMLInputElement>[]); // Array of refs
 
     const [triggerRerender, setTriggerRerender] = useState(['do not touch >:('])
+    const [addEmptyTransition, setAddEmptyTransition] = useState(false)
 
     const [blinkingInputs, setBlinkingInputs] = useState<number[]>([]); 
 
@@ -98,22 +99,32 @@ const CreateTransitionPopup: React.FC<CreateTransitionPopupProps> = ({
                 {inputValue.map((_, i) => (
                 <input
                     key={i} // Important for React lists
-                    className={`generic-popup-input ${blinkingInputs.includes(i) ? 'blink' : ''}`} // Add blink conditionally
+                    className={`transition-input generic-popup-input ${blinkingInputs.includes(i) ? 'blink' : ''}`} // Add blink conditionally
                     value={inputValue[i]}
                     onChange={(e) => handleInputChange(e, i)}
                     ref={inputRefs.current[i]}
+                    placeholder='∑'
                 />
                 ))}
+            </div>
+            <input  className='generic-popup-input' placeholder="RegEx (Opcional)"/>
+            <div>
+                <label>
+                    <input type='checkbox'
+                        checked={addEmptyTransition}
+                        onClick={() => setAddEmptyTransition(!addEmptyTransition)}
+                    />
+                    Inclui transição vazia
+                </label>
             </div>
             <button
                 className="canvas-button generic-popup-button"
                 onClick={() => {
-                    let finalLabels;
-                    if (inputValue.length > 1){
-                        finalLabels = inputValue.filter(x => x !== '')
-                    } else {
-                        finalLabels = inputValue
-                    }
+                    let finalLabels = inputValue.filter(x => x !== '')
+
+                    if (addEmptyTransition)
+                        finalLabels.push('')
+
                     popupInput.onSubmit(finalLabels)
                     onClose()
                 }}

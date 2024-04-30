@@ -590,10 +590,14 @@ display: none;
     background-color: var(--popup-button-bg);
 }
 
+.transition-input.generic-popup-input{
+    width: 29px;
+}
+
 .generic-popup-input{
-    box-shadow: var(--shadow-elevation-low);
     height: 35px;
-    width: 25px;
+    width: 200px;
+    box-shadow: var(--shadow-elevation-low);
     border-radius: 5px;
     border: 0px solid;
     background-color: var(--popup-button-bg);
@@ -609,7 +613,7 @@ display: none;
 }
 
 #popup-transicao-input-list{
-    max-width: 150px;
+    max-width: 200px;
     display: flex;
     justify-content: flex-start;
     flex-direction: row;
@@ -623,6 +627,6 @@ display: none;
   
   @keyframes blinker {
     50% {
-      opacity: 50%;
+      opacity: 20%;
     }
   }
