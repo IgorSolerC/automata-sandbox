@@ -97,8 +97,10 @@ const Canvas: React.FC = () => {
   
   const [simulationIndex, setSimulationIndex] = useState<number>(0);
   const simulationIndexRef = useRef(simulationIndex);
-
+  
   const [openPopup, setOpenPopup] = useState<PopupType>(PopupType.NONE);
+  const openPopupRef = useRef(openPopup);
+
   const [popupInput, setPopupInput] = useState<any>();
 
   const [zoomTarget, setZoomTarget] = useState<State>();
@@ -400,6 +402,13 @@ const Canvas: React.FC = () => {
     validadeAllInputs()
   }
 
+  function hasOpenPopup(): boolean{
+    let result = (openPopupRef.current !== PopupType.NONE)
+    console.log('Has open popup:')
+    console.log(result)
+    return result
+  }
+
   useEffect(() => {
     // calculateSteps();
     if(!automataRef.current){
@@ -463,6 +472,7 @@ const Canvas: React.FC = () => {
               // else
               //   alert("O nome não pode estar vazio.");
               setOpenPopup(PopupType.RENAME_STATE)
+              openPopupRef.current = PopupType.RENAME_STATE
 
               let selectedStatesAux = selectedStates
               const onSubmit = (newLabel: string) => selectedStatesAux[0].label = newLabel!
@@ -926,142 +936,347 @@ const Canvas: React.FC = () => {
       
 
         p.mouseWheel = (event: WheelEvent) => {
-          transitioning = false;
-          var oldZoom = cameraZoom;
-          cameraZoom -= (event.deltaY / 1000) //1000
-          if (cameraZoom < 0.2)
-            cameraZoom = 0.2
-          else if(cameraZoom > 4)
-            cameraZoom = 4
-          
-          var newZoom = cameraZoom;
+          if(!hasOpenPopup()){
+            transitioning = false;
+            var oldZoom = cameraZoom;
+            cameraZoom -= (event.deltaY / 1000) //1000
+            if (cameraZoom < 0.2)
+              cameraZoom = 0.2
+            else if(cameraZoom > 4)
+              cameraZoom = 4
+            
+            var newZoom = cameraZoom;
 
-          // ☠️☠️☠️☠️☠️☠️☠️☠️
-          // globalTranslateX = (getMouseXScaled(p) - (p.mouseX - globalTranslateX));
-          // globalTranslateY = (getMouseYScaled(p) - (p.mouseY - globalTranslateY));
-          // ☠️☠️☠️☠️☠️☠️☠️☠️
-          
-          // 🕯️🕯️🕯️🕯️🕯️🕯️🕯️🕯️ Só deus sabe como funciona
-          const mouseXWorld = getMouseXScaled(p);
-          const mouseYWorld = getMouseYScaled(p);
-          
-          // Calculate how the mouse's world coordinates would change due to the new zoom
-          const mouseXWorldScaled = mouseXWorld * (newZoom / oldZoom);
-          const mouseYWorldScaled = mouseYWorld * (newZoom / oldZoom);
-          
-          // Update globalTranslateX and globalTranslateY to keep the mouse's world coordinates the same
-          globalTranslateX += mouseXWorld - mouseXWorldScaled;
-          globalTranslateY += mouseYWorld - mouseYWorldScaled;
-          // 🕯️🕯️🕯️🕯️🕯️🕯️🕯️🕯️ Só deus sabe como funciona
+            // ☠️☠️☠️☠️☠️☠️☠️☠️
+            // globalTranslateX = (getMouseXScaled(p) - (p.mouseX - globalTranslateX));
+            // globalTranslateY = (getMouseYScaled(p) - (p.mouseY - globalTranslateY));
+            // ☠️☠️☠️☠️☠️☠️☠️☠️
+            
+            // 🕯️🕯️🕯️🕯️🕯️🕯️🕯️🕯️ Só deus sabe como funciona
+            const mouseXWorld = getMouseXScaled(p);
+            const mouseYWorld = getMouseYScaled(p);
+            
+            // Calculate how the mouse's world coordinates would change due to the new zoom
+            const mouseXWorldScaled = mouseXWorld * (newZoom / oldZoom);
+            const mouseYWorldScaled = mouseYWorld * (newZoom / oldZoom);
+            
+            // Update globalTranslateX and globalTranslateY to keep the mouse's world coordinates the same
+            globalTranslateX += mouseXWorld - mouseXWorldScaled;
+            globalTranslateY += mouseYWorld - mouseYWorldScaled;
+            // 🕯️🕯️🕯️🕯️🕯️🕯️🕯️🕯️ Só deus sabe como funciona
+          }
         }
         
         p.mouseDragged = () => {
-          const allStates = automataRef.current.getStates();
+          if(!hasOpenPopup()){
+            const allStates = automataRef.current.getStates();
 
-          if (currentCanvasAction === CanvasActions.MOVING_STATE) {
-            // selectedStates.forEach((auxState: automataRef.current.State) => { // <--- deu errado o type
-            selectedStates.forEach((state: State) => {
-              state.x = roundNumber(getMouseX(p), 20) + roundNumber(selectedStateMouseOffset[state.id]["x"], 20);
-              state.y = roundNumber(getMouseY(p), 20) + roundNumber(selectedStateMouseOffset[state.id]["y"], 20);
-            });
-          } else if (currentCanvasAction === CanvasActions.CREATING_SELECTION) {
-            // --- Update valor da seleção ---
-            // Isso é necessario para evitar tamanhos negativos ao criar
-            // seleções onde o ponto de inicio é maior que o de fim
-            selectionDistanceX = getMouseX(p) - selectionStarterX;
-            selectionDistanceY = getMouseY(p) - selectionStarterY;
-            selectionX = selectionStarterX;
-            selectionY = selectionStarterY;
-            if (selectionDistanceX < 0) {
-              selectionX = getMouseX(p);
-              selectionDistanceX = -1 * selectionDistanceX;
-            }
-            if (selectionDistanceY < 0) {
-              selectionY = getMouseY(p);
-              selectionDistanceY = -1 * selectionDistanceY;
-            }
+            if (currentCanvasAction === CanvasActions.MOVING_STATE) {
+              // selectedStates.forEach((auxState: automataRef.current.State) => { // <--- deu errado o type
+              selectedStates.forEach((state: State) => {
+                state.x = roundNumber(getMouseX(p), 20) + roundNumber(selectedStateMouseOffset[state.id]["x"], 20);
+                state.y = roundNumber(getMouseY(p), 20) + roundNumber(selectedStateMouseOffset[state.id]["y"], 20);
+              });
+            } else if (currentCanvasAction === CanvasActions.CREATING_SELECTION) {
+              // --- Update valor da seleção ---
+              // Isso é necessario para evitar tamanhos negativos ao criar
+              // seleções onde o ponto de inicio é maior que o de fim
+              selectionDistanceX = getMouseX(p) - selectionStarterX;
+              selectionDistanceY = getMouseY(p) - selectionStarterY;
+              selectionX = selectionStarterX;
+              selectionY = selectionStarterY;
+              if (selectionDistanceX < 0) {
+                selectionX = getMouseX(p);
+                selectionDistanceX = -1 * selectionDistanceX;
+              }
+              if (selectionDistanceY < 0) {
+                selectionY = getMouseY(p);
+                selectionDistanceY = -1 * selectionDistanceY;
+              }
 
-            selectedStates = allStates.filter((state) => {
-              return (
-                selectionX <= state.x &&
-                state.x <= selectionX + selectionDistanceX &&
-                selectionY <= state.y &&
-                state.y <= selectionY + selectionDistanceY
-              );
-            });
+              selectedStates = allStates.filter((state) => {
+                return (
+                  selectionX <= state.x &&
+                  state.x <= selectionX + selectionDistanceX &&
+                  selectionY <= state.y &&
+                  state.y <= selectionY + selectionDistanceY
+                );
+              });
 
-          } else if (currentCanvasAction === CanvasActions.MOVING_CANVAS){
-            const deltaX = getMouseX(p) - getPreviousMouseX(p);
-            const deltaY = getMouseY(p) - getPreviousMouseY(p);
-            globalTranslateX += deltaX;
-            globalTranslateY += deltaY;
-          } else if (currentCanvasAction === CanvasActions.RESIZING_TRANSITION){
-            if (clickedTransition){
-              let dx = (getMouseX(p) - getPreviousMouseX(p)) * 2
-              let dy = (getMouseY(p) - getPreviousMouseY(p)) * 2
-              let angle = Math.atan2(clickedTransition.from.y - clickedTransition.to.y, clickedTransition.from.x - clickedTransition.to.x)
-              let final = (Math.sin(angle) * dx) - (Math.cos(angle) * dy)
+            } else if (currentCanvasAction === CanvasActions.MOVING_CANVAS){
+              const deltaX = getMouseX(p) - getPreviousMouseX(p);
+              const deltaY = getMouseY(p) - getPreviousMouseY(p);
+              globalTranslateX += deltaX;
+              globalTranslateY += deltaY;
+            } else if (currentCanvasAction === CanvasActions.RESIZING_TRANSITION){
+              if (clickedTransition){
+                let dx = (getMouseX(p) - getPreviousMouseX(p)) * 2
+                let dy = (getMouseY(p) - getPreviousMouseY(p)) * 2
+                let angle = Math.atan2(clickedTransition.from.y - clickedTransition.to.y, clickedTransition.from.x - clickedTransition.to.x)
+                let final = (Math.sin(angle) * dx) - (Math.cos(angle) * dy)
 
-              //clickedTransition.height += final
-              clickedTransition.height = clickedTransition.height;
-            }
-          } else if (currentCanvasAction === CanvasActions.MOVING_NOTE){
-            clickedNote!.x = getMouseX(p) + selectedNoteMouseOffset[clickedNote!.id]["x"];
-            clickedNote!.y = getMouseY(p) + selectedNoteMouseOffset[clickedNote!.id]["y"];
-          } else if (currentCanvasAction ===  CanvasActions.RESIZING_NOTE){
-            const MIN_NOTE_WIDTH = 50; 
-            const MIN_NOTE_HEIGHT = 50;
-            const MAX_NOTE_WIDTH = 400;
-            const MAX_NOTE_HEIGHT = 300;
-            const mouseX = getMouseX(p);
-            const mouseY = getMouseY(p);
+                //clickedTransition.height += final
+                clickedTransition.height = clickedTransition.height;
+              }
+            } else if (currentCanvasAction === CanvasActions.MOVING_NOTE){
+              clickedNote!.x = getMouseX(p) + selectedNoteMouseOffset[clickedNote!.id]["x"];
+              clickedNote!.y = getMouseY(p) + selectedNoteMouseOffset[clickedNote!.id]["y"];
+            } else if (currentCanvasAction ===  CanvasActions.RESIZING_NOTE){
+              const MIN_NOTE_WIDTH = 50; 
+              const MIN_NOTE_HEIGHT = 50;
+              const MAX_NOTE_WIDTH = 400;
+              const MAX_NOTE_HEIGHT = 300;
+              const mouseX = getMouseX(p);
+              const mouseY = getMouseY(p);
 
-            // Assume resize starts from the bottom-right corner of the note
-            let newWidth = Math.max(10, mouseX - clickedNote!.x);
-            let newHeight = Math.max(10, mouseY - clickedNote!.y);
+              // Assume resize starts from the bottom-right corner of the note
+              let newWidth = Math.max(10, mouseX - clickedNote!.x);
+              let newHeight = Math.max(10, mouseY - clickedNote!.y);
 
-            newWidth = Math.max(MIN_NOTE_WIDTH, Math.min(newWidth, MAX_NOTE_WIDTH));
-            newHeight = Math.max(MIN_NOTE_HEIGHT, Math.min(newHeight, MAX_NOTE_HEIGHT));          
+              newWidth = Math.max(MIN_NOTE_WIDTH, Math.min(newWidth, MAX_NOTE_WIDTH));
+              newHeight = Math.max(MIN_NOTE_HEIGHT, Math.min(newHeight, MAX_NOTE_HEIGHT));          
 
-            clickedNote!.width = newWidth;
-            clickedNote!.height = newHeight;
+              clickedNote!.width = newWidth;
+              clickedNote!.height = newHeight;
 
-            const textLength = clickedNote!.textLines.length;
-            if (textLength < 3) {
-              calculateNoteLines(clickedNote!, p)
-            } else if (textLength < 5 && p.frameCount % 3 === 0) {
-              calculateNoteLines(clickedNote!, p)
-            } else if (textLength < 8 && p.frameCount % 5 === 0) {
-              calculateNoteLines(clickedNote!, p)
-            } else if (textLength < 10 && p.frameCount % 8 === 0) {
-              calculateNoteLines(clickedNote!, p)
-            } else if (textLength < 12 && p.frameCount % 11 === 0) {
-              calculateNoteLines(clickedNote!, p)
-            } else if (textLength >= 13 && p.frameCount % 14 === 0){
-              calculateNoteLines(clickedNote!, p)
+              const textLength = clickedNote!.textLines.length;
+              if (textLength < 3) {
+                calculateNoteLines(clickedNote!, p)
+              } else if (textLength < 5 && p.frameCount % 3 === 0) {
+                calculateNoteLines(clickedNote!, p)
+              } else if (textLength < 8 && p.frameCount % 5 === 0) {
+                calculateNoteLines(clickedNote!, p)
+              } else if (textLength < 10 && p.frameCount % 8 === 0) {
+                calculateNoteLines(clickedNote!, p)
+              } else if (textLength < 12 && p.frameCount % 11 === 0) {
+                calculateNoteLines(clickedNote!, p)
+              } else if (textLength >= 13 && p.frameCount % 14 === 0){
+                calculateNoteLines(clickedNote!, p)
+              }
             }
           }
         };
 
         p.mousePressed = (event: any) => {
-          if(p.mouseButton === p.CENTER){
-            console.log(automataRef.current.states)
-            console.log(automataRef.current.transitions)
-          }
+          if(!hasOpenPopup()){
+            if(p.mouseButton === p.CENTER){
+              console.log(automataRef.current.states)
+              console.log(automataRef.current.transitions)
+            }
 
-          //Se o click não foi no próprio contextMenu, ocultar o menu.
-          if (event.target.id && !event.target.id.includes('ContextMenu')) {
-            hideContextMenu();
-          }
-          //Gambiarra para não executar a tool selecionada ao clicar em botões
-          if ((event.target instanceof HTMLButtonElement || event.target instanceof HTMLInputElement || event.target.nodeName === 'svg' || event.target.nodeName === 'path')) {
-            return;
-          }
+            //Se o click não foi no próprio contextMenu, ocultar o menu.
+            if (event.target.id && !event.target.id.includes('ContextMenu')) {
+              hideContextMenu();
+            }
+            //Gambiarra para não executar a tool selecionada ao clicar em botões
+            if ((event.target instanceof HTMLButtonElement || event.target instanceof HTMLInputElement || event.target.nodeName === 'svg' || event.target.nodeName === 'path')) {
+              return;
+            }
 
-          if (contextMenuIsOpen) {
-          } else {
+            if (contextMenuIsOpen) {
+            } else {
+              const allStates = automataRef.current.getStates();
+              // Encontra estado que foi clicado
+              clickedState =
+                allStates.find((state) => {
+                  return (
+                    p.dist(state.x, state.y, getMouseX(p), getMouseY(p)) <
+                    state.diameter / 2
+                  );
+                }) || null;
+
+              // New clicked state
+              if (clickedState) {
+                let clickedStateIsSelected = selectedStates.find(
+                  (state) => state.id === clickedState!.id
+                );
+                if (!clickedStateIsSelected) {
+                  selectedStates = [clickedState];
+                }
+              } else {
+                selectedStates = [];
+              }
+
+              // Clicked transition
+              clickedTransition = getClickedTransition(p)
+              if (clickedTransition){
+                selectedTransitions = [clickedTransition] 
+              } else {
+                selectedTransitions = []
+              }
+
+              const allNotes = automataRef.current.getNotes();
+              
+              if(allNotes.length > 0){
+                clickedNote = allNotes.find((note) => {
+                  return getMouseX(p) >= note.x && getMouseX(p) <= note.x + note.width &&
+                        getMouseY(p) >= note.y && getMouseY(p) <= note.y + note.height;
+                }) || null;
+              }
+
+              // Create new 
+              if (p.mouseButton === p.LEFT && p.keyIsDown(p.SHIFT)) {
+                if (!clickedState) {
+                  createNewState(allStates, p)
+                }
+              }
+              else if (p.mouseButton === p.CENTER || (p.keyIsDown(p.CONTROL) && p.mouseButton === p.LEFT)){
+                  currentCanvasAction = CanvasActions.MOVING_CANVAS;
+                  transitioning = false;
+                  // Muda cursor para "grab" cursor
+                  window.document.body.style.cursor = 'grab';
+              }
+              /* Pointer */
+              else if (currentCanvasToolRef.current === CanvasTools.POINTER) {
+                // Botão esquerdo: Cria transições / Cria estados
+                currentCanvasAction = CanvasActions.NONE;
+
+                // Open context menu
+                if (p.mouseButton === p.RIGHT) {
+                  if (clickedState) {
+                    showContextMenu(p.mouseX, p.mouseY);
+                  } else {
+                    hideContextMenu();
+                  }
+                }
+                // Left click
+                else if (p.mouseButton === p.LEFT) {
+                  /* Shift NÃO apertado, clicou em um estado */
+                  // Move estado
+                  if (clickedState) {
+
+                    // Set offset, usado para não centralizar com o mouse os estados movidos
+                    selectedStateMouseOffset = {};
+                    selectedStates.forEach((state) => {
+                      selectedStateMouseOffset[state.id] = {};
+                      selectedStateMouseOffset[state.id]["x"] =
+                        state.x - roundNumber(getMouseX(p), 20)
+                      selectedStateMouseOffset[state.id]["y"] =
+                        state.y - roundNumber(getMouseY(p), 20)
+                    });
+
+                    // Set estado atual como "Movendo estado"
+                    currentCanvasAction = CanvasActions.MOVING_STATE;
+                    automataRef.current.pushSnapshotToUndo()
+                    automataRef.current.redoStack = [];
+                    // Muda cursor para "grab" cursor
+                    window.document.body.style.cursor = 'grab';
+                  } 
+                  // Criando caixa de seleção
+                  else if (clickedTransition){
+                    currentCanvasAction = CanvasActions.RESIZING_TRANSITION;
+                  }
+                  else if (clickedNote){
+                    if(isCursorOverNoteResizeHandle){
+                      currentCanvasAction = CanvasActions.RESIZING_NOTE
+                    }
+                    else {
+                      currentCanvasAction = CanvasActions.MOVING_NOTE;
+                      selectedNoteMouseOffset = {};
+                      selectedNoteMouseOffset[clickedNote.id] = {};
+                      selectedNoteMouseOffset[clickedNote.id]["x"] = clickedNote.x - getMouseX(p);
+                      selectedNoteMouseOffset[clickedNote.id]["y"] = clickedNote.y - getMouseY(p);
+                      // Muda cursor para "grab" cursor
+                      window.document.body.style.cursor = 'grab';
+                    }
+                  }
+                  else {
+                    // Set state
+                    currentCanvasAction = CanvasActions.CREATING_SELECTION;
+                    // Set dados da selecao
+                    selectionStarterX = getMouseX(p);
+                    selectionStarterY = getMouseY(p);
+                    selectionX = selectionStarterX;
+                    selectionY = selectionStarterY;
+                    selectionDistanceX = 0;
+                    selectionDistanceY = 0;
+                  }
+                }
+
+                /* Eraser */
+              } else if (currentCanvasToolRef.current === CanvasTools.ERASER) {
+                if (clickedState) {
+                  automataRef.current.deleteState(clickedState);
+                  stopSimulation()
+                  validadeAllInputs()
+                } else if(clickedTransition) {
+                  automataRef.current.deleteTransition(clickedTransition);
+                  stopSimulation()
+                  validadeAllInputs()
+                } else if (clickedNote) {
+                  automataRef.current.deleteNote(clickedNote);                
+                }
+
+                /* Mover */
+              } else if (currentCanvasToolRef.current === CanvasTools.MOVE) {
+                currentCanvasAction = CanvasActions.MOVING_CANVAS;
+                // Muda cursor para "grab" cursor
+                window.document.body.style.cursor = 'grab';
+                /* Cria transição */
+              } else if (currentCanvasToolRef.current === CanvasTools.TRANSITION) {
+                currentCanvasAction = CanvasActions.CREATING_TRANSITION;
+                /* Cria estado */
+              } else if (currentCanvasToolRef.current === CanvasTools.ADD_STATE) {
+                createNewState(allStates, p)
+                /* Cria Note */
+              } else if (currentCanvasToolRef.current === CanvasTools.NOTE){
+                createNewNote(p)              
+              }
+            }
+          }
+        };
+
+        p.mouseReleased = () => {
+          if(!hasOpenPopup()){
+            window.document.body.style.cursor = 'default';
+            
+            if(currentCanvasAction === CanvasActions.MOVING_STATE)
+            {
+              automataRef.current.pushSnapshotToUndo();
+              automataRef.current.redoStack = [];
+            }
+
+            if(currentCanvasAction === CanvasActions.RESIZING_NOTE){
+              calculateNoteLines(clickedNote!, p);
+            }
+
+            if (clickedState) {            
+              const endState = automataRef.current.getStates().find((state) => {
+                return (
+                  p.dist(state.x, state.y, getMouseX(p), getMouseY(p)) <
+                  state.diameter / 2
+                );
+              });
+              if (
+                endState &&
+                currentCanvasAction === CanvasActions.CREATING_TRANSITION
+              ) {
+                // let label = prompt("Digite o símbolo de transição: ");
+                // addNewTransition(label, clickedState, endState)             
+                setOpenPopup(PopupType.CREATE_TRANSITION)
+                openPopupRef.current = PopupType.CREATE_TRANSITION
+
+                let clickedStateAux = clickedState
+                let endStateAux = endState;
+                let currentLabelsAux = automataRef.current.getTransitions().find(t => t.from.id === clickedStateAux.id && t.to.id === endStateAux.id)
+                let currentLabels = currentLabelsAux ? currentLabelsAux.label : ['']
+                
+                const onSubmit = (labels: string[]) => addNewTransition(labels, clickedStateAux, endStateAux)
+                setPopupInput({onSubmit, previousLabels:currentLabels})
+              }
+            }
+            currentCanvasAction = CanvasActions.NONE;
+            clickedState = null;
+          }
+        };
+
+        p.keyPressed = () => {
+          // Está bugado!
+          // Não reconhece numero, a não ser q alt ou ctrl estejam apertados
+
+          if(!hasOpenPopup()){
             const allStates = automataRef.current.getStates();
-            // Encontra estado que foi clicado
+
             clickedState =
               allStates.find((state) => {
                 return (
@@ -1070,286 +1285,94 @@ const Canvas: React.FC = () => {
                 );
               }) || null;
 
-            // New clicked state
-            if (clickedState) {
-              let clickedStateIsSelected = selectedStates.find(
-                (state) => state.id === clickedState!.id
-              );
-              if (!clickedStateIsSelected) {
-                selectedStates = [clickedState];
-              }
-            } else {
-              selectedStates = [];
-            }
-
-            // Clicked transition
-            clickedTransition = getClickedTransition(p)
-            if (clickedTransition){
-              selectedTransitions = [clickedTransition] 
-            } else {
-              selectedTransitions = []
-            }
-
-            const allNotes = automataRef.current.getNotes();
-            
-            if(allNotes.length > 0){
-              clickedNote = allNotes.find((note) => {
-                return getMouseX(p) >= note.x && getMouseX(p) <= note.x + note.width &&
-                       getMouseY(p) >= note.y && getMouseY(p) <= note.y + note.height;
-              }) || null;
-            }
-
-            // Create new 
-            if (p.mouseButton === p.LEFT && p.keyIsDown(p.SHIFT)) {
-              if (!clickedState) {
-                createNewState(allStates, p)
-              }
-            }
-            else if (p.mouseButton === p.CENTER || (p.keyIsDown(p.CONTROL) && p.mouseButton === p.LEFT)){
-                currentCanvasAction = CanvasActions.MOVING_CANVAS;
-                transitioning = false;
-                // Muda cursor para "grab" cursor
-                window.document.body.style.cursor = 'grab';
-            }
-            /* Pointer */
-            else if (currentCanvasToolRef.current === CanvasTools.POINTER) {
-              // Botão esquerdo: Cria transições / Cria estados
-              currentCanvasAction = CanvasActions.NONE;
-
-              // Open context menu
-              if (p.mouseButton === p.RIGHT) {
-                if (clickedState) {
-                  showContextMenu(p.mouseX, p.mouseY);
-                } else {
-                  hideContextMenu();
-                }
-              }
-              // Left click
-              else if (p.mouseButton === p.LEFT) {
-                /* Shift NÃO apertado, clicou em um estado */
-                // Move estado
-                if (clickedState) {
-
-                  // Set offset, usado para não centralizar com o mouse os estados movidos
-                  selectedStateMouseOffset = {};
-                  selectedStates.forEach((state) => {
-                    selectedStateMouseOffset[state.id] = {};
-                    selectedStateMouseOffset[state.id]["x"] =
-                      state.x - roundNumber(getMouseX(p), 20)
-                    selectedStateMouseOffset[state.id]["y"] =
-                      state.y - roundNumber(getMouseY(p), 20)
+            /* Deleta estado(s) */
+            if (p.key === "Delete") {
+              if(clickedState || selectedStates.length !== 0){
+                if (selectedStates.length === 0) 
+                  selectedStates = [clickedState!];
+              
+                if(selectedStates[0] !== null){
+                  selectedStates.forEach((state, index) => {
+                    const isFirstState = index === 0;
+                    automataRef.current.deleteState(state, isFirstState);
                   });
-
-                  // Set estado atual como "Movendo estado"
-                  currentCanvasAction = CanvasActions.MOVING_STATE;
-                  automataRef.current.pushSnapshotToUndo()
-                  automataRef.current.redoStack = [];
-                  // Muda cursor para "grab" cursor
-                  window.document.body.style.cursor = 'grab';
-                } 
-                // Criando caixa de seleção
-                else if (clickedTransition){
-                  currentCanvasAction = CanvasActions.RESIZING_TRANSITION;
+                  selectedStates = [];
+                  stopSimulation()
+                  validadeAllInputs()
                 }
-                else if (clickedNote){
-                  if(isCursorOverNoteResizeHandle){
-                    currentCanvasAction = CanvasActions.RESIZING_NOTE
-                  }
-                  else {
-                    currentCanvasAction = CanvasActions.MOVING_NOTE;
-                    selectedNoteMouseOffset = {};
-                    selectedNoteMouseOffset[clickedNote.id] = {};
-                    selectedNoteMouseOffset[clickedNote.id]["x"] = clickedNote.x - getMouseX(p);
-                    selectedNoteMouseOffset[clickedNote.id]["y"] = clickedNote.y - getMouseY(p);
-                    // Muda cursor para "grab" cursor
-                    window.document.body.style.cursor = 'grab';
-                  }
-                }
-                else {
-                  // Set state
-                  currentCanvasAction = CanvasActions.CREATING_SELECTION;
-                  // Set dados da selecao
-                  selectionStarterX = getMouseX(p);
-                  selectionStarterY = getMouseY(p);
-                  selectionX = selectionStarterX;
-                  selectionY = selectionStarterY;
-                  selectionDistanceX = 0;
-                  selectionDistanceY = 0;
-                }
-              }
-
-              /* Eraser */
-            } else if (currentCanvasToolRef.current === CanvasTools.ERASER) {
-              if (clickedState) {
-                automataRef.current.deleteState(clickedState);
-                stopSimulation()
-                validadeAllInputs()
-              } else if(clickedTransition) {
+              } else if (clickedTransition){
                 automataRef.current.deleteTransition(clickedTransition);
                 stopSimulation()
-                validadeAllInputs()
-              } else if (clickedNote) {
-                automataRef.current.deleteNote(clickedNote);                
+                validadeAllInputs();
+                clickedTransition = null;
+              } else if (clickedNote){
+                automataRef.current.deleteNote(clickedNote);
+                clickedNote = null;
               }
-
-              /* Mover */
-            } else if (currentCanvasToolRef.current === CanvasTools.MOVE) {
-              currentCanvasAction = CanvasActions.MOVING_CANVAS;
-              // Muda cursor para "grab" cursor
-              window.document.body.style.cursor = 'grab';
-              /* Cria transição */
-            } else if (currentCanvasToolRef.current === CanvasTools.TRANSITION) {
-              currentCanvasAction = CanvasActions.CREATING_TRANSITION;
-              /* Cria estado */
-            } else if (currentCanvasToolRef.current === CanvasTools.ADD_STATE) {
-              createNewState(allStates, p)
-              /* Cria Note */
-            } else if (currentCanvasToolRef.current === CanvasTools.NOTE){
-              createNewNote(p)              
             }
-          }
-        };
 
-        p.mouseReleased = () => {
-          window.document.body.style.cursor = 'default';
-          
-          if(currentCanvasAction === CanvasActions.MOVING_STATE)
-          {
-            automataRef.current.pushSnapshotToUndo();
-            automataRef.current.redoStack = [];
-          }
+            /*
+              Undo e Redo 
+            */
 
-          if(currentCanvasAction === CanvasActions.RESIZING_NOTE){
-            calculateNoteLines(clickedNote!, p);
-          }
-
-          if (clickedState) {            
-            const endState = automataRef.current.getStates().find((state) => {
-              return (
-                p.dist(state.x, state.y, getMouseX(p), getMouseY(p)) <
-                state.diameter / 2
-              );
-            });
+            // Undo
             if (
-              endState &&
-              currentCanvasAction === CanvasActions.CREATING_TRANSITION
+              !undoInterval && (
+                (p.keyIsDown(p.CONTROL) && (p.key === 'Y' || p.key === 'y')) // CTRL + Y
+                || (p.keyIsDown(p.CONTROL) && p.keyIsDown(p.SHIFT) && (p.key === 'Z' || p.key === 'Z')) // CTRL + SHIFT + Z
+              )
             ) {
-              // let label = prompt("Digite o símbolo de transição: ");
-              // addNewTransition(label, clickedState, endState)             
-              setOpenPopup(PopupType.CREATE_TRANSITION)
-
-              let clickedStateAux = clickedState
-              let endStateAux = endState;
-              let currentLabelsAux = automataRef.current.getTransitions().find(t => t.from.id === clickedStateAux.id && t.to.id === endStateAux.id)
-              let currentLabels = currentLabelsAux ? currentLabelsAux.label : ['']
-              
-              const onSubmit = (labels: string[]) => addNewTransition(labels, clickedStateAux, endStateAux)
-              setPopupInput({onSubmit, previousLabels:currentLabels})
-            }
-          }
-          currentCanvasAction = CanvasActions.NONE;
-          clickedState = null;
-        };
-
-        p.keyPressed = () => {
-          // Está bugado!
-          // Não reconhece numero, a não ser q alt ou ctrl estejam apertados
-
-          const allStates = automataRef.current.getStates();
-
-          clickedState =
-            allStates.find((state) => {
-              return (
-                p.dist(state.x, state.y, getMouseX(p), getMouseY(p)) <
-                state.diameter / 2
-              );
-            }) || null;
-
-          /* Deleta estado(s) */
-          if (p.key === "Delete") {
-            if(clickedState || selectedStates.length !== 0){
-              if (selectedStates.length === 0) 
-                selectedStates = [clickedState!];
-            
-              if(selectedStates[0] !== null){
-                selectedStates.forEach((state, index) => {
-                  const isFirstState = index === 0;
-                  automataRef.current.deleteState(state, isFirstState);
-                });
-                selectedStates = [];
-                stopSimulation()
-                validadeAllInputs()
-              }
-            } else if (clickedTransition){
-              automataRef.current.deleteTransition(clickedTransition);
-              stopSimulation()
-              validadeAllInputs();
-              clickedTransition = null;
-            } else if (clickedNote){
-              automataRef.current.deleteNote(clickedNote);
-              clickedNote = null;
-            }
-          }
-
-          /*
-            Undo e Redo 
-          */
-
-          // Undo
-          if (
-            !undoInterval && (
-              (p.keyIsDown(p.CONTROL) && (p.key === 'Y' || p.key === 'y')) // CTRL + Y
-              || (p.keyIsDown(p.CONTROL) && p.keyIsDown(p.SHIFT) && (p.key === 'Z' || p.key === 'Z')) // CTRL + SHIFT + Z
-            )
-          ) {
-            Redo()
-            undoInterval = setInterval(() => {
               Redo()
-            }, 200); 
-          }
+              undoInterval = setInterval(() => {
+                Redo()
+              }, 200); 
+            }
 
-          // Redo
-          else if (p.keyIsDown(p.CONTROL) && (p.key === 'Z' || p.key === 'z') && !undoInterval) {
-            Undo();
-            undoInterval = setInterval(() => {
-              Undo()
-            }, 200);  // Repeat undo every 200 ms
-          }
+            // Redo
+            else if (p.keyIsDown(p.CONTROL) && (p.key === 'Z' || p.key === 'z') && !undoInterval) {
+              Undo();
+              undoInterval = setInterval(() => {
+                Undo()
+              }, 200);  // Repeat undo every 200 ms
+            }
 
-          /* Seleciona tool */
-          // if (!inputFocused) {
-          if (p.key === "1") {
-            currentCanvasToolRef.current = CanvasTools.POINTER;
-            setSelectedToolState(CanvasTools.POINTER) 
-          }
-          else if (p.key === "2") {
-            currentCanvasToolRef.current = CanvasTools.TRANSITION;
-            setSelectedToolState(CanvasTools.TRANSITION)
-          }
-          else if (p.key === "3") {
-            currentCanvasToolRef.current = CanvasTools.ADD_STATE;
-            setSelectedToolState(CanvasTools.ADD_STATE)
-          }
-          else if (p.key === "4") {
-            currentCanvasToolRef.current = CanvasTools.ERASER;
-            setSelectedToolState(CanvasTools.ERASER)
-          }
-          else if (p.key === "5") {
-            currentCanvasToolRef.current = CanvasTools.MOVE;
-            setSelectedToolState(CanvasTools.MOVE)
-          }
+            /* Seleciona tool */
+            // if (!inputFocused) {
+            if (p.key === "1") {
+              currentCanvasToolRef.current = CanvasTools.POINTER;
+              setSelectedToolState(CanvasTools.POINTER) 
+            }
+            else if (p.key === "2") {
+              currentCanvasToolRef.current = CanvasTools.TRANSITION;
+              setSelectedToolState(CanvasTools.TRANSITION)
+            }
+            else if (p.key === "3") {
+              currentCanvasToolRef.current = CanvasTools.ADD_STATE;
+              setSelectedToolState(CanvasTools.ADD_STATE)
+            }
+            else if (p.key === "4") {
+              currentCanvasToolRef.current = CanvasTools.ERASER;
+              setSelectedToolState(CanvasTools.ERASER)
+            }
+            else if (p.key === "5") {
+              currentCanvasToolRef.current = CanvasTools.MOVE;
+              setSelectedToolState(CanvasTools.MOVE)
+            }
 
-          /* Debug */
-          if (p.key === "!") {
-            automataRef.current.printInfo();
+            /* Debug */
+            if (p.key === "!") {
+              automataRef.current.printInfo();
+            }
           }
         };
 
         p.keyReleased = () => {
-          // Stop Undo when Z or Y is released
-          if ((p.key === 'Z' || p.key === 'z' || p.key === 'Y' || p.key === 'y') && undoInterval) {
-            clearInterval(undoInterval);
-            undoInterval = null;
+          if(!hasOpenPopup()){
+            // Stop Undo when Z or Y is released
+            if ((p.key === 'Z' || p.key === 'z' || p.key === 'Y' || p.key === 'y') && undoInterval) {
+              clearInterval(undoInterval);
+              undoInterval = null;
+            }
           }
         };
       });
@@ -1800,6 +1823,11 @@ const Canvas: React.FC = () => {
     validadeAllInputs()
   }
 
+  const closePopup = () => {
+    setOpenPopup(PopupType.NONE)
+    openPopupRef.current = PopupType.NONE
+  }
+
   return (
     <div>
       {/* Invisível. Usado para importar .jiff de automatos */}
@@ -1814,12 +1842,12 @@ const Canvas: React.FC = () => {
       {openPopup === PopupType.CREATE_TRANSITION
         ?
         <CreateTransitionPopup 
-          onClose={() => setOpenPopup(PopupType.NONE)}
+          onClose={closePopup}
           popupInput={popupInput}
         />
         : openPopup === PopupType.RENAME_STATE &&
         <RenameStatePopup 
-          onClose={() => setOpenPopup(PopupType.NONE)}
+          onClose={closePopup}
           popupInput={popupInput}
         />
       }
