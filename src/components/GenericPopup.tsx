@@ -34,7 +34,7 @@ const GenericPopup: React.FC<GenericPopupProps> = ({
           </div>
         </div>
         <div id='generic-popup-outside-div'
-          onClick={onClose}
+          // onClick={onClose}
         />
       </div>
     );

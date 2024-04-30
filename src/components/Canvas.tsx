@@ -7,6 +7,7 @@ import AutomataInput from "./AutomataInput";
 import CreateTransitionPopup from "./popups/CreateTransitionPopup";
 import RenameStatePopup from "./popups/RenameStatePopup";
 import CreateNotePopup from "./popups/CreateNotePopup";
+import SaveAutomataFilePopup from "./popups/SaveAutomataFilePopup";
 
 // Google Material Icons
 import NextIcon from "../symbols/next_icon";
@@ -1688,16 +1689,26 @@ const Canvas: React.FC = () => {
   };
   
   const clickSaveFile = () => {
-    // Data to save
-    const dataToSave = createXMLData();
+    // // Data to save
+    // const dataToSave = createXMLData();
     
-    const userInputFileName = prompt("Digite o nome do arquivo:", "myAutomaton.jff");
-    const fileName = userInputFileName ?
-        (userInputFileName.endsWith(".jff") ? userInputFileName : userInputFileName + ".jff") :
-        "myAutomaton.jff";  // Default file name if the user presses cancel or inputs nothing
+    // const userInputFileName = prompt("Digite o nome do arquivo:", "myAutomaton.jff");
+    // const fileName = userInputFileName ?
+    //     (userInputFileName.endsWith(".jff") ? userInputFileName : userInputFileName + ".jff") :
+    //     "myAutomaton.jff";  // Default file name if the user presses cancel or inputs nothing
   
-    // Call the save function
-    saveDataToFile(dataToSave, fileName);
+    // // Call the save function
+    // saveDataToFile(dataToSave, fileName);
+
+    setOpenPopup(PopupType.SAVE_FILE)
+    openPopupRef.current = PopupType.SAVE_FILE
+
+    const dataToSave = createXMLData();
+    const onSubmit = (fileName: string) => {
+      saveDataToFile(dataToSave, fileName);
+    }
+    setPopupInput({onSubmit})
+
   };
 
   const clickRegexToDFA = () => {
@@ -1861,6 +1872,12 @@ const Canvas: React.FC = () => {
         : openPopup === PopupType.CREATE_NOTE
         ?
         <CreateNotePopup 
+          onClose={closePopup}
+          popupInput={popupInput}
+        />
+        : openPopup === PopupType.SAVE_FILE
+        ?
+        <SaveAutomataFilePopup 
           onClose={closePopup}
           popupInput={popupInput}
         />
