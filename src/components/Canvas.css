@@ -491,7 +491,7 @@ display: none;
     justify-content: center;
     align-items: center;
 
-    /* background-color: #00000088; */
+    background-color: #00000050;
 }
 
 #generic-popup-outside-div{
@@ -577,14 +577,14 @@ display: none;
     min-height: 35px;
     height: min-content;
     width: 100px;
-    background-color: var(--popup-button-bg);
+    background-color: var(--selected-tool);
     font-size: 18px;
     margin: 0px;
     /* color: var(--tool-icon); */
 }
 
 .canvas-button.generic-popup-button:hover{
-    background-color: var(--popup-button-bg-hover);
+    background-color: var(--selected-tool-hover);
 }
 
 .generic-popup-input:focus{
@@ -595,6 +595,8 @@ display: none;
 
 .transition-input.generic-popup-input{
     width: 29px;
+    padding-left: 0px;
+    padding-right: 0px;
 }
 
 .generic-popup-input{
@@ -605,8 +607,8 @@ display: none;
     border: 0px solid;
     background-color: var(--popup-button-bg);
     font-size: 18px;
-    /* padding-left: 10px;
-    padding-right: 10px; */
+    padding-left: 10px;
+    padding-right: 10px;
     box-sizing: border-box;
     text-align:center
 }
