@@ -269,7 +269,7 @@ export class Automata {
     this.pushSnapshotToUndo();
     this.redoStack = [];
     
-    const transitionExists = this.transitions.find((t) => t.from === from && t.to === to);
+    const transitionExists = this.transitions.find((t) => t.from.id === from.id && t.to.id === to.id);
     if (transitionExists) {
       labels.forEach(label => {
         if (!transitionExists.label.includes(label)) {
