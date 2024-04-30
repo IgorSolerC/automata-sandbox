@@ -516,6 +516,7 @@ display: none;
     justify-content: space-between;
     align-items: center;
     flex-direction: row;
+    border-bottom: 1px solid var(--popup-button-bg);
 }
 
 #generic-popup-chindren-div{
@@ -533,7 +534,9 @@ display: none;
 
 #generic-popup-title{
     font-size: 18px;
-    margin-left: 40px;
+    position: relative;
+    left: 50%;
+    transform: translateX(-50%);
 }
 
 .generic-popup-close-button > svg{
