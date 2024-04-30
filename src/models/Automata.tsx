@@ -83,7 +83,7 @@ export class Automata {
   }
 
   undo(){
-    if(this.undoStack.length > 1){
+    if(this.undoStack.length >= 1){
       this.pushSnapshotToUndo();
       const currentSnapshot = this.undoStack.pop()!;
       this.redoStack.push(currentSnapshot);
@@ -145,6 +145,7 @@ export class Automata {
 
   /* Final states */
   toggleFinal(states: State[]) {
+    this.pushSnapshotToUndo();
     states.forEach((state) => {
       state.isFinal = !state.isFinal;
     });
@@ -154,7 +155,6 @@ export class Automata {
   }
   
   setFinalStates(finalStates: State[]) {
-    this.pushSnapshotToUndo();
     this.redoStack = [];
     this.finalStates = finalStates;
   }
@@ -407,6 +407,9 @@ export class Automata {
 
   /* Minimização de automatos - Algoritmo de Hopcroft*/
   minimizeDFA(): Automata {
+    console.log("OldS", this.states)
+    console.log("OldT", this.transitions)
+    
     const partition = new Map<string, State[]>();
     partition.set('final', this.finalStates);
     partition.set('non-final', this.states.filter(s => !this.finalStates.includes(s)));
@@ -421,6 +424,9 @@ export class Automata {
     
     var result = this.buildMinimizedDFA(partitions);
     
+    console.log("NewS", result.states)
+    console.log("NewT", result.transitions)
+
     this.transitions = [];
     for (const transition of result.transitions)
       this.addTransition(transition.from, transition.to, transition.label, transition.color, transition.textColor);
