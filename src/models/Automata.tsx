@@ -391,6 +391,7 @@ export class Automata {
       estado_atual = nextState!;
     }
 
+    estado_atual = this.getStates().find(s => s.id === estado_atual.id)!
     if (estado_atual.isFinal) {
       return {
         result: AutomataInputResultsEnum.ACCEPTED,
