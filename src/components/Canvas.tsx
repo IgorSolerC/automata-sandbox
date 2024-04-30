@@ -5,6 +5,7 @@ import "./Canvas.css";
 import Toolbox from "./ToolBox"; 
 import AutomataInput from "./AutomataInput";
 import CreateTransitionPopup from "./popups/CreateTransitionPopup";
+import RenameStatePopup from "./popups/RenameStatePopup";
 
 // Google Material Icons
 import NextIcon from "../symbols/next_icon";
@@ -456,11 +457,16 @@ const Canvas: React.FC = () => {
               alert("Selecione um estado por vez para alterar seu nome.")
             }
             else{
-              let label = prompt("Digite o novo nome: ");
-              if(label)
-                selectedStates[0].label = label!;
-              else
-                alert("O nome não pode estar vazio.");
+              // let label = prompt("Digite o novo nome: ");
+              // if(label)
+              //   selectedStates[0].label = label!;
+              // else
+              //   alert("O nome não pode estar vazio.");
+              setOpenPopup(PopupType.RENAME_STATE)
+
+              let selectedStatesAux = selectedStates
+              const onSubmit = (newLabel: string) => selectedStatesAux[0].label = newLabel!
+              setPopupInput({onSubmit, previousName:selectedStatesAux[0].label})
             }
             hideContextMenu();
           });
@@ -1805,8 +1811,14 @@ const Canvas: React.FC = () => {
         onChange={handleFileSelection}
       />
 
-      {openPopup === PopupType.CREATE_TRANSITION &&
+      {openPopup === PopupType.CREATE_TRANSITION
+        ?
         <CreateTransitionPopup 
+          onClose={() => setOpenPopup(PopupType.NONE)}
+          popupInput={popupInput}
+        />
+        : openPopup === PopupType.RENAME_STATE &&
+        <RenameStatePopup 
           onClose={() => setOpenPopup(PopupType.NONE)}
           popupInput={popupInput}
         />

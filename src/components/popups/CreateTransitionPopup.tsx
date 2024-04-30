@@ -3,8 +3,6 @@ import React, { useRef, useEffect, useState } from "react";
 
 // Components
 import GenericPopup from "../GenericPopup"; 
-import "./CreateTransitionPopup.css"; 
-
 
 interface CreateTransitionPopupProps {
     popupInput: {
