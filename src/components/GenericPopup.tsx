@@ -4,14 +4,6 @@ import ErrorIcon from "../symbols/error_icon";
 // Libaries
 import React, { useRef, useEffect, useState } from "react";
 
-// Enums
-import { CanvasTools } from "../enums/CanvasToolsEnum";
-
-// Contexts
-import { ToolboxProvider, useToolboxContext } from "../contexts/ToolboxContext";
-import NextIcon from "../symbols/next_icon";
-
-
 
 interface GenericPopupProps {
   title: string

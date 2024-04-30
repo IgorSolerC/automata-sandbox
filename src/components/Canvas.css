@@ -616,3 +616,13 @@ display: none;
     flex-wrap: wrap;
     gap: 5px
 }
+
+.blink {
+    animation: blinker 0.4s linear infinite;
+  }
+  
+  @keyframes blinker {
+    50% {
+      opacity: 50%;
+    }
+  }
