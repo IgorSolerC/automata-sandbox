@@ -417,8 +417,6 @@ const Canvas: React.FC = () => {
 
   function hasOpenPopup(): boolean{
     let result = (openPopupRef.current !== PopupType.NONE)
-    console.log('Has open popup:')
-    console.log(result)
     return result
   }
 
@@ -763,18 +761,28 @@ const Canvas: React.FC = () => {
                 // Label
                 let correctedAngle = angle
                 if(end.x < start.x && !reverseExists){
+                // if(end.x < start.x){
+                  correctedAngle += Math.PI
+                }
+
+                if (reverseExists && end.x < start.x){
                   correctedAngle += Math.PI
                 }
                 
                 p.push();
                 p.strokeWeight(0.1)
                 p.translate(middleX, middleY);
-                p.rotate(correctedAngle + (reverseExists ? Math.PI : 0));
+                // p.rotate(correctedAngle + (reverseExists ? Math.PI : 0));
+                p.rotate(correctedAngle);
                 p.textAlign(p.CENTER, p.CENTER);
                 p.stroke(transition.textColor);
                 p.fill(transition.textColor);
                 p.textSize(20);
-                p.text(transition.label, 0, -15); // Adjust label offset
+                if (reverseExists){
+                  p.text(transition.label, 0, curveOffsetY > 0 ? 70 : -70); // Adjust label offset
+                } else {
+                  p.text(transition.label, 0, -15); // Adjust label offset
+                }
                 p.pop();
               }
             }
