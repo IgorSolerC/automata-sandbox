@@ -345,7 +345,25 @@ export class Automata {
     }
   }
 
+  updateTransitionsReferences() : void{
+    let allStates = this.getStates();
+    this.transitions.forEach(t => {
+      let to = allStates.find(s => s.id === t.to.id)!;
+      let from = allStates.find(s => s.id === t.from.id)!
+      t.to = to;
+      t.from = from;
+    })
+  }
+  
+
   validate(input: string): { result: number; message: string } {
+
+    // console.log('VALIDATE')
+    // console.log(this.transitions)
+    // console.log(this.states)
+    // console.log(this.initialState)
+
+    this.updateTransitionsReferences();
     const characters = input.split("");
     const temCharForaDoAlfabeto = characters.some(
       (char) =>
@@ -376,7 +394,7 @@ export class Automata {
     if (
       this.transitions.some(
         (t, index, arr) =>
-          arr.filter((x) => x.from === t.from && x.label === t.label).length > 1
+          arr.filter((x) => x.from.id === t.from.id && x.label === t.label).length > 1
       )
     ) {
       return { 
@@ -401,6 +419,7 @@ export class Automata {
       estado_atual = nextState!;
     }
 
+    // let estado_atual_antigo = JSON.stringify(estado_atual);
     estado_atual = this.getStates().find(s => s.id === estado_atual.id)!
 
     if (estado_atual.isFinal) {
@@ -492,7 +511,7 @@ export class Automata {
         .filter(t => t.from === state)
         .map(t => {
           // Get the partition index for the state where the transition goes to.
-          const partitionIndex = otherPartitions.findIndex(p => p.includes(t.to));
+          const partitionIndex = otherPartitions.findIndex(p => p.some(s => s.id === t.to.id));
           // Use the label and the partition index as the key.
           return `${t.label.join('')}:${partitionIndex}`;
         })
@@ -525,9 +544,12 @@ export class Automata {
     partitions.forEach((partition, index) => {
       partition.forEach(state => {
         this.transitions.forEach(transition => {
-          if (transition.from === state) {
-            const newStateTo = newStates[partitions.findIndex(p => p.includes(transition.to))];
-            minimizedAutomata.transitions.push(new Transition(newStates[index], newStateTo, transition.label, transition.height, transition.color, transition.textColor));
+          if (transition.from.id === state.id) {
+            const targetIndex = partitions.findIndex(p => p.some(s => s.id === transition.to.id));
+            if (targetIndex !== -1) {
+              const newStateTo = newStates[targetIndex];
+              minimizedAutomata.transitions.push(new Transition(newStates[index], newStateTo, transition.label, transition.height, transition.color, transition.textColor));
+            }
           }
         });
       });

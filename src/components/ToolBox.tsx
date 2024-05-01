@@ -13,6 +13,7 @@ import LoadFileIcon from "../symbols/load_file_icon";
 import RegexIcon from "../symbols/regex_icon";
 import NewNoteIcon from "../symbols/new_note_icon";
 import MinimizeAutomataIcon from "../symbols/minimize_automata_icon";
+import NewAutomataIcon from "../symbols/new_automata_icon";
 
 // Libaries
 import React, { useRef, useEffect, useState } from "react";
@@ -37,11 +38,12 @@ interface ToolboxProps {
     Redo: () => void;
     MinimizeDFA: () => void;
     RegexToDFA: () => void;
+    ClearAutomata: () => void;
 }
 
-const Toolbox: React.FC<ToolboxProps> = ({ currentCanvasToolRef, handleImportFile, handleSaveFile, Undo, Redo, MinimizeDFA, RegexToDFA }) => {
+const Toolbox: React.FC<ToolboxProps> = ({ currentCanvasToolRef, handleImportFile, handleSaveFile, Undo, Redo, MinimizeDFA, RegexToDFA, ClearAutomata}) => {
     const { selectedToolState, setSelectedToolState } = useToolboxContext();
-    const [isExpanded, setIsExpanded] = useState(false)
+    const [isExpanded, setIsExpanded] = useState(true)
 
 
     const handleToolButtonClick = (tool: number) => {
@@ -64,16 +66,17 @@ const Toolbox: React.FC<ToolboxProps> = ({ currentCanvasToolRef, handleImportFil
             <CursorIcon />
           </button>
           {isExpanded &&
-            <button id="save" title="Save File"
+            <button id="clear-automata" title="New Automata"
               className={
                 "canvas-button navbar-button extra-option "
-                // + (selectedToolState === CanvasTools.POINTER ? "selected" : "")
+                // + (selectedToolState === CanvasTools.NOTE ? "selected" : "")
               }
-              onClick={handleSaveFile}
+              onClick={ClearAutomata}
             >
-              <SaveIcon/>
+              <NewAutomataIcon/>
             </button>
           }
+          
         </div>
 
         <div
@@ -89,14 +92,14 @@ const Toolbox: React.FC<ToolboxProps> = ({ currentCanvasToolRef, handleImportFil
             <TransitionIcon />
           </button>
           {isExpanded &&
-            <button id="load" title="Load File"
+            <button id="save" title="Save File"
               className={
                 "canvas-button navbar-button extra-option "
                 // + (selectedToolState === CanvasTools.POINTER ? "selected" : "")
               }
-              onClick={handleImportFile}
+              onClick={handleSaveFile}
             >
-              <LoadFileIcon/>
+              <SaveIcon/>
             </button>
           }
         </div>
@@ -114,14 +117,14 @@ const Toolbox: React.FC<ToolboxProps> = ({ currentCanvasToolRef, handleImportFil
             <AddCircleIcon />
           </button>
           {isExpanded &&
-            <button id="add-note" title="Create Note"
+            <button id="load" title="Load File"
               className={
                 "canvas-button navbar-button extra-option "
-                + (selectedToolState === CanvasTools.NOTE ? "selected" : "")
+                // + (selectedToolState === CanvasTools.POINTER ? "selected" : "")
               }
-              onClick={() => handleToolButtonClick(CanvasTools.NOTE)}
+              onClick={handleImportFile}
             >
-              <NewNoteIcon/>
+              <LoadFileIcon/>
             </button>
           }
         </div>
@@ -150,6 +153,31 @@ const Toolbox: React.FC<ToolboxProps> = ({ currentCanvasToolRef, handleImportFil
             </button>
           }
         </div>
+        
+        <div
+          className='navbar-row'
+        >
+          <button id="add-note" title="Create Note"
+            className={
+              "canvas-button navbar-button "
+              + (selectedToolState === CanvasTools.NOTE ? "selected" : "")
+            }
+            onClick={() => handleToolButtonClick(CanvasTools.NOTE)}
+          >
+            <NewNoteIcon/>
+          </button>
+          {isExpanded &&
+            <button id="minimize-automara" title="Minimize Automata"
+              className={
+                "canvas-button navbar-button extra-option "
+                // + (selectedToolState === CanvasTools.POINTER ? "selected" : "")
+              }
+              onClick={MinimizeDFA}
+            >
+              <MinimizeAutomataIcon/>
+            </button>
+          }
+        </div>
 
         <div
           className='navbar-row'
@@ -163,17 +191,7 @@ const Toolbox: React.FC<ToolboxProps> = ({ currentCanvasToolRef, handleImportFil
           >
             <MoveIcon/>
           </button>
-          {isExpanded &&
-            <button id="minimize-automara" title="Minimize Automata"
-              className={
-                "canvas-button navbar-button extra-option "
-                // + (selectedToolState === CanvasTools.POINTER ? "selected" : "")
-              }
-              onClick={MinimizeDFA}
-            >
-              <MinimizeAutomataIcon/>
-            </button>
-          }
+          
         </div>
 
         <button id="undo" title="Undo"
