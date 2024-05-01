@@ -66,7 +66,7 @@ const Canvas: React.FC = () => {
   let contextMenuIsOpen: boolean = false;
 
   // Zoom / Movement
-  var cameraZoom: number = 1
+  var cameraZoomRef = useRef(1)
   var globalTranslateX = 0
   var globalTranslateY = 0
 
@@ -118,6 +118,7 @@ const Canvas: React.FC = () => {
 
   let selectedStateMouseOffset: any; // {'q1': {'x': 10, 'y': -10}, 'q2': {'x': 10, 'y': -10}}
   let selectedNoteMouseOffset: any;
+  
   // Selection box variables
   let selectionStarterY: number = 0; 
   let selectionStarterX: number = 0;
@@ -132,17 +133,17 @@ const Canvas: React.FC = () => {
   let targetTranslateX: number;
   let targetTranslateY: number;
 
-  let currentZoom = cameraZoom; // Initialize with current zoom
+  let currentZoom = cameraZoomRef.current; // Initialize with current zoom
   let currentTranslateX = globalTranslateX; // Initialize with current translation X
   let currentTranslateY = globalTranslateY; // Initialize with current translation Y
 
   let undoInterval: any = null;
 
   const getMouseXScaled = (p: p5) => {
-    return (p.mouseX / cameraZoom)
+    return (p.mouseX / cameraZoomRef.current)
   }
   const getMouseYScaled = (p: p5) => {
-    return (p.mouseY / cameraZoom)
+    return (p.mouseY / cameraZoomRef.current)
   }
 
   const getMouseX = (p: p5) => {
@@ -152,10 +153,10 @@ const Canvas: React.FC = () => {
     return getMouseYScaled(p) - globalTranslateY
   }
   const getPreviousMouseX = (p: p5) => {
-    return (p.pmouseX / cameraZoom) - globalTranslateX
+    return (p.pmouseX / cameraZoomRef.current) - globalTranslateX
   }
   const getPreviousMouseY = (p: p5) => {
-    return (p.pmouseY / cameraZoom) - globalTranslateY
+    return (p.pmouseY / cameraZoomRef.current) - globalTranslateY
   }
 
   function roundNumber(num: number, factor: number){
@@ -500,7 +501,7 @@ const Canvas: React.FC = () => {
         p.draw = () => {
           p.background(CanvasColors.BACKGROUND);
           p.push();
-          p.scale(cameraZoom)
+          p.scale(cameraZoomRef.current)
           p.strokeCap(p.PROJECT);
           p.translate(globalTranslateX, globalTranslateY)
           
@@ -520,12 +521,12 @@ const Canvas: React.FC = () => {
             currentTranslateY = p.lerp(currentTranslateY, targetTranslateY, lerpFactor);
         
             // Update actual values
-            cameraZoom = currentZoom;
+            cameraZoomRef.current = currentZoom;
             globalTranslateX = currentTranslateX;
             globalTranslateY = currentTranslateY;
         
             // Check if close to target values
-            if (p.abs(cameraZoom - targetZoom) < 0.01 && 
+            if (p.abs(cameraZoomRef.current - targetZoom) < 0.01 && 
                 p.abs(globalTranslateX - targetTranslateX) < 0.01 && 
                 p.abs(globalTranslateY - targetTranslateY) < 0.01) {
               transitioning = false; // Stop transitioning
@@ -957,11 +958,11 @@ const Canvas: React.FC = () => {
         function adjustZoomAndPan(targetX: number, targetY: number) {
           const newZoom = 1;
           
-          cameraZoom = newZoom;
+          cameraZoomRef.current = newZoom;
         
           // Calculate the necessary translation to center on the target
-          const canvasCenterX = (p.width / cameraZoom) / 2;
-          const canvasCenterY = (p.height / cameraZoom) / 2;
+          const canvasCenterX = (p.width / cameraZoomRef.current) / 2;
+          const canvasCenterY = (p.height / cameraZoomRef.current) / 2;
         
 
           //Não ta centralizando corretamente. É próximo, então acredito que não está considerando
@@ -975,14 +976,14 @@ const Canvas: React.FC = () => {
           if(hasOpenPopup()) return
 
           transitioning = false;
-          var oldZoom = cameraZoom;
-          cameraZoom -= (event.deltaY / 1000) //1000
-          if (cameraZoom < 0.2)
-            cameraZoom = 0.2
-          else if(cameraZoom > 4)
-            cameraZoom = 4
+          var oldZoom = cameraZoomRef.current;
+          cameraZoomRef.current -= (event.deltaY / 1000) //1000
+          if (cameraZoomRef.current < 0.2)
+            cameraZoomRef.current = 0.2
+          else if(cameraZoomRef.current > 4)
+            cameraZoomRef.current = 4
           
-          var newZoom = cameraZoom;
+          var newZoom = cameraZoomRef.current;
 
           // ☠️☠️☠️☠️☠️☠️☠️☠️
           // globalTranslateX = (getMouseXScaled(p) - (p.mouseX - globalTranslateX));
@@ -1436,7 +1437,6 @@ const Canvas: React.FC = () => {
   }, []);
 
   function calculateSteps(inputId: number) {
-    currentCanvasActionRef.current = CanvasActions.SIMULATING;
     var inputText = (document.getElementById("automata-input-id-"+inputId) as HTMLInputElement).value;
     let newSimulationStates = [];
     let newSimulationTransitions = [];
