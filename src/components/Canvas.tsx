@@ -532,6 +532,21 @@ const Canvas: React.FC = () => {
             }
           }
 
+          const lerpSpeed = 0.05; // Control speed of the interpolation
+          automataRef.current.getStates().forEach(state => {
+            if (state.isAnimating) {
+              state.x = p.lerp(state.x, state.targetX, lerpSpeed);
+              state.y = p.lerp(state.y, state.targetY, lerpSpeed);
+              
+              // Check if the state is close enough to the target to stop isAnimating
+              if (p.dist(state.x, state.y, state.targetX, state.targetY) < 1) {
+                state.x = state.targetX;
+                state.y = state.targetY;
+                state.isAnimating = false; // Stop isAnimating
+              }
+            }
+          });
+
           // #region Renderiza notas
           isCursorOverNoteResizeHandle = false; // Flag to track cursor over the resize handle
           automataRef.current.getNotes().forEach((note: Note, index: number) => {
@@ -1083,6 +1098,7 @@ const Canvas: React.FC = () => {
             if(p.mouseButton === p.CENTER){
               console.log(automataRef.current.states)
               console.log(automataRef.current.transitions)
+              console.log(automataRef.current.notes)
             }
 
             //Se o click não foi no próprio contextMenu, ocultar o menu.
@@ -1859,6 +1875,120 @@ const Canvas: React.FC = () => {
     openPopupRef.current = PopupType.NONE
   }
 
+  const MinimizeAutomata = () => {
+    const partition = new Map<string, State[]>();
+    let partitionList: any = [];
+    partition.set('final', automataRef.current.finalStates);
+    partition.set('non-final', automataRef.current.states.filter(s => !automataRef.current.finalStates.includes(s)));
+  
+    let partitions = [automataRef.current.finalStates, automataRef.current.states.filter(s => !automataRef.current.containsId(s, automataRef.current.finalStates))];
+    let oldPartitions = [];
+  
+    partitionList.push(partitions);
+    while (partitions.length !== oldPartitions.length) {
+      oldPartitions = partitions;
+      partitions = automataRef.current.refinePartitions(partitions);
+      partitionList.push(partitions);
+    }
+    console.log("PartitionList: ", partitionList)
+  
+    let tempTransitions = JSON.parse(JSON.stringify(automataRef.current.transitions));
+    let tempStates = JSON.parse(JSON.stringify(automataRef.current.states));
+    
+    let originalCoordinates: any[] = [];
+    automataRef.current.states.forEach((state, index) => {
+      originalCoordinates[index] = { x: state.x, y: state.y };
+    });
+
+    let desiredIndex = 0;
+    automataRef.current.transitions = [];
+    // automataRef.current.states = [];
+  
+    let intervalId = setInterval(() => {
+      if (desiredIndex < partitionList.length) {
+        displayPartition(partitionList[desiredIndex]);
+        desiredIndex++;
+      } else {
+        clearInterval(intervalId); // Stop the interval when all partitions have been displayed
+        automataRef.current.transitions = tempTransitions;
+        // automataRef.current.states = tempStates;
+        automataRef.current.states.forEach((state, index) => {
+          // state.x = originalCoordinates[index].x;
+          // state.y = originalCoordinates[index].y;
+          state.targetX = originalCoordinates[index].x;
+          state.targetY = originalCoordinates[index].y;
+          state.isAnimating = true;
+        });        
+      }
+    }, 2000);
+  }
+
+  function displayPartition(partition: any[]) {
+    automataRef.current.notes = [];
+    partition.forEach((states, counter) => {
+      let counterY = 0;
+      states.forEach((state: State) => {
+        state.targetX = 300 * counter;
+        state.targetY = counterY * 100;
+        state.isAnimating = true;
+        counterY++;
+      });
+    });
+  }
+
+
+  // const MinimizeAutomata = () => {
+  //   const partition = new Map<string, State[]>();
+  //   let partitionList = [];
+  //   partition.set('final', automataRef.current.finalStates);
+  //   partition.set('non-final', automataRef.current.states.filter(s => !automataRef.current.finalStates.includes(s)));
+
+  //   let partitions = [automataRef.current.finalStates, automataRef.current.states.filter(s => !automataRef.current.containsId(s, automataRef.current.finalStates))];
+  //   let oldPartitions = [];
+
+  //   partitionList.push(partitions);
+  //   while (partitions.length !== oldPartitions.length) {
+  //     oldPartitions = partitions;
+  //     partitions = automataRef.current.refinePartitions(partitions);
+  //     partitionList.push(partitions);
+  //   }
+  //   console.log("PartitionList: ", partitionList)
+  
+  //   let tempTransitions = automataRef.current.transitions;
+  //   let tempStates = automataRef.current.states;
+    
+  //   let desiredIndex = 1;
+  //   automataRef.current.transitions = [];
+  //   automataRef.current.states = [];
+  //   partitionList.forEach((partition, index ) => {
+  //     let counter = 0;
+  //     if(index === 0) {
+  //       automataRef.current.addNote(-60, -80, "Estados Finais", 140, 30, ["Estados Finais"], 16, CanvasColors.NOTES, CanvasColors.NOTES_SECONDARY);
+  //       automataRef.current.addNote(300 + -81, -80, "Estados Não Finais", 170, 30, ["Estados Não Finais"], 16, CanvasColors.NOTES, CanvasColors.NOTES_SECONDARY);
+  //     } else {
+  //       automataRef.current.notes = [];
+  //     }
+  //     partition.forEach(teste => {
+  //       let counterY = 0;
+  //       //Se é a primeira partição, ela é separada em finais e não finais
+
+  //       teste.forEach(state => {
+  //         if(desiredIndex === index){
+  //           state.x = 300 * counter;
+  //           state.y = counterY * 100;
+  //           counterY++;
+  //           automataRef.current.addStateObject(state)
+  //         }
+  //       });
+  //       counter++;
+  //     })
+  //   });
+  //   // automataRef.current.minimizeDFA();
+
+  //   // automataRef.current.transitions = tempTransitions;
+  //   // automataRef.current.states = tempStates;
+  // }
+
   return (
     <div>
       {/* Invisível. Usado para importar .jff de automatos */}
@@ -1904,7 +2034,7 @@ const Canvas: React.FC = () => {
           handleSaveFile={clickSaveFile}
           Undo={Undo}
           Redo={Redo}
-          MinimizeDFA={() => automataRef.current.minimizeDFA()}
+          MinimizeDFA={MinimizeAutomata}
           RegexToDFA={clickRegexToDFA}
         />
 

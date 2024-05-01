@@ -225,12 +225,22 @@ export class Automata {
       secondaryColor,
       isInitial: isInitial,
       isFinal: isFinal,
+      isAnimating: false,
+      targetX: x,
+      targetY: y,
     }; // Mudar pra false
 
     if (isInitial) this.setInitialState(newState);
     if (isFinal) this.finalStates.push(newState);
 
     this.states.push(newState);
+  }
+
+  addStateObject(state: State): void {
+    this.pushSnapshotToUndo();
+    this.redoStack = [];
+    
+    this.states.push(state);
   }
 
   deleteState(state: State, saveSnapshot: boolean = true): void {
@@ -416,8 +426,8 @@ export class Automata {
 
   /* Minimização de automatos - Algoritmo de Hopcroft*/
   minimizeDFA(): Automata {
-    console.log("OldS", this.states)
-    console.log("OldT", this.transitions)
+    // console.log("OldS", this.states)
+    // console.log("OldT", this.transitions)
     
     const partition = new Map<string, State[]>();
     partition.set('final', this.finalStates);
@@ -433,8 +443,8 @@ export class Automata {
     
     var result = this.buildMinimizedDFA(partitions);
     
-    console.log("NewS", result.states)
-    console.log("NewT", result.transitions)
+    // console.log("NewS", result.states)
+    // console.log("NewT", result.transitions)
 
     this.transitions = [];
     for (const transition of result.transitions)
@@ -610,7 +620,10 @@ export class Automata {
         color: 'blue', 
         secondaryColor: 'lightblue', 
         isInitial: StateIdNFA === 1, 
-        isFinal: false 
+        isFinal: false,
+        isAnimating: false, 
+        targetX: 0,
+        targetY: 0
       };
     
       const end = { 
@@ -622,7 +635,10 @@ export class Automata {
         color: 'green', 
         secondaryColor: 'lightgreen', 
         isInitial: false, 
-        isFinal: true 
+        isFinal: true,
+        isAnimating: false, 
+        targetX: 0,
+        targetY: 0
       };
     
       automata.states.push(start, end);
@@ -645,7 +661,10 @@ export class Automata {
         color: 'blue',
         secondaryColor: 'lightblue',
         isInitial: true,
-        isFinal: false
+        isFinal: false,
+        isAnimating: false, 
+        targetX: 0,
+        targetY: 0
       };
     
       const end = {
@@ -657,7 +676,10 @@ export class Automata {
         color: 'green',
         secondaryColor: 'lightgreen',
         isInitial: false,
-        isFinal: true
+        isFinal: true,
+        isAnimating: false, 
+        targetX: 0,
+        targetY: 0
       };
     
       
@@ -698,7 +720,10 @@ export class Automata {
         color: 'blue',
         secondaryColor: 'lightblue',
         isInitial: true,
-        isFinal: false
+        isFinal: false,
+        isAnimating: false, 
+        targetX: 0,
+        targetY: 0
       };
     
       const newFinal = {
@@ -710,7 +735,10 @@ export class Automata {
         color: 'green',
         secondaryColor: 'lightgreen',
         isInitial: false,
-        isFinal: true
+        isFinal: true,
+        isAnimating: false, 
+        targetX: 0,
+        targetY: 0
       };
     
       let counter = 1
@@ -783,8 +811,7 @@ export class Automata {
     
 
     for (const symbol of postfixRegex) {
-    console.log(symbol)
-    switch (symbol) {
+      switch (symbol) {
       case '*': {
         const automata = automataStack.pop()!;
         automataStack.push(applyKleeneStar(automata));
@@ -812,17 +839,111 @@ export class Automata {
   return automataStack.length > 0 ? automataStack.pop()! : new Automata();
 }
 
+  epsilonClosure(state: State): Set<State> {
+    let closure = new Set<State>([state]);
+    let stack = [state];
+
+    while (stack.length > 0) {
+        let current = stack.pop();
+        this.transitions.forEach(t => {
+            if (t.from.id === current!.id && t.label.includes('λ')) { // Assuming 'λ' denotes epsilon
+                if (!closure.has(t.to)) {
+                    closure.add(t.to);
+                    stack.push(t.to);
+                }
+            }
+        });
+    }
+
+    return closure;
+  }
+
+  getAlphabet(): Set<string> {
+    let alphabet = new Set<string>();
+    this.transitions.forEach(transition => {
+        transition.label.forEach(label => {
+            if (label !== 'λ') { // Assuming 'λ' represents epsilon transitions
+                alphabet.add(label);
+            }
+        });
+    });
+    return alphabet;
+  }
+
+  stateSetToLabel(stateSet: Set<State>): string {
+    return Array.from(stateSet).map(state => state.id).sort().join(",");
+  }
+  
+  convertNFAToDFA() {
+    const dfaStates = new Map<string, State[]>();
+    const dfaTransitions: Transition[] = [];
+    const dfaFinalStates: State[] = [];
+    console.log(this.initialState);
+    const dfaStartState = this.epsilonClosure(this.initialState!);
+  
+    console.log(dfaStartState)
+    const startStateLabel = this.stateSetToLabel(dfaStartState);
+    const startState = {
+      id: startStateLabel, label: startStateLabel, x: 100, y: 100, diameter: 80, color: 'blue', secondaryColor: 'lightblue', isInitial: true, isFinal: Array.from(dfaStartState).some(s => s.isFinal), isAnimating: false, targetX: 0, targetY: 0
+    };
+    dfaStates.set(startStateLabel, Array.from(dfaStartState));
+  
+    const queue = [startState];
+    const processed = new Set();
+  
+    while (queue.length > 0) {
+      let currentState = queue.shift()!;
+      processed.add(currentState.label);
+  
+      this.getAlphabet().forEach(symbol => {
+        let nextStateSet = new Set<State>();
+  
+        dfaStates.get(currentState.label)!.forEach(state => {
+          this.transitions.filter(t => t.from.id === state.id && t.label.includes(symbol)).forEach(t => {
+            this.epsilonClosure(t.to).forEach(s => nextStateSet.add(s));
+          });
+        });
+  
+        const nextStateLabel = this.stateSetToLabel(nextStateSet);
+  
+        if (nextStateSet.size > 0) {
+          if (!dfaStates.has(nextStateLabel)) {
+            const newState = {
+              id: nextStateLabel, label: nextStateLabel, diameter: 80, x: 0, y: 0, color: 'light', secondaryColor: 'blue', isInitial: false, isFinal: Array.from(nextStateSet).some(s => s.isFinal), isAnimating: false, targetX: 0, targetY: 0 
+            };
+            dfaStates.set(nextStateLabel, Array.from(nextStateSet));
+            queue.push(newState);
+            if (newState.isFinal) {
+              dfaFinalStates.push(newState);
+            }
+          }
+          if (!processed.has(nextStateLabel)) {
+            dfaTransitions.push(new Transition(currentState, dfaStates.get(nextStateLabel)![0], [symbol], 50, 'black', 'white'));
+            processed.add(nextStateLabel);
+          }
+        }
+      });
+    }
+  
+    // Replace the current automaton states and transitions with the DFA ones
+    this.states = Array.from(dfaStates.values()).map(stateArray => stateArray[0]);
+    this.transitions = dfaTransitions;
+    this.finalStates = dfaFinalStates;
+  }
+
   convertRegexToDFA(regex: string) {
     StateIdNFA = 0;
     console.log(regex);
     const postfix = this.regexToPostfix(regex);
     console.log(postfix)
     const nfa = this.regexToNFA(postfix);
+    this.initialState = nfa.initialState;
     this.transitions = [];
     for (const transition of nfa.transitions)
       this.addTransition(transition.from, transition.to, transition.label, transition.color, transition.textColor);
     this.states = nfa.states;
-    this.initialState = nfa.initialState;
     this.finalStates = nfa.finalStates;
+
+    this.convertNFAToDFA();
   }
 }
