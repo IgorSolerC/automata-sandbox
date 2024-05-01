@@ -82,7 +82,7 @@ const Canvas: React.FC = () => {
   let clickedTransition: Transition | null;
   let clickedNote:  Note | null;
   // Enums
-  let currentCanvasAction: number = CanvasActions.NONE;
+  let currentCanvasActionRef = useRef(CanvasActions.NONE);
   // let currentCanvasToolRef.current: number = CanvasTools.POINTER
   const currentCanvasToolRef = useRef(CanvasTools.POINTER);
   
@@ -637,7 +637,7 @@ const Canvas: React.FC = () => {
             window.document.body.style.cursor = 'default';
           }
 
-          if(currentCanvasAction === CanvasActions.CREATING_TRANSITION && clickedState){
+          if(currentCanvasActionRef.current === CanvasActions.CREATING_TRANSITION && clickedState){
             p.stroke(CanvasColors.CLICKED_TRANSITION);
             p.fill(CanvasColors.CLICKED_TRANSITION);
             p.strokeWeight(arrowWeight);
@@ -645,25 +645,27 @@ const Canvas: React.FC = () => {
           }
 
           const allTransitions = automataRef.current.getTransitions();
-          allTransitions.forEach(
-            (transition) => {
-              transition.color = CanvasColors.DEFAULT_TRANSITION
-              transition.textColor = CanvasColors.DEFAULT_TRANSITION_TEXT
+          console.log(currentCanvasActionRef.current)
+          if(currentCanvasActionRef.current !== CanvasActions.ANIMATING){
+            allTransitions.forEach(
+              (transition) => {
+                transition.color = CanvasColors.DEFAULT_TRANSITION
+                transition.textColor = CanvasColors.DEFAULT_TRANSITION_TEXT
+              }
+            );
+            // Colore todos os estados selecionados como CLICKED color
+            selectedTransitions.forEach(
+              (transition) => {
+                transition.color = CanvasColors.CLICKED_TRANSITION
+                transition.textColor = CanvasColors.CLICKED_TRANSITION_TEXT
+              }
+            );
+  
+            if(simulationIndexRef && simulationIndexRef.current! > 0 && simulationIndexRef.current! < simulationStatesRef.current.length){
+              simulationTransitionsRef.current[simulationIndexRef.current!]!.color = CanvasColors.SIMULATION_STEP_TRANSITION;
+              simulationTransitionsRef.current[simulationIndexRef.current!]!.textColor = CanvasColors.SIMULATION_STEP_TRANSITION_TEXT;
             }
-          );
-          // Colore todos os estados selecionados como CLICKED color
-          selectedTransitions.forEach(
-            (transition) => {
-              transition.color = CanvasColors.CLICKED_TRANSITION
-              transition.textColor = CanvasColors.CLICKED_TRANSITION_TEXT
-            }
-          );
-
-          if(simulationIndexRef && simulationIndexRef.current! > 0 && simulationIndexRef.current! < simulationStatesRef.current.length){
-            simulationTransitionsRef.current[simulationIndexRef.current!]!.color = CanvasColors.SIMULATION_STEP_TRANSITION;
-            simulationTransitionsRef.current[simulationIndexRef.current!]!.textColor = CanvasColors.SIMULATION_STEP_TRANSITION_TEXT;
           }
-
 
           function getControlPointOffset(start: State, end: State, distance: number) {
             const angle = Math.atan2(end.y - start.y, end.x - start.x) + Math.PI / 2;
@@ -885,7 +887,7 @@ const Canvas: React.FC = () => {
           // #endregion
 
           // Desenha caixa de seleção
-          if (currentCanvasAction === CanvasActions.CREATING_SELECTION) {
+          if (currentCanvasActionRef.current === CanvasActions.CREATING_SELECTION) {
             p.push(); // Start a new drawing state
             p.fill(CanvasColors.SELECTION);
             p.stroke(CanvasColors.SELECTION_BORDER);
@@ -1007,13 +1009,13 @@ const Canvas: React.FC = () => {
           if(!hasOpenPopup()){
             const allStates = automataRef.current.getStates();
 
-            if (currentCanvasAction === CanvasActions.MOVING_STATE) {
+            if (currentCanvasActionRef.current === CanvasActions.MOVING_STATE) {
               // selectedStates.forEach((auxState: automataRef.current.State) => { // <--- deu errado o type
               selectedStates.forEach((state: State) => {
                 state.x = roundNumber(getMouseX(p), 20) + roundNumber(selectedStateMouseOffset[state.id]["x"], 20);
                 state.y = roundNumber(getMouseY(p), 20) + roundNumber(selectedStateMouseOffset[state.id]["y"], 20);
               });
-            } else if (currentCanvasAction === CanvasActions.CREATING_SELECTION) {
+            } else if (currentCanvasActionRef.current === CanvasActions.CREATING_SELECTION) {
               // --- Update valor da seleção ---
               // Isso é necessario para evitar tamanhos negativos ao criar
               // seleções onde o ponto de inicio é maior que o de fim
@@ -1039,12 +1041,12 @@ const Canvas: React.FC = () => {
                 );
               });
 
-            } else if (currentCanvasAction === CanvasActions.MOVING_CANVAS){
+            } else if (currentCanvasActionRef.current === CanvasActions.MOVING_CANVAS){
               const deltaX = getMouseX(p) - getPreviousMouseX(p);
               const deltaY = getMouseY(p) - getPreviousMouseY(p);
               globalTranslateX += deltaX;
               globalTranslateY += deltaY;
-            } else if (currentCanvasAction === CanvasActions.RESIZING_TRANSITION){
+            } else if (currentCanvasActionRef.current === CanvasActions.RESIZING_TRANSITION){
               if (clickedTransition){
                 let dx = (getMouseX(p) - getPreviousMouseX(p)) * 2
                 let dy = (getMouseY(p) - getPreviousMouseY(p)) * 2
@@ -1054,10 +1056,10 @@ const Canvas: React.FC = () => {
                 //clickedTransition.height += final
                 clickedTransition.height = clickedTransition.height;
               }
-            } else if (currentCanvasAction === CanvasActions.MOVING_NOTE){
+            } else if (currentCanvasActionRef.current === CanvasActions.MOVING_NOTE){
               clickedNote!.x = getMouseX(p) + selectedNoteMouseOffset[clickedNote!.id]["x"];
               clickedNote!.y = getMouseY(p) + selectedNoteMouseOffset[clickedNote!.id]["y"];
-            } else if (currentCanvasAction ===  CanvasActions.RESIZING_NOTE){
+            } else if (currentCanvasActionRef.current ===  CanvasActions.RESIZING_NOTE){
               const MIN_NOTE_WIDTH = 50; 
               const MIN_NOTE_HEIGHT = 50;
               const MAX_NOTE_WIDTH = 400;
@@ -1158,7 +1160,7 @@ const Canvas: React.FC = () => {
                 }
               }
               else if (p.mouseButton === p.CENTER || (p.keyIsDown(p.CONTROL) && p.mouseButton === p.LEFT)){
-                  currentCanvasAction = CanvasActions.MOVING_CANVAS;
+                  currentCanvasActionRef.current = CanvasActions.MOVING_CANVAS;
                   transitioning = false;
                   // Muda cursor para "grab" cursor
                   window.document.body.style.cursor = 'grab';
@@ -1166,7 +1168,7 @@ const Canvas: React.FC = () => {
               /* Pointer */
               else if (currentCanvasToolRef.current === CanvasTools.POINTER) {
                 // Botão esquerdo: Cria transições / Cria estados
-                currentCanvasAction = CanvasActions.NONE;
+                currentCanvasActionRef.current = CanvasActions.NONE;
 
                 // Open context menu
                 if (p.mouseButton === p.RIGHT) {
@@ -1193,7 +1195,7 @@ const Canvas: React.FC = () => {
                     });
 
                     // Set estado atual como "Movendo estado"
-                    currentCanvasAction = CanvasActions.MOVING_STATE;
+                    currentCanvasActionRef.current = CanvasActions.MOVING_STATE;
                     automataRef.current.pushSnapshotToUndo()
                     automataRef.current.redoStack = [];
                     // Muda cursor para "grab" cursor
@@ -1201,14 +1203,14 @@ const Canvas: React.FC = () => {
                   } 
                   // Criando caixa de seleção
                   else if (clickedTransition){
-                    currentCanvasAction = CanvasActions.RESIZING_TRANSITION;
+                    currentCanvasActionRef.current = CanvasActions.RESIZING_TRANSITION;
                   }
                   else if (clickedNote){
                     if(isCursorOverNoteResizeHandle){
-                      currentCanvasAction = CanvasActions.RESIZING_NOTE
+                      currentCanvasActionRef.current = CanvasActions.RESIZING_NOTE
                     }
                     else {
-                      currentCanvasAction = CanvasActions.MOVING_NOTE;
+                      currentCanvasActionRef.current = CanvasActions.MOVING_NOTE;
                       selectedNoteMouseOffset = {};
                       selectedNoteMouseOffset[clickedNote.id] = {};
                       selectedNoteMouseOffset[clickedNote.id]["x"] = clickedNote.x - getMouseX(p);
@@ -1219,7 +1221,7 @@ const Canvas: React.FC = () => {
                   }
                   else {
                     // Set state
-                    currentCanvasAction = CanvasActions.CREATING_SELECTION;
+                    currentCanvasActionRef.current = CanvasActions.CREATING_SELECTION;
                     // Set dados da selecao
                     selectionStarterX = getMouseX(p);
                     selectionStarterY = getMouseY(p);
@@ -1246,12 +1248,12 @@ const Canvas: React.FC = () => {
 
                 /* Mover */
               } else if (currentCanvasToolRef.current === CanvasTools.MOVE) {
-                currentCanvasAction = CanvasActions.MOVING_CANVAS;
+                currentCanvasActionRef.current = CanvasActions.MOVING_CANVAS;
                 // Muda cursor para "grab" cursor
                 window.document.body.style.cursor = 'grab';
                 /* Cria transição */
               } else if (currentCanvasToolRef.current === CanvasTools.TRANSITION) {
-                currentCanvasAction = CanvasActions.CREATING_TRANSITION;
+                currentCanvasActionRef.current = CanvasActions.CREATING_TRANSITION;
                 /* Cria estado */
               } else if (currentCanvasToolRef.current === CanvasTools.ADD_STATE) {
                 createNewState(allStates, p)
@@ -1267,13 +1269,13 @@ const Canvas: React.FC = () => {
           if(!hasOpenPopup()){
             window.document.body.style.cursor = 'default';
             
-            if(currentCanvasAction === CanvasActions.MOVING_STATE)
+            if(currentCanvasActionRef.current === CanvasActions.MOVING_STATE)
             {
               automataRef.current.pushSnapshotToUndo();
               automataRef.current.redoStack = [];
             }
 
-            if(currentCanvasAction === CanvasActions.RESIZING_NOTE){
+            if(currentCanvasActionRef.current === CanvasActions.RESIZING_NOTE){
               calculateNoteLines(clickedNote!, p);
             }
 
@@ -1286,7 +1288,7 @@ const Canvas: React.FC = () => {
               });
               if (
                 endState &&
-                currentCanvasAction === CanvasActions.CREATING_TRANSITION
+                currentCanvasActionRef.current === CanvasActions.CREATING_TRANSITION
               ) {
                 // let label = prompt("Digite o símbolo de transição: ");
                 // addNewTransition(label, clickedState, endState)             
@@ -1302,7 +1304,7 @@ const Canvas: React.FC = () => {
                 setPopupInput({onSubmit, previousLabels:currentLabels})
               }
             }
-            currentCanvasAction = CanvasActions.NONE;
+            currentCanvasActionRef.current = CanvasActions.NONE;
             clickedState = null;
           }
         };
@@ -1423,7 +1425,7 @@ const Canvas: React.FC = () => {
   }, []);
 
   function calculateSteps(inputId: number) {
-    currentCanvasAction = CanvasActions.SIMULATING;
+    currentCanvasActionRef.current = CanvasActions.SIMULATING;
     var inputText = (document.getElementById("automata-input-id-"+inputId) as HTMLInputElement).value;
     let newSimulationStates = [];
     let newSimulationTransitions = [];
@@ -1737,7 +1739,8 @@ const Canvas: React.FC = () => {
 
   const clickRegexToDFA = () => {
     const regexInput = prompt("Digite o nome do arquivo:", "(a|b)*")!;
-    automataRef.current.convertRegexToDFA(regexInput);
+    if(regexInput)
+      automataRef.current.convertRegexToDFA(regexInput);
   }
 
   const handleFileSelection = (event: any) => {
@@ -1876,6 +1879,12 @@ const Canvas: React.FC = () => {
   }
 
   const MinimizeAutomata = () => {
+    
+    automataRef.current.minimizeDFA();
+    return;
+    
+    currentCanvasActionRef.current = CanvasActions.ANIMATING;
+
     const partition = new Map<string, State[]>();
     let partitionList: any = [];
     partition.set('final', automataRef.current.finalStates);
@@ -1901,93 +1910,100 @@ const Canvas: React.FC = () => {
     });
 
     let desiredIndex = 0;
-    automataRef.current.transitions = [];
+    // automataRef.current.transitions = [];
     // automataRef.current.states = [];
   
-    let intervalId = setInterval(() => {
+    const triggerFunction = () => {
       if (desiredIndex < partitionList.length) {
+        if(desiredIndex === 0){
+          automataRef.current.addNote(-70, -80, "Estados Finais", 140, 30, ["Estados Finais"], 16, CanvasColors.NOTES, CanvasColors.NOTES_SECONDARY);
+          automataRef.current.addNote(300 + -81, -80, "Estados Não Finais", 170, 30, ["Estados Não Finais"], 16, CanvasColors.NOTES, CanvasColors.NOTES_SECONDARY);
+        } else {
+          automataRef.current.notes = []
+        }
         displayPartition(partitionList[desiredIndex]);
+        displayTransitions(partitionList[desiredIndex]);
+        
         desiredIndex++;
       } else {
-        clearInterval(intervalId); // Stop the interval when all partitions have been displayed
+        clearInterval(intervalId);
+        automataRef.current.notes = [];
         automataRef.current.transitions = tempTransitions;
-        // automataRef.current.states = tempStates;
         automataRef.current.states.forEach((state, index) => {
-          // state.x = originalCoordinates[index].x;
-          // state.y = originalCoordinates[index].y;
           state.targetX = originalCoordinates[index].x;
           state.targetY = originalCoordinates[index].y;
           state.isAnimating = true;
         });        
       }
-    }, 2000);
+    };
+    
+    // Trigger the function immediately for the first time
+    triggerFunction();
+    
+    // Set the interval for subsequent triggers
+    let intervalId = setInterval(triggerFunction, 5000);
   }
 
   function displayPartition(partition: any[]) {
-    automataRef.current.notes = [];
+    let noteOffset = 50
     partition.forEach((states, counter) => {
+      automataRef.current.addNote(300 * counter - noteOffset/2 - 40, -noteOffset, "", noteOffset + 80, noteOffset * 2 + (states.length - 1) * 200, [""], 16, CanvasColors.NOTES, CanvasColors.NOTES_SECONDARY);
       let counterY = 0;
       states.forEach((state: State) => {
         state.targetX = 300 * counter;
-        state.targetY = counterY * 100;
+        state.targetY = counterY * 200;
         state.isAnimating = true;
         counterY++;
       });
     });
   }
 
+  function displayTransitions(partition: any[]) {
+    let allTransitions = automataRef.current.getTransitions();
+    automataRef.current.transitions = [];
+    let stateToPartition = new Map();
 
-  // const MinimizeAutomata = () => {
-  //   const partition = new Map<string, State[]>();
-  //   let partitionList = [];
-  //   partition.set('final', automataRef.current.finalStates);
-  //   partition.set('non-final', automataRef.current.states.filter(s => !automataRef.current.finalStates.includes(s)));
+    // Step 2: Map states to their sub-partitions
+    partition.forEach((states, index) => {
+        states.forEach((state: State) => {
+            stateToPartition.set(state.id, index);
+        });
+    });
 
-  //   let partitions = [automataRef.current.finalStates, automataRef.current.states.filter(s => !automataRef.current.containsId(s, automataRef.current.finalStates))];
-  //   let oldPartitions = [];
+    // Preparing colors for each symbol-destination pair
+    let colors = new Map();
 
-  //   partitionList.push(partitions);
-  //   while (partitions.length !== oldPartitions.length) {
-  //     oldPartitions = partitions;
-  //     partitions = automataRef.current.refinePartitions(partitions);
-  //     partitionList.push(partitions);
-  //   }
-  //   console.log("PartitionList: ", partitionList)
-  
-  //   let tempTransitions = automataRef.current.transitions;
-  //   let tempStates = automataRef.current.states;
-    
-  //   let desiredIndex = 1;
-  //   automataRef.current.transitions = [];
-  //   automataRef.current.states = [];
-  //   partitionList.forEach((partition, index ) => {
-  //     let counter = 0;
-  //     if(index === 0) {
-  //       automataRef.current.addNote(-60, -80, "Estados Finais", 140, 30, ["Estados Finais"], 16, CanvasColors.NOTES, CanvasColors.NOTES_SECONDARY);
-  //       automataRef.current.addNote(300 + -81, -80, "Estados Não Finais", 170, 30, ["Estados Não Finais"], 16, CanvasColors.NOTES, CanvasColors.NOTES_SECONDARY);
-  //     } else {
-  //       automataRef.current.notes = [];
-  //     }
-  //     partition.forEach(teste => {
-  //       let counterY = 0;
-  //       //Se é a primeira partição, ela é separada em finais e não finais
+    // Step 3: Draw transitions for each sub-partition
+    partition.forEach((states, sourceIndex) => {
+        states.forEach((state: State) => {
+            allTransitions.filter(t => t.from.id === state.id).forEach(t => {
+                let destinationIndex = stateToPartition.get(t.to.id);
+                let symbol = t.label;
+                let colorKey = `${symbol}-${destinationIndex}`;
 
-  //       teste.forEach(state => {
-  //         if(desiredIndex === index){
-  //           state.x = 300 * counter;
-  //           state.y = counterY * 100;
-  //           counterY++;
-  //           automataRef.current.addStateObject(state)
-  //         }
-  //       });
-  //       counter++;
-  //     })
-  //   });
-  //   // automataRef.current.minimizeDFA();
+                // Step 4: Assign colors if not already assigned
+                if (!colors.has(colorKey)) {
+                    colors.set(colorKey, getRandomColor());
+                }
+                
+                t.color = colors.get(colorKey);
+                t.textColor = colors.get(colorKey);
+                automataRef.current.addTransition(t.to, t.from, t.label, t.color, t.textColor)
+                console.log(automataRef.current.transitions)
+            });
+        });
+    });
+    // automataRef.current.transitions = allTransitions;
+}
 
-  //   // automataRef.current.transitions = tempTransitions;
-  //   // automataRef.current.states = tempStates;
-  // }
+function getRandomColor() {
+    var letters = '0123456789ABCDEF';
+    var color = '#';
+    for (var i = 0; i < 6; i++) {
+        color += letters[Math.floor(Math.random() * 16)];
+    }
+    return color;
+}
 
   return (
     <div>
