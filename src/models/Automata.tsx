@@ -64,11 +64,13 @@ export class Automata {
   }
 
   pushSnapshotToUndo(){
+    let statesSnap: State[] = JSON.parse(JSON.stringify(this.states));
+    statesSnap.forEach(s => s.isAnimating = false);
     const newSnapshot: AutomataSnapshot = {
-      states: JSON.parse(JSON.stringify(this.states)),
+      states: statesSnap,
       transitions: JSON.parse(JSON.stringify(this.transitions)),
-      initialState: JSON.parse(JSON.stringify(this.initialState)),
-      finalStates: JSON.parse(JSON.stringify(this.finalStates))
+      initialState: statesSnap.find((s: State) => s.isInitial) || null,
+      finalStates: statesSnap.filter((s: State) => s.isFinal)
     };
     
     //Validation to not make duped snapshots
@@ -146,6 +148,7 @@ export class Automata {
   /* Final states */
   toggleFinal(states: State[]) {
     this.pushSnapshotToUndo();
+    this.redoStack = [];
     states.forEach((state) => {
       state.isFinal = !state.isFinal;
     });
@@ -155,7 +158,6 @@ export class Automata {
   }
   
   setFinalStates(finalStates: State[]) {
-    this.redoStack = [];
     this.finalStates = finalStates;
   }
 
@@ -479,7 +481,7 @@ export class Automata {
     let isStable = false;
   
     // Repeat until no changes occur.
-    while (!isStable) {
+    // while (!isStable) {
       isStable = true;
       newPartitions = [];
   
@@ -487,17 +489,17 @@ export class Automata {
         const refined = this.splitPartition(partition, partitions);
       
         // Check if partition has been refined.
-        if (refined.length > 1) {
-          isStable = false;
-        }
+        // if (refined.length > 1) {
+        //   isStable = false;
+        // }
       
         newPartitions.push(...refined);
       }
   
-      if (!isStable) {
-        partitions = newPartitions;
-      }
-    }
+      // if (!isStable) {
+      //   partitions = newPartitions;
+      // }
+    // }
   
     return newPartitions;
   }
@@ -508,7 +510,7 @@ export class Automata {
     // Use a map to record transitions for each state.
     partition.forEach(state => {
       const transitionKey = this.transitions
-        .filter(t => t.from === state)
+        .filter(t => t.from.id === state.id)
         .map(t => {
           // Get the partition index for the state where the transition goes to.
           const partitionIndex = otherPartitions.findIndex(p => p.some(s => s.id === t.to.id));
@@ -530,13 +532,15 @@ export class Automata {
   buildMinimizedDFA(partitions: State[][]): Automata {
     const minimizedAutomata = new Automata();
     const newStates = partitions.map((partition, index) => {
-      const newState = { ...partition[0], id: `${index}` };
+      const newState = { ...partition[0]};
       minimizedAutomata.states.push(newState);
       if (partition.some(state => state.isInitial)) {
         minimizedAutomata.initialState = newState;
+        newState.isInitial = true;
       }
       if (partition.some(state => state.isFinal)) {
         minimizedAutomata.finalStates.push(newState);
+        newState.isFinal = true;
       }
       return newState;
     });

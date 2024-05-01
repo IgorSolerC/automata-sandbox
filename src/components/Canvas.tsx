@@ -532,7 +532,7 @@ const Canvas: React.FC = () => {
             }
           }
 
-          const lerpSpeed = 0.05; // Control speed of the interpolation
+          const lerpSpeed = 0.12; // Control speed of the interpolation
           automataRef.current.getStates().forEach(state => {
             if (state.isAnimating) {
               state.x = p.lerp(state.x, state.targetX, lerpSpeed);
@@ -1892,29 +1892,29 @@ const Canvas: React.FC = () => {
   const MinimizeAutomata = () => {
     currentCanvasActionRef.current = CanvasActions.ANIMATING;
 
-    const partition = new Map<string, State[]>();
     let partitionList: any = [];
-    partition.set('final', automataRef.current.finalStates);
-    partition.set('non-final', automataRef.current.states.filter(s => !automataRef.current.finalStates.includes(s)));
-  
-    let partitions = [automataRef.current.finalStates, automataRef.current.states.filter(s => !automataRef.current.containsId(s, automataRef.current.finalStates))];
+    let partitions = [
+      automataRef.current.getFinalStates(),
+      automataRef.current.getStates().filter(s => !automataRef.current.containsId(s, automataRef.current.getFinalStates()))
+    ];
     let oldPartitions = [];
-  
+
     partitionList.push(partitions);
     while (partitions.length !== oldPartitions.length) {
       oldPartitions = partitions;
       partitions = automataRef.current.refinePartitions(partitions);
       partitionList.push(partitions);
     }
-    partitionList.pop();
     console.log("PartitionList: ", partitionList)
   
     let tempTransitions = JSON.parse(JSON.stringify(automataRef.current.transitions));
     let tempStates = JSON.parse(JSON.stringify(automataRef.current.states));
     
-    let originalCoordinates: any[] = [];
+    type Coordinates = {x: number, y: number};
+    type CoordinatesMap = Record<string, Coordinates>;
+    let originalCoordinates: CoordinatesMap = {}
     automataRef.current.states.forEach((state, index) => {
-      originalCoordinates[index] = { x: state.x, y: state.y };
+      originalCoordinates[state.id] = {x: state.x, y: state.y };
     });
 
     let desiredIndex = 0;
@@ -1929,8 +1929,9 @@ const Canvas: React.FC = () => {
         } else {
           automataRef.current.notes = []
         }
+
         displayPartition(partitionList[desiredIndex]);
-        //displayTransitions(partitionList[desiredIndex]);
+        displayTransitions(partitionList[desiredIndex]);
         
         desiredIndex++;
       } else {
@@ -1938,9 +1939,10 @@ const Canvas: React.FC = () => {
         let dfa = automataRef.current.buildMinimizedDFA(partitions)
         automataRef.current.notes = [];
         automataRef.current.states = dfa.states;
+
         automataRef.current.states.forEach((state, index) => {
-          state.targetX = originalCoordinates[index].x;
-          state.targetY = originalCoordinates[index].y;
+          state.targetX = originalCoordinates[state.id].x;
+          state.targetY = originalCoordinates[state.id].y;
           state.isAnimating = true;
         });        
 
@@ -1957,12 +1959,11 @@ const Canvas: React.FC = () => {
     triggerFunction();
     
     // Set the interval for subsequent triggers
-    let intervalId = setInterval(triggerFunction, 5000);
+    let intervalId = setInterval(triggerFunction, 1000);
   }
 
   function displayPartition(partition: any[]) {
     let noteOffset = 50
-    let allStates = automataRef.current.getStates();
     partition.forEach((states, counter) => {
       automataRef.current.addNote(300 * counter - noteOffset/2 - 40, -noteOffset, "", noteOffset + 80, noteOffset * 2 + (states.length - 1) * 200, [" "], 16, CanvasColors.NOTES, CanvasColors.NOTES_SECONDARY);
       let counterY = 0;
@@ -1971,10 +1972,6 @@ const Canvas: React.FC = () => {
         state.targetY = counterY * 200;
         state.isAnimating = true;
         counterY++;
-        // let stateRef = allStates.find(s => s.id === state.id)!;
-        // stateRef.targetX = state.targetX
-        // stateRef.targetY = state.targetY
-        // stateRef.isAnimating = state.isAnimating;
       });
     });
   }
@@ -2009,7 +2006,7 @@ const Canvas: React.FC = () => {
                 
                 t.color = colors.get(colorKey);
                 t.textColor = colors.get(colorKey);
-                automataRef.current.addTransition(t.to, t.from, t.label, t.color, t.textColor)
+                automataRef.current.addTransition(t.from, t.to, t.label, t.color, t.textColor)
             });
         });
     });

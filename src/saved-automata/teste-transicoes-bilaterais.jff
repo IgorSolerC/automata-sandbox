@@ -2,12 +2,12 @@
 <structure>
   <type>fa</type>
   <automaton>
-    <state id="S0" name="q1">
+    <state id="0" name="q1">
       <x>525</x>
       <y>400</y>
       <final/>
     </state>
-    <state id="S1" name="q0">
+    <state id="1" name="q0">
       <x>525</x>
       <y>262.5</y>
       <initial/>
@@ -48,83 +48,83 @@
       <final/>
     </state>
     <transition>
-      <from>S0</from>
-      <to>S1</to>
+      <from>0</from>
+      <to>1</to>
       <read>1</read>
     </transition>
     <transition>
-      <from>S1</from>
-      <to>S0</to>
+      <from>1</from>
+      <to>0</to>
       <read>1</read>
     </transition>
     <transition>
-      <from>S1</from>
+      <from>1</from>
       <to>6</to>
       <read>2</read>
     </transition>
     <transition>
-      <from>S1</from>
+      <from>1</from>
       <to>3</to>
       <read>3</read>
     </transition>
     <transition>
-      <from>S1</from>
+      <from>1</from>
       <to>8</to>
       <read>4</read>
     </transition>
     <transition>
-      <from>S1</from>
+      <from>1</from>
       <to>4</to>
       <read>5</read>
     </transition>
     <transition>
-      <from>S1</from>
+      <from>1</from>
       <to>5</to>
       <read>6</read>
     </transition>
     <transition>
-      <from>S1</from>
+      <from>1</from>
       <to>2</to>
       <read>7</read>
     </transition>
     <transition>
-      <from>S1</from>
+      <from>1</from>
       <to>7</to>
       <read>8</read>
     </transition>
     <transition>
       <from>6</from>
-      <to>S1</to>
+      <to>1</to>
       <read>2</read>
     </transition>
     <transition>
       <from>3</from>
-      <to>S1</to>
+      <to>1</to>
       <read>3</read>
     </transition>
     <transition>
       <from>8</from>
-      <to>S1</to>
+      <to>1</to>
       <read>4</read>
     </transition>
     <transition>
       <from>4</from>
-      <to>S1</to>
+      <to>1</to>
       <read>5</read>
     </transition>
     <transition>
       <from>5</from>
-      <to>S1</to>
+      <to>1</to>
       <read>6</read>
     </transition>
     <transition>
       <from>2</from>
-      <to>S1</to>
+      <to>1</to>
       <read>7</read>
     </transition>
     <transition>
       <from>7</from>
-      <to>S1</to>
+      <to>1</to>
       <read>8</read>
     </transition>
   </automaton>
