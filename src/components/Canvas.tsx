@@ -1394,18 +1394,17 @@ const Canvas: React.FC = () => {
                 endState &&
                 currentCanvasActionRef.current === CanvasActions.CREATING_TRANSITION
               ) {
-                // let label = prompt("Digite o símbolo de transição: ");
-                // addNewTransition(label, clickedState, endState)             
-                setOpenPopup(PopupType.CREATE_TRANSITION)
-                openPopupRef.current = PopupType.CREATE_TRANSITION
+                  // let label = prompt("Digite o símbolo de transição: ");
+                  // addNewTransition(label, clickedState, endState)             
+                  setOpenPopup(PopupType.CREATE_TRANSITION)
+                  openPopupRef.current = PopupType.CREATE_TRANSITION
 
-                let clickedStateAux = clickedState
-                let endStateAux = endState;
-                let currentLabelsAux = automataRef.current.getTransitions().find(t => t.from.id === clickedStateAux.id && t.to.id === endStateAux.id)
-                let currentLabels = currentLabelsAux ? currentLabelsAux.label : ['']
-                
-                console.log(currentLabelsAux)
-                const onSubmit = (labels: string[]) => {
+                  let clickedStateAux = clickedState
+                  let endStateAux = endState;
+                  let currentLabelsAux = automataRef.current.getTransitions().find(t => t.from.id === clickedStateAux.id && t.to.id === endStateAux.id)
+                  let currentLabels = currentLabelsAux ? currentLabelsAux.label : ['']
+                  
+                  const onSubmit = (labels: string[]) => {
                   if(!currentLabelsAux){
                     addNewTransition(labels, clickedStateAux, endStateAux)
                   }
