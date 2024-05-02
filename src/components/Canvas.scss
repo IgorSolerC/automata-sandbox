@@ -4,62 +4,122 @@
     --gui-default-size: 60px;
     --text-color: #E9ECEF;
 
-    /* Buttons */
-    --button-bg: #343A40;
-    --button-bg-hover: #495057;
-    --button-icon: #ADB5BD;
-    --button-icon-disabled: #4f565e;
+    &[color-mode="dark"] {
+        --shadow-color: 0deg 0% 10%;
+        --shadow-elevation-low:
+        0px 0.7px 0.8px hsl(var(--shadow-color) / 0.35),
+        0px 1.2px 1.3px -1.2px hsl(var(--shadow-color) / 0.35),
+        0px 2.9px 3.3px -2.5px hsl(var(--shadow-color) / 0.35);
+        --shadow-elevation-medium:
+        0px 0.7px 0.8px hsl(var(--shadow-color) / 0.36),
+        0px 2.4px 2.7px -0.8px hsl(var(--shadow-color) / 0.36),
+        0px 6px 6.8px -1.7px hsl(var(--shadow-color) / 0.36),
+        0.1px 14.5px 16.3px -2.5px hsl(var(--shadow-color) / 0.36);
+        --shadow-elevation-high:
+        0px 0.7px 0.8px hsl(var(--shadow-color) / 0.39),
+        0px 4.8px 5.4px -0.4px hsl(var(--shadow-color) / 0.39),
+        0px 9.4px 10.6px -0.8px hsl(var(--shadow-color) / 0.39),
+        0.1px 16.5px 18.6px -1.2px hsl(var(--shadow-color) / 0.39),
+        0.1px 28.2px 31.7px -1.7px hsl(var(--shadow-color) / 0.39),
+        0.2px 46.3px 52.1px -2.1px hsl(var(--shadow-color) / 0.39),
+        0.4px 73px 82.1px -2.5px hsl(var(--shadow-color) / 0.39);
 
-    /* Tools */
-    --tool-icon: #ced4da;
-    --selected-tool-icon: #ffe4c4;
-    --selected-tool: #FF6D00;
-    --selected-tool-hover: #FF9100;
-    
-    /* Input Box */
-    --accepted: #00C853;
-    --accepted-hover: #00E676;
-    --accepted-icon: #B9F6CA;
-    --warning: #FFD600;
-    --warning-hover: #FFEA00;
-    --warning-icon: #fffce0;
-    --rejected: #eb022f;
-    --rejected-hover: #FF1744;
-    --rejected-icon: #FFCDD2;
-    --error-message-div: #FF6D00;
-    --error-message: #ffe4c4;
-    --input-palceholder: #6C757D;
+        /* Buttons */
+        --button-bg: #343A40;
+        --button-bg-hover: #495057;
+        --button-icon: #ADB5BD;
+        --button-icon-disabled: #4f565e;
 
-    /* Context Menu */
-    --context-menu-bg: #343A40;
-    --context-menu-border: #343A40;
-    --context-menu-bg-hover: #495057;
+        /* Tools */
+        --tool-icon: #ced4da;
+        --selected-tool-icon: #ffe4c4;
+        --selected-tool: #FF6D00;
+        --selected-tool-hover: #FF9100;
+        
+        /* Input Box */
+        --accepted: #00C853;
+        --accepted-hover: #00E676;
+        --accepted-icon: #B9F6CA;
+        --warning: #FFD600;
+        --warning-hover: #FFEA00;
+        --warning-icon: #fffce0;
+        --rejected: #eb022f;
+        --rejected-hover: #FF1744;
+        --rejected-icon: #FFCDD2;
+        --error-message-div: #FF6D00;
+        --error-message: #ffe4c4;
+        --input-palceholder: #6C757D;
+
+        /* Context Menu */
+        --context-menu-bg: #343A40;
+        --context-menu-border: #343A40;
+        --context-menu-bg-hover: #495057;
+        
+        /* Popup */
+        --popup-button-bg: #495057;
+        --popup-button-bg-hover: #61686f;
+    }
     
-    /* Popup */
-    --popup-button-bg: #495057;
-    --popup-button-bg-hover: #61686f;
+    &[color-mode="light"] {
+        --shadow-color: 0deg 0% 10%;
+        --shadow-elevation-low:
+        0px 0.7px 0.8px hsl(var(--shadow-color) / 0.10),
+        0px 1.2px 1.3px -1.2px hsl(var(--shadow-color) / 0.10),
+        0px 2.9px 3.3px -2.5px hsl(var(--shadow-color) / 0.10);
+        --shadow-elevation-medium:
+        0px 0.7px 0.8px hsl(var(--shadow-color) / 0.05),
+        0px 2.4px 2.7px -0.8px hsl(var(--shadow-color) / 0.05),
+        0px 6px 6.8px -1.7px hsl(var(--shadow-color) / 0.05),
+        0.1px 14.5px 16.3px -2.5px hsl(var(--shadow-color) / 0.05);
+        --shadow-elevation-high:
+        0px 0.7px 0.8px hsl(var(--shadow-color) / 0.10),
+        0px 4.8px 5.4px -0.4px hsl(var(--shadow-color) / 0.10),
+        0px 9.4px 10.6px -0.8px hsl(var(--shadow-color) / 0.10),
+        0.1px 16.5px 18.6px -1.2px hsl(var(--shadow-color) / 0.10),
+        0.1px 28.2px 31.7px -1.7px hsl(var(--shadow-color) / 0.10),
+        0.2px 46.3px 52.1px -2.1px hsl(var(--shadow-color) / 0.10),
+        0.4px 73px 82.1px -2.5px hsl(var(--shadow-color) / 0.10);
+
+        /* Buttons */
+        --button-bg: #000;
+        --button-bg-hover: #495057;
+        --button-icon: #343A40;
+        --button-icon-disabled: #4f565e;
+
+        /* Tools */
+        --tool-icon: #ced4da;
+        --selected-tool-icon: #ffe4c4;
+        --selected-tool: #FF6D00;
+        --selected-tool-hover: #FF9100;
+        
+        /* Input Box */
+        --accepted: #00C853;
+        --accepted-hover: #00E676;
+        --accepted-icon: #B9F6CA;
+        --warning: #FFD600;
+        --warning-hover: #FFEA00;
+        --warning-icon: #fffce0;
+        --rejected: #eb022f;
+        --rejected-hover: #FF1744;
+        --rejected-icon: #FFCDD2;
+        --error-message-div: #FF6D00;
+        --error-message: #ffe4c4;
+        --input-palceholder: #6C757D;
+
+        /* Context Menu */
+        --context-menu-bg: #343A40;
+        --context-menu-border: #343A40;
+        --context-menu-bg-hover: #495057;
+        
+        /* Popup */
+        --popup-button-bg: #495057;
+        --popup-button-bg-hover: #61686f;
+    }
 }
 
 /* Shows */
 :root {
-    --shadow-color: 0deg 0% 10%;
-    --shadow-elevation-low:
-      0px 0.7px 0.8px hsl(var(--shadow-color) / 0.35),
-      0px 1.2px 1.3px -1.2px hsl(var(--shadow-color) / 0.35),
-      0px 2.9px 3.3px -2.5px hsl(var(--shadow-color) / 0.35);
-    --shadow-elevation-medium:
-      0px 0.7px 0.8px hsl(var(--shadow-color) / 0.36),
-      0px 2.4px 2.7px -0.8px hsl(var(--shadow-color) / 0.36),
-      0px 6px 6.8px -1.7px hsl(var(--shadow-color) / 0.36),
-      0.1px 14.5px 16.3px -2.5px hsl(var(--shadow-color) / 0.36);
-    --shadow-elevation-high:
-      0px 0.7px 0.8px hsl(var(--shadow-color) / 0.39),
-      0px 4.8px 5.4px -0.4px hsl(var(--shadow-color) / 0.39),
-      0px 9.4px 10.6px -0.8px hsl(var(--shadow-color) / 0.39),
-      0.1px 16.5px 18.6px -1.2px hsl(var(--shadow-color) / 0.39),
-      0.1px 28.2px 31.7px -1.7px hsl(var(--shadow-color) / 0.39),
-      0.2px 46.3px 52.1px -2.1px hsl(var(--shadow-color) / 0.39),
-      0.4px 73px 82.1px -2.5px hsl(var(--shadow-color) / 0.39);
+    
 }
 
 * {
@@ -577,6 +637,11 @@ display: none;
     font-size: 18px;
     margin: 0px;
     /* color: var(--tool-icon); */
+}
+
+.canvas-button.generic-popup-button:disabled, .canvas-button.generic-popup-button:disabled:hover{
+    background-color: var(--button-icon-disabled);
+    cursor: not-allowed;
 }
 
 .canvas-button.generic-popup-button:hover{

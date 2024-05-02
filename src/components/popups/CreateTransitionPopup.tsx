@@ -17,11 +17,16 @@ const CreateTransitionPopup: React.FC<CreateTransitionPopupProps> = ({
     onClose,
 }) => { 
     // const [inputValue, setInputValue] = useState([''])
-    const [inputValue, setInputValue] = useState(!popupInput.previousLabels.includes('') ? popupInput.previousLabels.concat(['']) : popupInput.previousLabels)
+    const getInitialInputValue = () =>{
+        let labelsList = popupInput.previousLabels.filter(x => x !== 'λ')
+        return !labelsList.includes('') ? labelsList.concat(['']) : labelsList
+    }
+    
+    const [inputValue, setInputValue] = useState(getInitialInputValue)
     const inputRefs = useRef([React.createRef()] as React.RefObject<HTMLInputElement>[]); // Array of refs
 
     const [triggerRerender, setTriggerRerender] = useState(['do not touch >:('])
-    const [addEmptyTransition, setAddEmptyTransition] = useState(false)
+    const [addEmptyTransition, setAddEmptyTransition] = useState(popupInput.previousLabels.includes('λ'))
 
     const [blinkingInputs, setBlinkingInputs] = useState<number[]>([]); 
 
@@ -101,7 +106,7 @@ const CreateTransitionPopup: React.FC<CreateTransitionPopupProps> = ({
                     value={inputValue[i]}
                     onChange={(e) => handleInputChange(e, i)}
                     ref={inputRefs.current[i]}
-                    placeholder='∑'
+                    placeholder='λ'
                 />
                 ))}
             </div>
@@ -117,11 +122,12 @@ const CreateTransitionPopup: React.FC<CreateTransitionPopupProps> = ({
             </div>
             <button
                 className="canvas-button generic-popup-button"
+                disabled={!((inputValue.filter(x => x !== '').length > 0) || addEmptyTransition)}
                 onClick={() => {
-                    let finalLabels = inputValue.filter(x => x !== '')
+                    let finalLabels = inputValue.filter(x => x !== '' && x !== 'λ')
 
                     if (addEmptyTransition)
-                        finalLabels.push('')
+                        finalLabels.push('λ')
 
                     popupInput.onSubmit(finalLabels)
                     onClose()

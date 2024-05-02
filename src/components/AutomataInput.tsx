@@ -1,6 +1,3 @@
-// Css
-import "./Canvas.css";
-
 // Google Material Icons
 import CheckIcon from "../symbols/check_icon";
 import WarningIcon from "../symbols/warning_icon";

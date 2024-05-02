@@ -1,9 +1,47 @@
 /* Dark Theme */
-export const CanvasColors = {
+export const CanvasColorsLight = {
+    BACKGROUND: "#ffffff",
+
+    // State
+    DEFAULT_STATE: "#ffda75 ",
+    DEFAULT_STATE_TEXT: "#000000",
+    DEFAULT_STATE_SECONDARY: "#e6bd50", 
+    CLICKED_STATE: "#4b9cf9", 
+    CLICKED_STATE_SECONDARY: "#287ee0",
+    SIMULATION_STEP_STATE: "#ff385f", 
+    SIMULATION_STEP_STATE_SECONDARY: "#eb022f",
+
+    // Transition
+    DEFAULT_TRANSITION: "#222",
+    DEFAULT_TRANSITION_TEXT: "#222",
+    CLICKED_TRANSITION: "#287ee0", 
+    CLICKED_TRANSITION_TEXT: "#000",
+    SIMULATION_STEP_TRANSITION: "#ff385f", 
+    SIMULATION_STEP_TRANSITION_TEXT: "#ff385f",
+
+    // Selecion
+    SELECTION: "#4b9cf9" + '33',
+    SELECTION_BORDER: "#4b9cf9" + '55',
+
+    // Notes
+    NOTES: "#E9ECEF" + '99',
+    NOTES_SECONDARY: "#ccc",
+    NOTES_TEXT: "#000000",
+    NOTES_CLICKED: "#4b9cf9",
+    NOTES_CLICKED_SECONDARY: "#4b9cf9",
+
+    // Other
+    INFO_SUCCESS: "#00C853",
+    INFO_WARNING: "#FFD600",
+    INFO_ERROR: "#eb022f",
+};
+
+export const CanvasColorsDark = {
     BACKGROUND: "#212529",
 
     // State
     DEFAULT_STATE: "#FF6D00",
+    DEFAULT_STATE_TEXT: "#E9ECEF",
     DEFAULT_STATE_SECONDARY: "#FF9100", 
     CLICKED_STATE: "#0b63de", 
     CLICKED_STATE_SECONDARY: "#4b9cf9",
@@ -28,7 +66,6 @@ export const CanvasColors = {
     NOTES_TEXT: "#E9ECEF",
     NOTES_CLICKED: "#0b63de",
     NOTES_CLICKED_SECONDARY: "#4b9cf9",
-    NOTES_CLICKED_TEXT: "#E9ECEF",
 
     // Other
     INFO_SUCCESS: "#00C853",

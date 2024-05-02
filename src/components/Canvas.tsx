@@ -1,5 +1,5 @@
 // Css
-import "./Canvas.css";
+import "./Canvas.scss";
 
 // Components
 import Toolbox from "./ToolBox"; 
@@ -19,7 +19,7 @@ import MinusIcon from "../symbols/minus_icon";
 import ErrorIcon from "../symbols/error_icon";
 
 // Libaries
-import React, { useRef, useEffect, useState } from "react";
+import React, { useRef, useEffect, useState, useMemo } from "react";
 import p5 from "p5";
 import { XMLParser } from 'fast-xml-parser';
 import builder from 'xmlbuilder';
@@ -34,9 +34,10 @@ import { Note } from "../models/Note";
 import { CanvasActions } from "../enums/CanvasActionsEnum";
 import { CanvasTools } from "../enums/CanvasToolsEnum";
 import { PopupType } from "../enums/PopupEnum";
+import { ColorThemes } from "../enums/ColorThemesEnum";
 
 // Constants
-import { CanvasColors } from "../constants/CanvasConstants";
+import { CanvasColorsLight, CanvasColorsDark } from "../constants/CanvasConstants"; 
 
 // Contexts
 import { ToolboxProvider, useToolboxContext } from "../contexts/ToolboxContext";
@@ -109,6 +110,28 @@ const Canvas: React.FC = () => {
   const zoomTargetRef = useRef(zoomTarget);
   
   const fileInputRef = useRef<HTMLInputElement>(null);
+  
+  const [selectedColorTheme, setSelectedColorTheme] = useState(localStorage.getItem('color') === "1" ? ColorThemes.LIGHT : ColorThemes.DARK)
+
+  const updateCanvasColorEnum = () => {
+    if (selectedColorTheme === ColorThemes.LIGHT){
+      return CanvasColorsLight
+    } else if (selectedColorTheme === ColorThemes.DARK){
+      return CanvasColorsDark
+    }
+    return CanvasColorsDark
+  }
+  const CanvasColorsRef = useRef(updateCanvasColorEnum());
+
+  const updateRootColor = () =>{
+    const rootElement = document.documentElement;
+    if (selectedColorTheme === ColorThemes.LIGHT){
+      rootElement.setAttribute('color-mode', 'light');
+    } else if (selectedColorTheme === ColorThemes.DARK) {
+      rootElement.setAttribute('color-mode', 'dark');
+    } else
+      rootElement.setAttribute('color-mode', 'dark');
+  }
 
   useEffect(() => {
     simulationStatesRef.current = simulationStates;
@@ -196,14 +219,13 @@ const Canvas: React.FC = () => {
         id_number.toString(),
         getMouseX(p),
         getMouseY(p),
-        CanvasColors.DEFAULT_STATE,
-        CanvasColors.DEFAULT_STATE_SECONDARY,
+        CanvasColorsRef.current.DEFAULT_STATE,
+        CanvasColorsRef.current.DEFAULT_STATE_SECONDARY,
         false,
         false,
         id
       );
-      stopSimulation()
-      validadeAllInputs()
+      handleAutomataChange()
     }
   }
 
@@ -211,7 +233,7 @@ const Canvas: React.FC = () => {
     // let text = prompt("Digite o texto da nota: ");
     // if(text)
     // {
-    //   let note = automataRef.current.addNote(getMouseX(p), getMouseY(p), text, 200, 100, [""], 16, CanvasColors.NOTES, CanvasColors.NOTES_SECONDARY);
+    //   let note = automataRef.current.addNote(getMouseX(p), getMouseY(p), text, 200, 100, [""], 16, CanvasColorsRef.current.NOTES, CanvasColorsRef.current.NOTES_SECONDARY);
     //   calculateNoteLines(note, p)
     // } else{
     //   alert("A nota não pode estar vazia.");
@@ -221,7 +243,7 @@ const Canvas: React.FC = () => {
     openPopupRef.current = PopupType.CREATE_NOTE
 
     const onSubmit = (noteText: string) => {
-      let note = automataRef.current.addNote(getMouseX(p), getMouseY(p), noteText, 200, 100, [""], 16, CanvasColors.NOTES, CanvasColors.NOTES_SECONDARY);
+      let note = automataRef.current.addNote(getMouseX(p), getMouseY(p), noteText, 200, 100, [""], 16, CanvasColorsRef.current.NOTES, CanvasColorsRef.current.NOTES_SECONDARY);
       calculateNoteLines(note, p)
     }
     setPopupInput({onSubmit, previousText:''})
@@ -230,45 +252,106 @@ const Canvas: React.FC = () => {
   }
 
   // Check colision
-  const collidePointArc = (pointX: number, pointY: number, ellipseX: number, ellipseY: number, ellipseWidth: number, ellipseHeight: number, rotation: number, arcStart: number, arcEnd: number) => {   
-    // 2D
-    var ellipseRadiusX = ellipseWidth / 2, ellipseRadiusY = ellipseHeight / 2;
+  // const collidePointArc = (pointX: number, pointY: number, ellipseX: number, ellipseY: number, ellipseWidth: number, ellipseHeight: number, rotation: number, arcStart: number, arcEnd: number) => {   
+  //   // 2D
+  //   var ellipseRadiusX = ellipseWidth / 2, ellipseRadiusY = ellipseHeight / 2;
 
-    // Apply the rotation to the point
-    var cosR = Math.cos(rotation);
-    var sinR = Math.sin(rotation);
-    var xDiff = pointX - ellipseX;
-    var yDiff = pointY - ellipseY;
-    var rotatedX = cosR * xDiff + sinR * yDiff + ellipseX;
-    var rotatedY = -sinR * xDiff + cosR * yDiff + ellipseY;
+  //   // Apply the rotation to the point
+  //   var cosR = Math.cos(rotation);
+  //   var sinR = Math.sin(rotation);
+  //   var xDiff = pointX - ellipseX;
+  //   var yDiff = pointY - ellipseY;
+  //   var rotatedX = cosR * xDiff + sinR * yDiff + ellipseX;
+  //   var rotatedY = -sinR * xDiff + cosR * yDiff + ellipseY;
 
-    // Calculate the angle from the center of the ellipse to the point
-    var angle = Math.atan2(rotatedY - ellipseY, rotatedX - ellipseX);
+  //   // Calculate the angle from the center of the ellipse to the point
+  //   var angle = Math.atan2(rotatedY - ellipseY, rotatedX - ellipseX);
 
-    // Calculate the angle within the specified arc range
-    if (arcStart < 0) arcStart += 2 * Math.PI;
-    if (arcEnd < 0) arcEnd += 2 * Math.PI;
-    if (arcEnd < arcStart) {
-        angle += 2 * Math.PI; // Fiz essa linha na mão, talvez esteja errada
-        arcEnd += 2 * Math.PI;
+  //   // Calculate the angle within the specified arc range
+  //   if (arcStart < 0) arcStart += 2 * Math.PI;
+  //   if (arcEnd < 0) arcEnd += 2 * Math.PI;
+  //   if (arcEnd < arcStart) {
+  //       angle += 2 * Math.PI; // Fiz essa linha na mão, talvez esteja errada
+  //       arcEnd += 2 * Math.PI;
+  //   }
+
+  //   // Check if the angle is within the specified arc range
+  //   if (angle >= arcStart && angle <= arcEnd) {
+  //       // Discard the points outside the bounding box of the rotated ellipse
+  //       if (rotatedX > ellipseX + ellipseRadiusX || rotatedX < ellipseX - ellipseRadiusX || rotatedY > ellipseY + ellipseRadiusY || rotatedY < ellipseY - ellipseRadiusY) {
+  //           return false;
+  //       }
+
+  //       // Compare the point to its equivalent on the rotated ellipse
+  //       var xx = rotatedX - ellipseX, yy = rotatedY - ellipseY;
+  //       var eyy = ellipseRadiusY * Math.sqrt(Math.abs(ellipseRadiusX * ellipseRadiusX - xx * xx)) / ellipseRadiusX;
+
+  //       return yy <= eyy && yy >= -eyy;
+  //   }
+
+  //   return false;
+  // };
+
+  const collidePointArc = (px: number, py: number, cx: number, cy: number, width: number, height: number, angle: number, startAngle: number, endAngle: number) => {
+    // Adjustments for inversion based on height
+    let adjustedAngle = angle;
+    if (height < 0) {
+      adjustedAngle += Math.PI;  // Flip the arc if height indicates a reverse curvature
+      height = -height;  // Use the absolute height for calculations
     }
-
-    // Check if the angle is within the specified arc range
-    if (angle >= arcStart && angle <= arcEnd) {
-        // Discard the points outside the bounding box of the rotated ellipse
-        if (rotatedX > ellipseX + ellipseRadiusX || rotatedX < ellipseX - ellipseRadiusX || rotatedY > ellipseY + ellipseRadiusY || rotatedY < ellipseY - ellipseRadiusY) {
-            return false;
-        }
-
-        // Compare the point to its equivalent on the rotated ellipse
-        var xx = rotatedX - ellipseX, yy = rotatedY - ellipseY;
-        var eyy = ellipseRadiusY * Math.sqrt(Math.abs(ellipseRadiusX * ellipseRadiusX - xx * xx)) / ellipseRadiusX;
-
-        return yy <= eyy && yy >= -eyy;
+  
+    // Convert point to ellipse-centric coordinates
+    const cosAngle = Math.cos(-adjustedAngle);
+    const sinAngle = Math.sin(-adjustedAngle);
+    const dx = (px - cx) * cosAngle - (py - cy) * sinAngle;
+    const dy = (px - cx) * sinAngle + (py - cy) * cosAngle;
+  
+    // Check if point is within ellipse using the ellipse equation
+    const ellipseRadiusX = width / 2;
+    const ellipseRadiusY = height / 2;
+    const ellipseEquation = (dx * dx) / (ellipseRadiusX * ellipseRadiusX) + (dy * dy) / (ellipseRadiusY * ellipseRadiusY);
+  
+    // Determine the angle for the point relative to the ellipse center
+    const pointAngle = Math.atan2(dy, dx);
+    let normalizedStart = startAngle % (2 * Math.PI);
+    let normalizedEnd = endAngle % (2 * Math.PI);
+    if (normalizedEnd < normalizedStart) {  // Adjust if the start is greater than the end
+      normalizedEnd += 2 * Math.PI;
     }
+    let normalizedPointAngle = (pointAngle < 0) ? 2 * Math.PI + pointAngle : pointAngle;
+  
+    // Check if the point's angle lies within the arc span
+    return ellipseEquation <= 1 &&
+           normalizedPointAngle >= normalizedStart &&
+           normalizedPointAngle <= normalizedEnd;
+  }
 
-    return false;
-  };
+  const collidePointLine = (px: number, py: number, x1: number, y1: number, x2: number, y2: number, tolerance: number) => {
+    let dx = x2 - x1;
+    let dy = y2 - y1;
+    let length = Math.sqrt(dx * dx + dy * dy);
+    
+    // Normalize the direction vector
+    dx /= length;
+    dy /= length;
+  
+    // Project the point onto the line (px, py to x1, y1)
+    let t = dx * (px - x1) + dy * (py - y1);
+  
+    // Ensure that t is within the bounds of the line segment
+    t = Math.max(0, Math.min(length, t));
+  
+    // Get the closest point on the line
+    let closestX = x1 + t * dx;
+    let closestY = y1 + t * dy;
+  
+    // Calculate the distance from the closest point on the line to the point
+    let distX = closestX - px;
+    let distY = closestY - py;
+    let distance = Math.sqrt(distX * distX + distY * distY);
+  
+    return distance <= tolerance;
+  }
 
   const getClickedTransition = (p: p5) => {
     let clickedTransitionTemp = null
@@ -310,62 +393,49 @@ const Canvas: React.FC = () => {
           }
         }
         else {
-          /* 
-           * ARCO DA TRANSIÇÃO
-           * A posição do arco deve ser 0, 0
-           * Isso é necessario pois a rotação ocorre sempre com 0, 0 de ancora
-           * Entao o mais facio é criar o elemento lá e então movelo para a posição correta
-           * Por isso o p.translate() recebe o local onde o arc() deveria estar
-           */
-          const transitionAngle = Math.atan2(end.y - start.y, end.x - start.x); // angle of line
-          const transitionLenght = p.dist(start.x, start.y, end.x, end.y); // angle of line
-          const middleX = (start.x + end.x) / 2
-          const middleY = (start.y + end.y) / 2
-          const COLISION_ERROR_MARGIN = 20
-
-          // Fix bug onde transição some se for 100% reta
-          if (transitionHeight === 0)
-            transitionHeight = 0.00000001
+          // Handle transitions to different states
+          const angle = Math.atan2(end.y - start.y, end.x - start.x);
+          const radius = start.diameter / 2;
+          const offsetRadius = 30; // additional radius to avoid overlap
+          let offsetX = radius * Math.cos(angle);
+          let offsetY = radius * Math.sin(angle);
+  
+          let curveOffsetX = offsetRadius * Math.cos(angle + Math.PI / 2); // perpendicular to the line
+          let curveOffsetY = offsetRadius * Math.sin(angle + Math.PI / 2);
+  
+          const middleX = (start.x + end.x) / 2 + curveOffsetX;
+          const middleY = (start.y + end.y) / 2 + curveOffsetY;
+  
+          const reverseExists = automataRef.current.getTransitions().some(t => t.from.id === end.id && t.to.id === start.id);
           
-          // Faz o arco representar o lado oposto da elipse caso
-          // a altura do arco seja negativa
-          const getArcSlice = (transitionHeight:number, p:p5) => {
-            let arcStart = 0
-            let arcEnd = p.PI
-            if (transitionHeight < 0){
-              arcStart = p.PI
-              arcEnd = 0
+          if (reverseExists) {
+            curveOffsetX *= -1; // Invert the curve direction for one of the transitions
+            curveOffsetY *= -1;
+            
+            // Adjusted collision detection
+            const transitionLenght = p.dist(start.x, start.y, end.x, end.y);
+            const COLISION_ERROR_MARGIN = 20;
+            let outerColisionWidth = transitionLenght + COLISION_ERROR_MARGIN;
+            let outerColisionHeight = offsetRadius + COLISION_ERROR_MARGIN;
+            let innerColisionWidth = transitionLenght - COLISION_ERROR_MARGIN;
+            let innerColisionHeight = offsetRadius - COLISION_ERROR_MARGIN;
+            
+            if (collidePointArc(getMouseX(p), getMouseY(p), middleX, middleY, outerColisionWidth, outerColisionHeight + COLISION_ERROR_MARGIN, angle, 0, Math.PI) ||
+            collidePointArc(getMouseX(p), getMouseY(p), middleX, middleY, innerColisionWidth, innerColisionHeight + COLISION_ERROR_MARGIN, angle, Math.PI, 0)) {
+              let actualTransition = automataRef.current.getTransitions().find(t => t.to.id === transition.from.id && t.from.id === transition.to.id)
+              clickedTransitionTemp = actualTransition;
+              return;
             }
-            return {arcStart, arcEnd}
-          }
-
-          let outerColisionWidth = transitionLenght + COLISION_ERROR_MARGIN
-          let outerColisionHeight = transitionHeight + COLISION_ERROR_MARGIN
-          let outerColisionArc = getArcSlice(outerColisionHeight, p)
-          let innerColisionWidth = transitionLenght - COLISION_ERROR_MARGIN
-          let innerColisionHeight = transitionHeight - COLISION_ERROR_MARGIN
-          let innerColisionArc = getArcSlice(innerColisionHeight, p)
-
-          if (transitionHeight < -COLISION_ERROR_MARGIN){
-            let aux = outerColisionHeight;
-            outerColisionHeight = innerColisionHeight;
-            innerColisionHeight = aux;
-          }
-
-          if (
-            (-COLISION_ERROR_MARGIN < transitionHeight && transitionHeight < COLISION_ERROR_MARGIN) ?
-              (collidePointArc(getMouseX(p), getMouseY(p), middleX, middleY, outerColisionWidth, Math.abs(outerColisionHeight), transitionAngle, outerColisionArc.arcStart, outerColisionArc.arcEnd)  
-              || collidePointArc(getMouseX(p), getMouseY(p), middleX, middleY, innerColisionWidth, Math.abs(innerColisionHeight), transitionAngle, innerColisionArc.arcStart, innerColisionArc.arcEnd))
-            :
-              (collidePointArc(getMouseX(p), getMouseY(p), middleX, middleY, outerColisionWidth, Math.abs(outerColisionHeight), transitionAngle, outerColisionArc.arcStart, outerColisionArc.arcEnd)  
-              && !collidePointArc(getMouseX(p), getMouseY(p), middleX, middleY, innerColisionWidth, Math.abs(innerColisionHeight), transitionAngle, innerColisionArc.arcStart, innerColisionArc.arcEnd))
-          ){
-            clickedTransitionTemp = transition
-            return
+          } else {
+            const tolerance = 10; // Pixel tolerance for clicking the line
+            if (collidePointLine(getMouseX(p), getMouseY(p), start.x + offsetX, start.y + offsetY, end.x - offsetX, end.y - offsetY, tolerance)) {
+              clickedTransitionTemp = transition;
+              return;
+            }
           }
         }
       }
-    })
+    });
     return clickedTransitionTemp
   }
 
@@ -409,11 +479,10 @@ const Canvas: React.FC = () => {
       clickedState,
       endState,
       labels,
-      CanvasColors.DEFAULT_TRANSITION,
-      CanvasColors.DEFAULT_TRANSITION_TEXT,
+      CanvasColorsRef.current.DEFAULT_TRANSITION,
+      CanvasColorsRef.current.DEFAULT_TRANSITION_TEXT,
     );
-    stopSimulation()
-    validadeAllInputs()
+    handleAutomataChange()
   }
 
   function hasOpenPopup(): boolean{
@@ -422,10 +491,36 @@ const Canvas: React.FC = () => {
   }
 
   useEffect(() => {
+    updateRootColor()
+    CanvasColorsRef.current = updateCanvasColorEnum()
+  }, [selectedColorTheme])
+
+  useEffect(() => {
+    
     // calculateSteps();
     if(!automataRef.current){
-      automataRef.current = new Automata(); 
+      automataRef.current = new Automata();
     }
+
+    let previousStates = localStorage.getItem("States")
+    if(previousStates) {
+      let prevStates: State[] = JSON.parse(previousStates);
+      automataRef.current.states = prevStates;
+      automataRef.current.initialState = prevStates.find(s => s.isInitial) || null;
+      automataRef.current.finalStates = prevStates.filter(s => s.isFinal);
+    }
+    let previousTransitions = localStorage.getItem("Transitions")
+    if(previousTransitions){
+      let prevTransitions: Transition[] = JSON.parse(previousTransitions);
+      automataRef.current.transitions = prevTransitions;
+    }
+    let previousNotes = localStorage.getItem("Notes")
+    if(previousNotes){
+      let prevNotes: Note[] = JSON.parse(previousNotes);
+      automataRef.current.notes = prevNotes;
+    }
+
+
     console.log('%c-- O CANVAS FOI RERENDERED! --', 'color: #ff7777')
     if (canvasRef.current) {
       //* Parou de funcionar */
@@ -458,8 +553,7 @@ const Canvas: React.FC = () => {
           option2.mouseClicked(() => {
             toggleInitial(p);
             hideContextMenu();
-            stopSimulation()
-            validadeAllInputs()
+            handleAutomataChange();
             });
 
           let option3 = p.createDiv("Final");
@@ -467,8 +561,7 @@ const Canvas: React.FC = () => {
           option3.mouseClicked(() => {
             automataRef.current.toggleFinal(selectedStates);
             hideContextMenu();
-            stopSimulation()
-            validadeAllInputs()
+            handleAutomataChange();
           });
           
           let option4 = p.createDiv("Rename");
@@ -499,7 +592,7 @@ const Canvas: React.FC = () => {
         }; 
 
         p.draw = () => {
-          p.background(CanvasColors.BACKGROUND);
+          p.background(CanvasColorsRef.current.BACKGROUND);
           p.push();
           p.scale(cameraZoomRef.current)
           p.strokeCap(p.PROJECT);
@@ -551,17 +644,18 @@ const Canvas: React.FC = () => {
           // #region Renderiza notas
           isCursorOverNoteResizeHandle = false; // Flag to track cursor over the resize handle
           automataRef.current.getNotes().forEach((note: Note, index: number) => {
-            p.fill(note.color);
+            p.fill(CanvasColorsRef.current.NOTES);
             p.strokeWeight(0) // p.strokeWeight(2)
-            p.stroke(note.secondaryColor);
+            p.stroke(CanvasColorsRef.current.NOTES_SECONDARY);
             
             if(clickedNote){
               if(note.id === clickedNote.id){
-                p.fill(CanvasColors.NOTES_CLICKED);
-                p.stroke(CanvasColors.NOTES_CLICKED_SECONDARY);
+                p.fill(CanvasColorsRef.current.NOTES_CLICKED);
+                p.stroke(CanvasColorsRef.current.NOTES_CLICKED_SECONDARY);
               }
             }
 
+            p.strokeWeight(1); // Visible lines
             p.rect(note.x, note.y, note.width, note.height, 5);
             p.fill(0) // Reinicia cor para preto
             
@@ -573,7 +667,7 @@ const Canvas: React.FC = () => {
             p.strokeWeight(0)
             p.textAlign(p.LEFT, p.TOP); // Align text to the left and top
             p.textSize(note.textSize);
-            p.fill("#FFFFFF")
+            p.fill(CanvasColorsRef.current.NOTES_TEXT)
     
             
             note.textLines.forEach((linha, i) => {
@@ -585,8 +679,8 @@ const Canvas: React.FC = () => {
             const HANDLE_SIZE_Y = 20;
             const handleX = note.x + note.width - HANDLE_SIZE_X;
             const handleY = note.y + note.height - HANDLE_SIZE_Y;
-            p.fill(CanvasColors.NOTES);
-            p.stroke(CanvasColors.NOTES_SECONDARY); 
+            p.fill(CanvasColorsRef.current.NOTES);
+
             // p.rect(handleX, handleY, HANDLE_SIZE_X, HANDLE_SIZE_Y);
             
             /* HANDLE ICON 1 */
@@ -639,8 +733,8 @@ const Canvas: React.FC = () => {
           }
 
           if(currentCanvasActionRef.current === CanvasActions.CREATING_TRANSITION && clickedState){
-            p.stroke(CanvasColors.CLICKED_TRANSITION);
-            p.fill(CanvasColors.CLICKED_TRANSITION);
+            p.stroke(CanvasColorsRef.current.CLICKED_TRANSITION);
+            p.fill(CanvasColorsRef.current.CLICKED_TRANSITION);
             p.strokeWeight(arrowWeight);
             p.line(clickedState.x, clickedState.y, getMouseX(p), getMouseY(p));
           }
@@ -649,21 +743,21 @@ const Canvas: React.FC = () => {
           if(currentCanvasActionRef.current !== CanvasActions.ANIMATING){
             allTransitions.forEach(
               (transition) => {
-                transition.color = CanvasColors.DEFAULT_TRANSITION
-                transition.textColor = CanvasColors.DEFAULT_TRANSITION_TEXT
+                transition.color = CanvasColorsRef.current.DEFAULT_TRANSITION
+                transition.textColor = CanvasColorsRef.current.DEFAULT_TRANSITION_TEXT
               }
             );
             // Colore todos os estados selecionados como CLICKED color
             selectedTransitions.forEach(
               (transition) => {
-                transition.color = CanvasColors.CLICKED_TRANSITION
-                transition.textColor = CanvasColors.CLICKED_TRANSITION_TEXT
+                transition.color = CanvasColorsRef.current.CLICKED_TRANSITION
+                transition.textColor = CanvasColorsRef.current.CLICKED_TRANSITION_TEXT
               }
             );
   
             if(simulationIndexRef && simulationIndexRef.current! > 0 && simulationIndexRef.current! < simulationStatesRef.current.length){
-              simulationTransitionsRef.current[simulationIndexRef.current!]!.color = CanvasColors.SIMULATION_STEP_TRANSITION;
-              simulationTransitionsRef.current[simulationIndexRef.current!]!.textColor = CanvasColors.SIMULATION_STEP_TRANSITION_TEXT;
+              simulationTransitionsRef.current[simulationIndexRef.current!]!.color = CanvasColorsRef.current.SIMULATION_STEP_TRANSITION;
+              simulationTransitionsRef.current[simulationIndexRef.current!]!.textColor = CanvasColorsRef.current.SIMULATION_STEP_TRANSITION_TEXT;
             }
           }
 
@@ -810,20 +904,20 @@ const Canvas: React.FC = () => {
           const allStates = automataRef.current.getStates();
           allStates.forEach(
             (state) => {
-              state.color = CanvasColors.DEFAULT_STATE
-              state.secondaryColor = CanvasColors.DEFAULT_STATE_SECONDARY
+              state.color = CanvasColorsRef.current.DEFAULT_STATE
+              state.secondaryColor = CanvasColorsRef.current.DEFAULT_STATE_SECONDARY
             }
           );
           // Colore estados do passo atual da simulação como SIMULATION_STEP color
           if(simulationStatesRef.current[simulationIndexRef.current!]){
-            simulationStatesRef.current[simulationIndexRef.current!].color = CanvasColors.SIMULATION_STEP_STATE;
-            simulationStatesRef.current[simulationIndexRef.current!].secondaryColor = CanvasColors.SIMULATION_STEP_STATE_SECONDARY;
+            simulationStatesRef.current[simulationIndexRef.current!].color = CanvasColorsRef.current.SIMULATION_STEP_STATE;
+            simulationStatesRef.current[simulationIndexRef.current!].secondaryColor = CanvasColorsRef.current.SIMULATION_STEP_STATE_SECONDARY;
           }
           // Colore todos os estados selecionados como CLICKED color
           selectedStates.forEach(
             (state) => {
-              state.color = CanvasColors.CLICKED_STATE
-              state.secondaryColor = CanvasColors.CLICKED_STATE_SECONDARY
+              state.color = CanvasColorsRef.current.CLICKED_STATE
+              state.secondaryColor = CanvasColorsRef.current.CLICKED_STATE_SECONDARY
             }
           );
             
@@ -875,7 +969,7 @@ const Canvas: React.FC = () => {
                 p.ellipse(state.x, state.y, innerDiameter);
               }
 
-              p.fill(255);
+              p.fill(CanvasColorsRef.current.DEFAULT_STATE_TEXT);
               p.textAlign(p.CENTER, p.CENTER);
               p.strokeWeight(0)
               wrapText(p, state.label, state.x, state.y, state.diameter, 12);
@@ -889,8 +983,8 @@ const Canvas: React.FC = () => {
           // Desenha caixa de seleção
           if (currentCanvasActionRef.current === CanvasActions.CREATING_SELECTION) {
             p.push(); // Start a new drawing state
-            p.fill(CanvasColors.SELECTION);
-            p.stroke(CanvasColors.SELECTION_BORDER);
+            p.fill(CanvasColorsRef.current.SELECTION);
+            p.stroke(CanvasColorsRef.current.SELECTION_BORDER);
             p.rect(
               selectionX,
               selectionY,
@@ -919,25 +1013,25 @@ const Canvas: React.FC = () => {
 
               if(currentIndex < simulationStatesRef.current.length - 1){
                 if (i < currentIndex) {
-                  p.fill(CanvasColors.DEFAULT_TRANSITION);
+                  p.fill(CanvasColorsRef.current.DEFAULT_TRANSITION);
                 } else if (i === currentIndex) {
-                  p.fill(CanvasColors.DEFAULT_STATE);
+                  p.fill(CanvasColorsRef.current.DEFAULT_STATE);
                 } else {
-                  p.fill(CanvasColors.DEFAULT_TRANSITION_TEXT);
+                  p.fill(CanvasColorsRef.current.DEFAULT_TRANSITION_TEXT);
                 }
 
               } else { //Finalizou por completo a simulação
                 let lastState = simulationStatesRef.current[simulationIndexRef.current!]
                 if (lastState && lastState.isFinal) {
-                  p.fill(CanvasColors.INFO_SUCCESS);
+                  p.fill(CanvasColorsRef.current.INFO_SUCCESS);
                 } else {
-                  p.fill(CanvasColors.INFO_ERROR);
+                  p.fill(CanvasColorsRef.current.INFO_ERROR);
                 }
               }
 
               p.textAlign(p.CENTER, p.CENTER);
               p.strokeWeight(7);
-              p.stroke(CanvasColors.BACKGROUND)
+              p.stroke(CanvasColorsRef.current.BACKGROUND)
               p.strokeJoin(p.ROUND)
               p.text(char, x + (window.innerWidth / 2), window.innerHeight - TEXT_HEIGHT); // Position the text at the top
               x += TEXT_SIZE; // Increment x for the next character
@@ -1167,6 +1261,9 @@ const Canvas: React.FC = () => {
             if (p.mouseButton === p.LEFT && p.keyIsDown(p.SHIFT)) {
               if (!clickedState) {
                 createNewState(allStates, p)
+              } else {
+                currentCanvasActionRef.current = CanvasActions.CREATING_TRANSITION;
+
               }
             }
             else if (p.mouseButton === p.CENTER || (p.keyIsDown(p.CONTROL) && p.mouseButton === p.LEFT)){
@@ -1246,12 +1343,10 @@ const Canvas: React.FC = () => {
             } else if (currentCanvasToolRef.current === CanvasTools.ERASER) {
               if (clickedState) {
                 automataRef.current.deleteState(clickedState);
-                stopSimulation()
-                validadeAllInputs()
+                handleAutomataChange();
               } else if(clickedTransition) {
                 automataRef.current.deleteTransition(clickedTransition);
-                stopSimulation()
-                validadeAllInputs()
+                handleAutomataChange();
               } else if (clickedNote) {
                 automataRef.current.deleteNote(clickedNote);                
               }
@@ -1309,7 +1404,15 @@ const Canvas: React.FC = () => {
                 let currentLabelsAux = automataRef.current.getTransitions().find(t => t.from.id === clickedStateAux.id && t.to.id === endStateAux.id)
                 let currentLabels = currentLabelsAux ? currentLabelsAux.label : ['']
                 
-                const onSubmit = (labels: string[]) => addNewTransition(labels, clickedStateAux, endStateAux)
+                console.log(currentLabelsAux)
+                const onSubmit = (labels: string[]) => {
+                  if(!currentLabelsAux){
+                    addNewTransition(labels, clickedStateAux, endStateAux)
+                  }
+                  else{
+                    automataRef.current.changeTransitionLabel(labels, currentLabelsAux)
+                  } 
+                }
                 setPopupInput({onSubmit, previousLabels:currentLabels})
               }
             }
@@ -1345,13 +1448,11 @@ const Canvas: React.FC = () => {
                     automataRef.current.deleteState(state, isFirstState);
                   });
                   selectedStates = [];
-                  stopSimulation()
-                  validadeAllInputs()
+                  handleAutomataChange()
                 }
               } else if (clickedTransition){
                 automataRef.current.deleteTransition(clickedTransition);
-                stopSimulation()
-                validadeAllInputs();
+                handleAutomataChange()
                 clickedTransition = null;
               } else if (clickedNote){
                 automataRef.current.deleteNote(clickedNote);
@@ -1632,7 +1733,7 @@ const Canvas: React.FC = () => {
     }
   }
 
-  function stopSimulation(){
+  function stopSimulation() {
     setSimulationMessage("");
     setSimulationIndex(0)
     setSimulationTransitions([])
@@ -1640,6 +1741,19 @@ const Canvas: React.FC = () => {
     setSimulationInputText("")
     setSimulationInputId(null)
     simulationInputIdRef.current = null
+  }
+
+  function saveLocalStorage() {
+    localStorage.setItem("States", JSON.stringify(automataRef.current.states));
+    localStorage.setItem("Transitions", JSON.stringify(automataRef.current.transitions));
+    localStorage.setItem("Notes", JSON.stringify(automataRef.current.notes));
+  }
+
+  function handleAutomataChange(saveToLocalStorage = true) {
+    stopSimulation();
+    validadeAllInputs();
+    if(saveToLocalStorage)
+      saveLocalStorage();
   }
 
   function handleSimulationButtonClick(change: number) {
@@ -1767,8 +1881,7 @@ const Canvas: React.FC = () => {
           createTransitionsFromXML(jsonObj.structure.automaton.transition, automataRef.current.states);
           createNotesFromXML(jsonObj.structure.automaton.note);
           event.target.value = '';
-        stopSimulation()
-        validadeAllInputs()
+          handleAutomataChange()
       } else {
         console.error("File content is not a string.");
       }
@@ -1796,8 +1909,8 @@ const Canvas: React.FC = () => {
         stateXml.id,
         +stateXml.x * scaleMultiplier,
         +stateXml.y * scaleMultiplier,
-        CanvasColors.DEFAULT_STATE,
-        CanvasColors.DEFAULT_STATE_SECONDARY,
+        CanvasColorsRef.current.DEFAULT_STATE,
+        CanvasColorsRef.current.DEFAULT_STATE_SECONDARY,
         isInitial,
         isFinal,
         stateXml.name,
@@ -1822,8 +1935,8 @@ const Canvas: React.FC = () => {
         fromState, 
         toState, 
         [label], 
-        CanvasColors.DEFAULT_TRANSITION, 
-        CanvasColors.DEFAULT_TRANSITION_TEXT
+        CanvasColorsRef.current.DEFAULT_TRANSITION, 
+        CanvasColorsRef.current.DEFAULT_TRANSITION_TEXT
       );
       return transition;
     });
@@ -1851,8 +1964,8 @@ const Canvas: React.FC = () => {
         100,
         [""],
         16,
-        CanvasColors.NOTES,
-        CanvasColors.NOTES_SECONDARY,
+        CanvasColorsRef.current.NOTES,
+        CanvasColorsRef.current.NOTES_SECONDARY,
       );
 
       return note;
@@ -1875,13 +1988,11 @@ const Canvas: React.FC = () => {
 
   const Undo = () => {
     automataRef.current.undo()
-    stopSimulation()
-    validadeAllInputs()
+    handleAutomataChange()
   }
   const Redo = () => {
     automataRef.current.redo()
-    stopSimulation()
-    validadeAllInputs()
+    handleAutomataChange()
   }
 
   const closePopup = () => {
@@ -1924,8 +2035,8 @@ const Canvas: React.FC = () => {
     const triggerFunction = () => {
       if (desiredIndex < partitionList.length) {
         if(desiredIndex === 0){
-          automataRef.current.addNote(-70, -80, "Estados Finais", 140, 30, ["Estados Finais"], 16, CanvasColors.NOTES, CanvasColors.NOTES_SECONDARY);
-          automataRef.current.addNote(300 + -81, -80, "Estados Não Finais", 170, 30, ["Estados Não Finais"], 16, CanvasColors.NOTES, CanvasColors.NOTES_SECONDARY);
+          automataRef.current.addNote(-70, -80, "Estados Finais", 140, 30, ["Estados Finais"], 16, CanvasColorsRef.current.NOTES, CanvasColorsRef.current.NOTES_SECONDARY);
+          automataRef.current.addNote(300 + -81, -80, "Estados Não Finais", 170, 30, ["Estados Não Finais"], 16, CanvasColorsRef.current.NOTES, CanvasColorsRef.current.NOTES_SECONDARY);
         } else {
           automataRef.current.notes = []
         }
@@ -1950,7 +2061,7 @@ const Canvas: React.FC = () => {
         automataRef.current.initialState = dfa.initialState;        
         automataRef.current.transitions = [];
         for (const transition of dfa.transitions)
-          automataRef.current.addTransition(transition.from, transition.to, transition.label, CanvasColors.DEFAULT_TRANSITION, CanvasColors.DEFAULT_TRANSITION_TEXT);
+          automataRef.current.addTransition(transition.from, transition.to, transition.label, CanvasColorsRef.current.DEFAULT_TRANSITION, CanvasColorsRef.current.DEFAULT_TRANSITION_TEXT);
         // automataRef.current.transitions = dfa.transitions;
       }
     };
@@ -1965,7 +2076,7 @@ const Canvas: React.FC = () => {
   function displayPartition(partition: any[]) {
     let noteOffset = 50
     partition.forEach((states, counter) => {
-      automataRef.current.addNote(300 * counter - noteOffset/2 - 40, -noteOffset, "", noteOffset + 80, noteOffset * 2 + (states.length - 1) * 200, [" "], 16, CanvasColors.NOTES, CanvasColors.NOTES_SECONDARY);
+      automataRef.current.addNote(300 * counter - noteOffset/2 - 40, -noteOffset, "", noteOffset + 80, noteOffset * 2 + (states.length - 1) * 200, [" "], 16, CanvasColorsRef.current.NOTES, CanvasColorsRef.current.NOTES_SECONDARY);
       let counterY = 0;
       states.forEach((state: State) => {
         state.targetX = 300 * counter;
@@ -2069,7 +2180,10 @@ function getRandomColor() {
           Redo={Redo}
           MinimizeDFA={MinimizeAutomata}
           RegexToDFA={clickRegexToDFA}
-          ClearAutomata = {() => automataRef.current.clearAutomata()}
+          ClearAutomata = {() => {
+            // automataRef.current.clearAutomata()
+            setSelectedColorTheme(selectedColorTheme === ColorThemes.DARK ? ColorThemes.LIGHT : ColorThemes.DARK)
+          }}
         />
 
         {/* Lado Direito */}

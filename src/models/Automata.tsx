@@ -9,6 +9,7 @@ import { AutomataInputResultsEnum } from "../enums/AutomataInputEnum";
 
 import { findByPlaceholderText } from "@testing-library/react";
 import { collapseTextChangeRangesAcrossMultipleVersions } from "typescript";
+import { toHaveAccessibleDescription } from "@testing-library/jest-dom/matchers";
 
 interface AutomataSnapshot {
   states: State[];
@@ -302,6 +303,12 @@ export class Automata {
     }
   }
 
+  changeTransitionLabel(labels: string[], transition: Transition){
+    this.pushSnapshotToUndo();
+    this.redoStack = [];
+    transition.label = labels;
+  }
+
   deleteTransition(transition: Transition): void {
     this.pushSnapshotToUndo();
     const index = this.transitions.findIndex((t) => t.from === transition.from && t.to === transition.to && t.label === transition.label);
@@ -396,8 +403,14 @@ export class Automata {
     if (
       this.transitions.some(
         (t, index, arr) =>
-          arr.filter((x) => x.from.id === t.from.id && x.label === t.label).length > 1
-      )
+          arr.some(x =>
+            x !== t &&
+            x.from.id === t.from.id &&
+            x.to.id !== t.to.id &&
+            x.label.every((lbl, lblIndex) => lbl === t.label[lblIndex]) &&
+            t.label.every((lbl, lblIndex) => lbl === x.label[lblIndex])
+          )
+      ) || this.transitions.some(t => t.label.includes("λ"))
     ) {
       return { 
         result: AutomataInputResultsEnum.WARNING, 
