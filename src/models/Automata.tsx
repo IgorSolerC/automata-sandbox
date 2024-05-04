@@ -335,22 +335,31 @@ export class Automata {
       (transition) => transition.from.id === estado_atual.id
     );
 
-    if (
-      !possiveis_transicoes ||
-      !possiveis_transicoes.some((transition) => transition.label.includes(char))
-      ) {
+    if (!possiveis_transicoes) {
       return {
         isValidTransition: false,
         nextState: null,
-      };
-    } else {
-      estado_atual = possiveis_transicoes.find(
-        (transition) => transition.label.includes(char)
-        )!.to;
+      }
+    } 
+    
+    let matchingTransition = possiveis_transicoes.find((transition) => 
+      transition.label.some(label => {
+        const regex = this.interpretLabel(label)
+        return regex.test(char);
+      })
+    );
+
+    if(matchingTransition) {
+      estado_atual = matchingTransition.to;
       return {
         isValidTransition: true,
         nextState: estado_atual,
       };
+    } else {
+      return {
+        isValidTransition: false,
+        nextState: null,
+      }
     }
   }
 
@@ -364,6 +373,26 @@ export class Automata {
     })
   }
   
+  isRegex(label: string) {
+    // Assuming regex patterns are more complex or longer than single characters
+    return label.length > 1;
+  }
+
+  interpretLabel(label: string) {
+    if (this.isRegex(label)) {
+      // Treat as a regex
+      return new RegExp(`^${label}$`);
+    } else {
+      // Treat as a literal character, escape to be safe
+      return new RegExp(`^${this.escapeRegex(label)}$`);
+    }
+  }
+  
+  escapeRegex(label: string) {
+    // Escapes special regex characters
+    return label.replace(/[-/\\^$*+?.()|[\]{}]/g, '\\$&');
+  }
+
 
   validate(input: string): { result: number; message: string } {
 
@@ -376,7 +405,12 @@ export class Automata {
     const characters = input.split("");
     const temCharForaDoAlfabeto = characters.some(
       (char) =>
-        !this.transitions.some((transition) => transition.label.includes(char))
+        !this.transitions.some((transition) =>
+          transition.label.some(label => {
+            const regex = this.interpretLabel(label)
+            return regex.test(char);
+          })
+        )
     );
 
     if (temCharForaDoAlfabeto) {
@@ -407,8 +441,14 @@ export class Automata {
             x !== t &&
             x.from.id === t.from.id &&
             x.to.id !== t.to.id &&
-            x.label.every((lbl, lblIndex) => lbl === t.label[lblIndex]) &&
-            t.label.every((lbl, lblIndex) => lbl === x.label[lblIndex])
+            x.label.some(xLbl => {
+              const xRegex = this.interpretLabel(xLbl);
+              return t.label.some(tLbl => {
+                const tRegex = this.interpretLabel(tLbl);
+                // Check both directions to ensure any overlap is detected
+                return xRegex.test(tLbl) || tRegex.test(xLbl);
+              });
+            })
           )
       ) || this.transitions.some(t => t.label.includes("λ"))
     ) {

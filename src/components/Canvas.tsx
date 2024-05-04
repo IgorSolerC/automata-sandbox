@@ -482,7 +482,7 @@ const Canvas: React.FC = () => {
       CanvasColorsRef.current.DEFAULT_TRANSITION,
       CanvasColorsRef.current.DEFAULT_TRANSITION_TEXT,
     );
-    handleAutomataChange()
+    handleAutomataChange();
   }
 
   function hasOpenPopup(): boolean{
@@ -1409,7 +1409,10 @@ const Canvas: React.FC = () => {
                     addNewTransition(labels, clickedStateAux, endStateAux)
                   }
                   else{
+                    //Teste pro Regex
+                    labels.push('[0-9]');
                     automataRef.current.changeTransitionLabel(labels, currentLabelsAux)
+                    handleAutomataChange();
                   } 
                 }
                 setPopupInput({onSubmit, previousLabels:currentLabels})
@@ -1555,11 +1558,15 @@ const Canvas: React.FC = () => {
         newSimulationTransitions.push(null);
       else{
         newSimulationTransitions.push(
-          allTransitions.find(x => 
-            x.from.id === estadoAnterior.id && 
-            x.label.includes(inputText[i - 1])
+          allTransitions.find(x =>
+            x.from.id === estadoAnterior.id &&
+            x.label.some(label => {
+              const regex = automataRef.current.interpretLabel(label);
+              return regex.test(inputText[i - 1]);
+            })
           )!
-        );      }
+        );      
+      }
       
 
       newSimulationStates.push(result.nextState!);
@@ -1575,7 +1582,10 @@ const Canvas: React.FC = () => {
       newSimulationTransitions.push(
         allTransitions.find(x => 
           x.from === estadoAnterior && 
-          x.label.includes(inputText[inputText.length - 1])
+          x.label.some(label => {
+            const regex = automataRef.current.interpretLabel(label);
+            return regex.test(inputText[inputText.length - 1]);
+          })
         )!
       );
     }
