@@ -520,6 +520,10 @@ const Canvas: React.FC = () => {
       automataRef.current.notes = prevNotes;
     }
 
+    if(previousStates || previousTransitions){
+      handleAutomataChange();
+    }
+
 
     console.log('%c-- O CANVAS FOI RERENDERED! --', 'color: #ff7777')
     if (canvasRef.current) {
@@ -1377,10 +1381,12 @@ const Canvas: React.FC = () => {
             {
               automataRef.current.pushSnapshotToUndo();
               automataRef.current.redoStack = [];
+              saveLocalStorage();
             }
 
             if(currentCanvasActionRef.current === CanvasActions.RESIZING_NOTE){
               calculateNoteLines(clickedNote!, p);
+              saveLocalStorage();
             }
 
             if (clickedState) {            
