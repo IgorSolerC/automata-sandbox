@@ -18,7 +18,7 @@ const CreateTransitionPopup: React.FC<CreateTransitionPopupProps> = ({
 }) => { 
     // const [inputValue, setInputValue] = useState([''])
     const getInitialInputValue = () =>{
-        let labelsList = popupInput.previousLabels.filter(x => x !== 'λ')
+        let labelsList = popupInput.previousLabels.filter(x => x !== 'λ' && x.length === 1)
         return !labelsList.includes('') ? labelsList.concat(['']) : labelsList
     }
     
@@ -29,6 +29,24 @@ const CreateTransitionPopup: React.FC<CreateTransitionPopupProps> = ({
     const [addEmptyTransition, setAddEmptyTransition] = useState(popupInput.previousLabels.includes('λ'))
 
     const [blinkingInputs, setBlinkingInputs] = useState<number[]>([]); 
+
+    const [regexValue, setRegexValue] = useState(popupInput.previousLabels.find(label => label.length > 1) || '') ;
+    const [isRegexValid, setIsRegexValid] = useState(true);
+
+    const handleRegexChange = (e: any) => {
+        const value = e.target.value;
+        setRegexValue(value);
+        setIsRegexValid(validateRegex(value));
+    };
+
+
+    const validateRegex = (value: string) => {
+        //Só podemos aceitar Regex que dão match em um único símbolo por vez, como "[a-z]"
+        //Não podemos aceitar coisas como "teste", já que teria q dar match em mais de um símbolo
+        const parts = value.split('|');
+        const validRegex = /^(?:\[\^?.*?\]$|\\[wdsWDS]$|^\.$|^[^\\[])$/;
+        return parts.every(part => validRegex.test(part));
+    };
 
     useEffect(() => {
         const handleKeyPress = (e: KeyboardEvent) => {
@@ -110,7 +128,14 @@ const CreateTransitionPopup: React.FC<CreateTransitionPopupProps> = ({
                 />
                 ))}
             </div>
-            <input  className='generic-popup-input' placeholder="RegEx (Opcional)"/>
+            <input  
+            className='generic-popup-input' 
+            placeholder="RegEx (Opcional)"
+            value={regexValue}
+            onChange={handleRegexChange}
+            />
+            {!isRegexValid && <div className="error-message">RegEx inválido</div>}
+
             <div>
                 <label>
                     <input type='checkbox'
@@ -122,12 +147,15 @@ const CreateTransitionPopup: React.FC<CreateTransitionPopupProps> = ({
             </div>
             <button
                 className="canvas-button generic-popup-button"
-                disabled={!((inputValue.filter(x => x !== '').length > 0) || addEmptyTransition)}
+                disabled={!((inputValue.filter(x => x !== '').length > 0) || addEmptyTransition || (isRegexValid && regexValue.length > 1))}
                 onClick={() => {
                     let finalLabels = inputValue.filter(x => x !== '' && x !== 'λ')
 
                     if (addEmptyTransition)
                         finalLabels.push('λ')
+
+                    if(regexValue && isRegexValid)
+                        finalLabels.push(regexValue);
 
                     popupInput.onSubmit(finalLabels)
                     onClose()

@@ -1415,8 +1415,6 @@ const Canvas: React.FC = () => {
                     addNewTransition(labels, clickedStateAux, endStateAux)
                   }
                   else{
-                    //Teste pro Regex
-                    labels.push('[0-9]');
                     automataRef.current.changeTransitionLabel(labels, currentLabelsAux)
                     handleAutomataChange();
                   } 
