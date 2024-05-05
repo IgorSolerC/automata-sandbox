@@ -1510,6 +1510,10 @@ const Canvas: React.FC = () => {
               setSelectedToolState(CanvasTools.ERASER)
             }
             else if (p.key === "5") {
+              currentCanvasToolRef.current = CanvasTools.NOTE;
+              setSelectedToolState(CanvasTools.NOTE)
+            }
+            else if (p.key === "6") {
               currentCanvasToolRef.current = CanvasTools.MOVE;
               setSelectedToolState(CanvasTools.MOVE)
             }
