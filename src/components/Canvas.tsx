@@ -2196,6 +2196,7 @@ function getRandomColor() {
           ClearAutomata = {() => {
             // automataRef.current.clearAutomata()
             setSelectedColorTheme(selectedColorTheme === ColorThemes.DARK ? ColorThemes.LIGHT : ColorThemes.DARK)
+            automataRef.current.findOrCreateSinkState();
           }}
         />
 

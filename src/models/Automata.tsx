@@ -122,6 +122,86 @@ export class Automata {
     this.redoStack = [];
   }
 
+  findOrCreateSinkState(): void {
+    let sinkStateExists = false;
+    let sinkState: State | null = null;
+
+    // Check for existing sink state
+    for (const state of this.states) {
+        let isSink = true;
+        for (const transition of this.transitions) {
+            if (transition.from === state && transition.to !== state) {
+                isSink = false;
+                break;
+            }
+        }
+
+        // Ensure the state is not a final state
+        if (isSink && !this.finalStates.includes(state)) {
+            sinkStateExists = true;
+            sinkState = state;
+            break;
+        }
+    }
+
+    // Create a sink state if none exists
+    if (!sinkStateExists) {
+      let id_number = 0;
+      const allStates = this.getStates(); 
+      while (allStates.some(state => state.id === id_number.toString())) {
+        id_number++;
+      }
+
+      let avgX = 0, avgY = 0;
+      if (this.states.length > 0) {
+          this.states.forEach(state => {
+              avgX += state.x;
+              avgY += state.y;
+          });
+          avgX /= this.states.length;
+          avgY /= this.states.length;
+      }
+
+      const newState = new State(
+          `${id_number}`, // Unique ID
+          'Poço', 
+          avgX,
+          avgY,
+          80,
+          'grey',
+          'lightgrey',
+          false,
+          false,
+          0,
+          0,
+          false
+      );
+
+        this.states.push(newState);
+        sinkState = newState;
+        // Create a self-loop transition for the new sink state
+        const alphabet = this.getAlphabet();
+        alphabet.forEach(symbol => {
+          if(symbol !== 'λ'){
+            this.addTransition(newState, newState, [symbol], 'black', 'black');
+          }
+        })
+    }
+
+     // Add missing transitions to the sink state from each state
+    this.states.forEach(state => {
+      const alphabet = this.getAlphabet();
+      alphabet.forEach(symbol => {
+        if(symbol !== 'λ'){
+          // Check if there is already a transition for this symbol from this state
+          if (!this.transitions.some(t => t.from === state && t.label.includes(symbol))) {
+            this.addTransition(state, sinkState!, [symbol], 'black', 'black');
+          }
+        }
+      });
+    });
+  }
+
   /* Initial state */
   setInitialState(newState: State | null, saveSnapshot: boolean = true) {
     if(saveSnapshot){
