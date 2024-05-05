@@ -112,6 +112,7 @@ const Canvas: React.FC = () => {
   const fileInputRef = useRef<HTMLInputElement>(null);
   
   const [selectedColorTheme, setSelectedColorTheme] = useState(localStorage.getItem('color') === "1" ? ColorThemes.LIGHT : ColorThemes.DARK)
+  
 
   const updateCanvasColorEnum = () => {
     if (selectedColorTheme === ColorThemes.LIGHT){
@@ -136,8 +137,6 @@ const Canvas: React.FC = () => {
   useEffect(() => {
     simulationStatesRef.current = simulationStates;
   }, [simulationStates]);
-
-
 
   let selectedStateMouseOffset: any; // {'q1': {'x': 10, 'y': -10}, 'q2': {'x': 10, 'y': -10}}
   let selectedNoteMouseOffset: any;
@@ -544,9 +543,6 @@ const Canvas: React.FC = () => {
           p.createCanvas(window.innerWidth, window.innerHeight);
           p.frameRate(144);
 
-          // slider = p.createSlider(-5, 50, 1);
-          // slider.position(10, 80);
-
           // Create custom context menu
           contextMenu = p.createDiv(" "); 
           contextMenu.id("contextMenu"); 
@@ -575,11 +571,6 @@ const Canvas: React.FC = () => {
               alert("Selecione um estado por vez para alterar seu nome.")
             }
             else{
-              // let label = prompt("Digite o novo nome: ");
-              // if(label)
-              //   selectedStates[0].label = label!;
-              // else
-              //   alert("O nome não pode estar vazio.");
               setOpenPopup(PopupType.RENAME_STATE)
               openPopupRef.current = PopupType.RENAME_STATE
 
@@ -594,6 +585,10 @@ const Canvas: React.FC = () => {
           contextMenu.child(option3);
           contextMenu.child(option4);
         }; 
+
+        p.windowResized= () => {
+          p.resizeCanvas(window.innerWidth, window.innerHeight);
+        }
 
         p.draw = () => {
           p.background(CanvasColorsRef.current.BACKGROUND);

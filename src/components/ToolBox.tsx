@@ -142,7 +142,7 @@ const Toolbox: React.FC<ToolboxProps> = ({ currentCanvasToolRef, handleImportFil
             <TrashIcon />
           </button>
           {isExpanded &&
-            <button id="regex" title="Create from RegEx"
+            <button id="regex" title="Create from RegEx" disabled
               className={
                 "canvas-button navbar-button extra-option "
                 // + (selectedToolState === CanvasTools.POINTER ? "selected" : "")
