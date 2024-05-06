@@ -3,17 +3,17 @@ export const CanvasColorsLight = {
     BACKGROUND: "#ffffff",
 
     // State
-    DEFAULT_STATE: "#ffda75 ",
+    DEFAULT_STATE: "#fcd181 ",
     DEFAULT_STATE_TEXT: "#000000",
-    DEFAULT_STATE_SECONDARY: "#e6bd50", 
+    DEFAULT_STATE_SECONDARY: "#e8b961", 
     CLICKED_STATE: "#4b9cf9", 
     CLICKED_STATE_SECONDARY: "#287ee0",
     SIMULATION_STEP_STATE: "#ff385f", 
     SIMULATION_STEP_STATE_SECONDARY: "#eb022f",
 
     // Transition
-    DEFAULT_TRANSITION: "#222",
-    DEFAULT_TRANSITION_TEXT: "#222",
+    DEFAULT_TRANSITION: "#212529",
+    DEFAULT_TRANSITION_TEXT: "#212529",
     CLICKED_TRANSITION: "#287ee0", 
     CLICKED_TRANSITION_TEXT: "#000",
     SIMULATION_STEP_TRANSITION: "#ff385f", 
@@ -25,10 +25,10 @@ export const CanvasColorsLight = {
 
     // Notes
     NOTES: "#E9ECEF" + '99',
-    NOTES_SECONDARY: "#ccc",
+    NOTES_SECONDARY: "#ced4da",
     NOTES_TEXT: "#000000",
     NOTES_CLICKED: "#4b9cf9",
-    NOTES_CLICKED_SECONDARY: "#4b9cf9",
+    NOTES_CLICKED_SECONDARY: "#287ee0",
 
     // Other
     INFO_SUCCESS: "#00C853",

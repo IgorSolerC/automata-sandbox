@@ -43,12 +43,15 @@ const CreateTransitionPopup: React.FC<CreateTransitionPopupProps> = ({
     const validateRegex = (value: string) => {
         //Só podemos aceitar Regex que dão match em um único símbolo por vez, como "[a-z]"
         //Não podemos aceitar coisas como "teste", já que teria q dar match em mais de um símbolo
+        // 🕯️🕯️🕯️ sagrado, não encoste 🕯️🕯️🕯️
         const parts = value.split('|');
-        const validRegex = /^(?:\[\^?.*?\]$|\\[wdsWDS]$|^\.$|^[^\\[])$/;
+        const validRegex = /^(?:\[\^?(?:\\.|[^\\\-\]]|-\]|-\[|(?<=\[)-?(?:[^\]-][^-]?)*-?(?=\]))\]$|\\[wdsWDS]$|^.$|^[^\\[])$/;
+
         return parts.every(part => validRegex.test(part));
+        // 🕯️🕯️🕯️ sagrado, não encoste🕯️🕯️🕯️
     };
 
-    useEffect(() => {
+    useEffect(() => {   
         const handleKeyPress = (e: KeyboardEvent) => {
             if (e.keyCode === 13) { // Enter key
                 const createButton = document.querySelector('.generic-popup-button') as HTMLElement;
@@ -115,24 +118,31 @@ const CreateTransitionPopup: React.FC<CreateTransitionPopupProps> = ({
     }
 
     return (
-        <GenericPopup onClose={onClose} title='Criar transição'>
+        <GenericPopup onClose={onClose} title='Criar Transição'>
             <div id="popup-transicao-input-list">
                 {inputValue.map((_, i) => (
                 <input
                     key={i} // Important for React lists
                     className={`transition-input generic-popup-input ${blinkingInputs.includes(i) ? 'blink' : ''}`} // Add blink conditionally
                     value={inputValue[i]}
-                    onChange={(e) => handleInputChange(e, i)}
+                    onChange={(e) => {
+                        handleInputChange(e, i)
+                    }}
                     ref={inputRefs.current[i]}
                     placeholder='λ'
                 />
                 ))}
             </div>
             <input  
-            className='generic-popup-input' 
-            placeholder="RegEx (Opcional)"
-            value={regexValue}
-            onChange={handleRegexChange}
+                className='generic-popup-input' 
+                placeholder="RegEx (Opcional)"
+                value={regexValue}
+                onChange={handleRegexChange}
+                onKeyUp={(e) => {
+                    if (e.keyCode === 27) {
+                        onClose()
+                    }
+                }}
             />
             {!isRegexValid && <div className="error-message">RegEx inválido</div>}
 
@@ -141,6 +151,11 @@ const CreateTransitionPopup: React.FC<CreateTransitionPopupProps> = ({
                     <input type='checkbox'
                         checked={addEmptyTransition}
                         onClick={() => setAddEmptyTransition(!addEmptyTransition)}
+                        onKeyUp={(e) => {
+                            if (e.keyCode === 27) {
+                                onClose()
+                            }
+                        }}
                     />
                     Inclui transição vazia
                 </label>

@@ -2,9 +2,10 @@
 :root {
     /* Geral */
     --gui-default-size: 60px;
-    --text-color: #E9ECEF;
-
+    
     &[color-mode="dark"] {
+        --text-color: #E9ECEF;
+
         --shadow-color: 0deg 0% 10%;
         --shadow-elevation-low:
         0px 0.7px 0.8px hsl(var(--shadow-color) / 0.35),
@@ -46,6 +47,7 @@
         --rejected: #eb022f;
         --rejected-hover: #FF1744;
         --rejected-icon: #FFCDD2;
+        --error-message-border: #FF6D00;
         --error-message-div: #FF6D00;
         --error-message: #ffe4c4;
         --input-palceholder: #6C757D;
@@ -56,21 +58,25 @@
         --context-menu-bg-hover: #495057;
         
         /* Popup */
+        --popup-menu-bg: #343A40;
+        --popup-menu-border: #343A40;
         --popup-button-bg: #495057;
         --popup-button-bg-hover: #61686f;
     }
     
     &[color-mode="light"] {
+        --text-color: #343A40;
+
         --shadow-color: 0deg 0% 10%;
         --shadow-elevation-low:
         0px 0.7px 0.8px hsl(var(--shadow-color) / 0.10),
         0px 1.2px 1.3px -1.2px hsl(var(--shadow-color) / 0.10),
         0px 2.9px 3.3px -2.5px hsl(var(--shadow-color) / 0.10);
         --shadow-elevation-medium:
-        0px 0.7px 0.8px hsl(var(--shadow-color) / 0.05),
-        0px 2.4px 2.7px -0.8px hsl(var(--shadow-color) / 0.05),
-        0px 6px 6.8px -1.7px hsl(var(--shadow-color) / 0.05),
-        0.1px 14.5px 16.3px -2.5px hsl(var(--shadow-color) / 0.05);
+        0px 0.7px 0.8px hsl(var(--shadow-color) / 0.02),
+        0px 2.4px 2.7px -0.8px hsl(var(--shadow-color) / 0.02),
+        0px 6px 6.8px -1.7px hsl(var(--shadow-color) / 0.02),
+        0.1px 14.5px 16.3px -2.5px hsl(var(--shadow-color) / 0.02);
         --shadow-elevation-high:
         0px 0.7px 0.8px hsl(var(--shadow-color) / 0.10),
         0px 4.8px 5.4px -0.4px hsl(var(--shadow-color) / 0.10),
@@ -81,39 +87,45 @@
         0.4px 73px 82.1px -2.5px hsl(var(--shadow-color) / 0.10);
 
         /* Buttons */
-        --button-bg: #000;
-        --button-bg-hover: #495057;
-        --button-icon: #343A40;
-        --button-icon-disabled: #4f565e;
+        --button-bg: #dde4eb;
+        --button-bg-hover: #ced4da;
+        --button-icon: #fff;
+        --button-icon-disabled: #aeb7bf;
 
         /* Tools */
-        --tool-icon: #ced4da;
-        --selected-tool-icon: #ffe4c4;
-        --selected-tool: #FF6D00;
-        --selected-tool-hover: #FF9100;
+        --tool-icon: #343A40;
+        --selected-tool-icon: #FF6D00;;
+        --selected-tool: #ffe4c4;
+        --selected-tool-hover: #fcd5a7;
         
         /* Input Box */
-        --accepted: #00C853;
+        --accepted: #B9F6CA;
         --accepted-hover: #00E676;
-        --accepted-icon: #B9F6CA;
-        --warning: #FFD600;
+        --accepted-border: #00C853;
+        --accepted-icon: #00C853;
+        --warning: #fffce0;
         --warning-hover: #FFEA00;
-        --warning-icon: #fffce0;
-        --rejected: #eb022f;
+        --warning-border: #FFD600;
+        --warning-icon: #FFD600;
+        --rejected: #FFCDD2;
         --rejected-hover: #FF1744;
-        --rejected-icon: #FFCDD2;
-        --error-message-div: #FF6D00;
-        --error-message: #ffe4c4;
-        --input-palceholder: #6C757D;
+        --rejected-border: #eb022f;
+        --rejected-icon: #eb022f;
+        --error-message-border: #FF6D00;
+        --error-message-div: #ffe4c4;
+        --error-message: #FF6D00;
+        --input-palceholder: #aeb7bf;
 
         /* Context Menu */
-        --context-menu-bg: #343A40;
-        --context-menu-border: #343A40;
-        --context-menu-bg-hover: #495057;
-        
+        --context-menu-bg: #dde5ed;
+        --context-menu-border: #dde5ed;
+        --context-menu-bg-hover: #ced4da;
+
         /* Popup */
-        --popup-button-bg: #495057;
-        --popup-button-bg-hover: #61686f;
+        --popup-menu-bg: #f7fbff;
+        --popup-menu-border: #f7fbff;
+        --popup-button-bg: #dde4eb;
+        --popup-button-bg-hover: #ced4da;
     }
 }
 
@@ -160,6 +172,7 @@ html{
 
 .input-button.accepted{
     background-color: var(--accepted);
+    border: 2px solid var(--accepted-border);
 }
 .input-button.accepted > svg{
     fill: var(--accepted-icon);
@@ -170,6 +183,7 @@ html{
 }
 .input-button.rejected{
     background-color: var(--rejected);
+    border: 2px solid var(--rejected-border);
 }
 .input-button.rejected:hover{
     background-color: var(--rejected-hover);
@@ -180,6 +194,7 @@ html{
 }
 .input-button.warning{
     background-color: var(--warning);
+    border: 2px solid var(--warning-border);
 }
 .input-button.warning:hover{
     /* background-color: var(--warning-hover); */
@@ -563,7 +578,7 @@ display: none;
 
 #generic-popup{
     min-width: 100px;
-    background-color: var(--context-menu-bg);
+    background-color: var(--popup-menu-bg);
 
     box-shadow: var(--shadow-elevation-medium);
     border-radius: 5px;

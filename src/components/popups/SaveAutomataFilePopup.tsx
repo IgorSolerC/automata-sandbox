@@ -38,11 +38,16 @@ const SaveAutomataFilePopup: React.FC<SaveAutomataFilePopupProps> = ({
     }, [])
 
     return (
-        <GenericPopup onClose={onClose} title='Salvar automato'>
+        <GenericPopup onClose={onClose} title='Salvar Automato'>
             <input  className='generic-popup-input'
                 placeholder="Nome do arquivo .jff"
                 value={inputValue}
                 onChange={(e) => setInputValue(e.target.value)}
+                onKeyUp={(e) => {
+                    if (e.keyCode === 27) {
+                        onClose()
+                    }
+                }}
             />
             <button
                 className="canvas-button generic-popup-button"

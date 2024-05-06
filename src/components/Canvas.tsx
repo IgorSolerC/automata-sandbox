@@ -70,6 +70,7 @@ const Canvas: React.FC = () => {
   var cameraZoomRef = useRef(1)
   var globalTranslateX = 0
   var globalTranslateY = 0
+  const GRID_SPACING = 20;
 
   // Tool selecionada
   const { setSelectedToolState } = useToolboxContext();
@@ -597,6 +598,26 @@ const Canvas: React.FC = () => {
           p.strokeCap(p.PROJECT);
           p.translate(globalTranslateX, globalTranslateY)
           
+          // Calculate the number of dots based on canvas size and GRID_SPACING
+          // const visibleLeft = -globalTranslateX / cameraZoomRef.current;
+          // const visibleRight = (p.width - globalTranslateX) / cameraZoomRef.current;
+          // const visibleTop = -globalTranslateY / cameraZoomRef.current;
+          // const visibleBottom = (p.height - globalTranslateY) / cameraZoomRef.current;
+
+
+          // // Draw dots in a grid
+          // const DOT_SIZE = cameraZoomRef.current * GRID_SPACING;
+          // // p.ellipse(visibleLeft, visibleBottom, DOT_SIZE)
+          // // p.ellipse(visibleLeft, visibleTop, DOT_SIZE)
+          // // p.ellipse(visibleRight, visibleBottom, DOT_SIZE)
+          // // p.ellipse(visibleRight, visibleTop, DOT_SIZE)
+
+          // for (let x = Math.floor(visibleLeft / GRID_SPACING) * GRID_SPACING; x < visibleRight; x += GRID_SPACING) {
+          //   for (let y = Math.floor(visibleTop / GRID_SPACING) * GRID_SPACING; y < visibleBottom; y += GRID_SPACING) {
+          //     p.point(x, y, DOT_SIZE);
+          //   }
+          // }
+
           const arrowWeight = 5; 
 
           if (zoomTargetRef.current !== null && zoomTargetRef.current) {
@@ -971,7 +992,15 @@ const Canvas: React.FC = () => {
               p.fill(CanvasColorsRef.current.DEFAULT_STATE_TEXT);
               p.textAlign(p.CENTER, p.CENTER);
               p.strokeWeight(0)
-              wrapText(p, state.label, state.x, state.y, state.diameter, 12);
+
+              // Necessário pra alinhas o texto
+              let FIXED_OFFSET_X = 2  
+              let FIXED_OFFSET_Y = 1
+              wrapText(
+                p, state.label,
+                state.x + FIXED_OFFSET_X, state.y + FIXED_OFFSET_Y,
+                state.diameter, 12
+              );
               
               p.fill(0);
               p.stroke(0);
@@ -1105,8 +1134,8 @@ const Canvas: React.FC = () => {
           if (currentCanvasActionRef.current === CanvasActions.MOVING_STATE) {
             // selectedStates.forEach((auxState: automataRef.current.State) => { // <--- deu errado o type
             selectedStates.forEach((state: State) => {
-              state.x = roundNumber(getMouseX(p), 20) + roundNumber(selectedStateMouseOffset[state.id]["x"], 20);
-              state.y = roundNumber(getMouseY(p), 20) + roundNumber(selectedStateMouseOffset[state.id]["y"], 20);
+              state.x = roundNumber(getMouseX(p), GRID_SPACING) + roundNumber(selectedStateMouseOffset[state.id]["x"], GRID_SPACING);
+              state.y = roundNumber(getMouseY(p), GRID_SPACING) + roundNumber(selectedStateMouseOffset[state.id]["y"], GRID_SPACING);
             });
           } else if (currentCanvasActionRef.current === CanvasActions.CREATING_SELECTION) {
             // --- Update valor da seleção ---
@@ -1295,9 +1324,9 @@ const Canvas: React.FC = () => {
                   selectedStates.forEach((state) => {
                     selectedStateMouseOffset[state.id] = {};
                     selectedStateMouseOffset[state.id]["x"] =
-                      state.x - roundNumber(getMouseX(p), 20)
+                      state.x - roundNumber(getMouseX(p), GRID_SPACING)
                     selectedStateMouseOffset[state.id]["y"] =
-                      state.y - roundNumber(getMouseY(p), 20)
+                      state.y - roundNumber(getMouseY(p), GRID_SPACING)
                   });
 
                   // Set estado atual como "Movendo estado"
@@ -2030,14 +2059,23 @@ const Canvas: React.FC = () => {
     }
     console.log("PartitionList: ", partitionList)
   
-    let tempTransitions = JSON.parse(JSON.stringify(automataRef.current.transitions));
-    let tempStates = JSON.parse(JSON.stringify(automataRef.current.states));
-    
+    // let tempTransitions = JSON.parse(JSON.stringify(automataRef.current.transitions));
+    // let tempStates = JSON.parse(JSON.stringify(automataRef.current.states));
+    let tempNotes = JSON.parse(JSON.stringify(automataRef.current.getNotes()))
+    automataRef.current.notes = [];
+
     type Coordinates = {x: number, y: number};
     type CoordinatesMap = Record<string, Coordinates>;
     let originalCoordinates: CoordinatesMap = {}
-    automataRef.current.states.forEach((state, index) => {
+    let allStates = automataRef.current.getStates();
+    let smallerX: number = allStates[0].x;
+    let smallerY: number = allStates[0].y;
+    allStates.forEach((state, index) => {
       originalCoordinates[state.id] = {x: state.x, y: state.y };
+      if(state.x < smallerX)
+        smallerX = state.x;
+      if(state.y < smallerY)
+        smallerY = state.y;
     });
 
     let desiredIndex = 0;
@@ -2047,20 +2085,20 @@ const Canvas: React.FC = () => {
     const triggerFunction = () => {
       if (desiredIndex < partitionList.length) {
         if(desiredIndex === 0){
-          automataRef.current.addNote(-70, -80, "Estados Finais", 140, 30, ["Estados Finais"], 16, CanvasColorsRef.current.NOTES, CanvasColorsRef.current.NOTES_SECONDARY);
-          automataRef.current.addNote(300 + -81, -80, "Estados Não Finais", 170, 30, ["Estados Não Finais"], 16, CanvasColorsRef.current.NOTES, CanvasColorsRef.current.NOTES_SECONDARY);
+          automataRef.current.addNote(smallerX + -70, smallerY + -80, "Estados Finais", 140, 30, ["Estados Finais"], 16, CanvasColorsRef.current.NOTES, CanvasColorsRef.current.NOTES_SECONDARY);
+          automataRef.current.addNote(smallerX + 300 + -81, smallerY + -80, "Estados Não Finais", 170, 30, ["Estados Não Finais"], 16, CanvasColorsRef.current.NOTES, CanvasColorsRef.current.NOTES_SECONDARY);
         } else {
           automataRef.current.notes = []
         }
 
-        displayPartition(partitionList[desiredIndex]);
+        displayPartition(partitionList[desiredIndex], smallerX, smallerY);
         displayTransitions(partitionList[desiredIndex]);
         
         desiredIndex++;
       } else {
         clearInterval(intervalId);
         let dfa = automataRef.current.buildMinimizedDFA(partitions)
-        automataRef.current.notes = [];
+        automataRef.current.notes = tempNotes;
         automataRef.current.states = dfa.states;
 
         automataRef.current.states.forEach((state, index) => {
@@ -2085,14 +2123,14 @@ const Canvas: React.FC = () => {
     let intervalId = setInterval(triggerFunction, 1000);
   }
 
-  function displayPartition(partition: any[]) {
+  function displayPartition(partition: any[], smallerX: number, smallerY: number) {
     let noteOffset = 50
     partition.forEach((states, counter) => {
-      automataRef.current.addNote(300 * counter - noteOffset/2 - 40, -noteOffset, "", noteOffset + 80, noteOffset * 2 + (states.length - 1) * 200, [" "], 16, CanvasColorsRef.current.NOTES, CanvasColorsRef.current.NOTES_SECONDARY);
+      automataRef.current.addNote(smallerX + 300 * counter - noteOffset/2 - 40,  smallerY + -noteOffset, "", noteOffset + 80, noteOffset * 2 + Math.max((states.length - 1), 0) * 200, [" "], 16, CanvasColorsRef.current.NOTES, CanvasColorsRef.current.NOTES_SECONDARY);
       let counterY = 0;
       states.forEach((state: State) => {
-        state.targetX = 300 * counter;
-        state.targetY = counterY * 200;
+        state.targetX = smallerX + 300 * counter;
+        state.targetY = smallerY + counterY * 200;
         state.isAnimating = true;
         counterY++;
       });

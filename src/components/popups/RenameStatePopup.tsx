@@ -42,6 +42,11 @@ const RenameStatePopup: React.FC<RenameStatePopupProps> = ({
                 placeholder="Rótulo do Estado"
                 value={inputValue}
                 onChange={(e) => setInputValue(e.target.value)}
+                onKeyUp={(e) => {
+                    if (e.keyCode === 27) {
+                        onClose()
+                    }
+                }}
             />
             <button
                 className="canvas-button generic-popup-button"

@@ -38,12 +38,17 @@ const CreateNotePopup: React.FC<CreateNotePopupProps> = ({
     
 
     return (
-        <GenericPopup onClose={onClose} title='Cria nota'>
+        <GenericPopup onClose={onClose} title='Criar Nota'>
             <textarea  className='generic-popup-textarea'
                 placeholder="Sua nota..."
                 value={inputValue}
                 onChange={(e) => setInputValue(e.target.value)}
                 // style={{resize: 'none'}}
+                onKeyUp={(e) => {
+                    if (e.keyCode === 27) {
+                        onClose()
+                    }
+                }}
             />
             <button
                 className="canvas-button generic-popup-button"

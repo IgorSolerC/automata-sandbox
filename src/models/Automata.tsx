@@ -7,10 +7,6 @@ import { Note } from "../models/Note";
 // Enums
 import { AutomataInputResultsEnum } from "../enums/AutomataInputEnum";
 
-import { findByPlaceholderText } from "@testing-library/react";
-import { collapseTextChangeRangesAcrossMultipleVersions } from "typescript";
-import { toHaveAccessibleDescription } from "@testing-library/jest-dom/matchers";
-
 interface AutomataSnapshot {
   states: State[];
   transitions: Transition[];
@@ -62,6 +58,25 @@ export class Automata {
     // Estado Inicial
     let initial: string = this.initialState ? this.initialState.id : "null";
     console.log("initial = " + initial);
+    this.printFormalDefinition();
+  }
+
+  printFormalDefinition() {
+    const statesList = this.states.map(state => state.label).join(", ");
+    const initialStateLabel = this.initialState ? this.initialState.label : "None";
+    const finalStatesList = this.finalStates.map(state => state.label).join(", ");
+    
+    console.log(`Definição formal do automato - Quintupla (Q, Σ, δ, q0, F):`);
+    console.log(`Q = {${statesList}}`);
+    console.log(`Σ = {${[...this.getAlphabet()].join(", ")}}`);
+    console.log(`q0 = ${initialStateLabel}`);
+    console.log(`F = {${finalStatesList}}`);
+    console.log(`δ = Funções de transição abaixo:`);
+    
+    this.transitions.forEach(transition => {
+      console.log(`δ(${transition.from.label}, ${transition.label.join("|")}) = ${transition.to.label}`);
+    });
+
   }
 
   pushSnapshotToUndo(){

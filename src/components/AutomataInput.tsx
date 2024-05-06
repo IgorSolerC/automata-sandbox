@@ -69,11 +69,6 @@ interface AutomataInputProps {
 
             let aumataInputResultsAux = [...aumataInputResults]
             let newInput = event.target.value
-            
-            /*
-            // Um pouco gambiarrado, mas foi o jeito que encontrei de "resetar" os valores de simulação
-            // calculateSteps()
-            */
   
             // Simulate automata again
             const { result, message } = automataRef.current.validate(newInput);

@@ -16,6 +16,21 @@ const GenericPopup: React.FC<GenericPopupProps> = ({
   onClose,
   children,
 }) => { 
+
+  useEffect(() => {
+    const handleKeyPress = (e: KeyboardEvent) => {
+      console.log(e)
+      if (e.keyCode === 27) {
+        onClose()
+      }
+    };
+    window.addEventListener('keyup', handleKeyPress);
+
+    return () => { 
+        window.removeEventListener('keyup', handleKeyPress);
+    };
+  }, []);
+
     return (
       <div id='generic-popup-main-div'>
         <div id='generic-popup'>
