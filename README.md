@@ -8,7 +8,7 @@ Link para download JFLAP:
 
 ### `npm start`
 
-Roda versão de debug
+Inicia servidor de debug
 [http://localhost:3000](http://localhost:3000)
 
 ### `npm run deploy`
