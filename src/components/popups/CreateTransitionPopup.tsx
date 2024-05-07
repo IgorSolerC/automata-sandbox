@@ -45,7 +45,8 @@ const CreateTransitionPopup: React.FC<CreateTransitionPopupProps> = ({
         //Não podemos aceitar coisas como "teste", já que teria q dar match em mais de um símbolo
         // 🕯️🕯️🕯️ sagrado, não encoste 🕯️🕯️🕯️
         const parts = value.split('|');
-        const validRegex = /^(?:\[\^?(?:\\.|[^\\\-\]]|-\]|-\[|(?<=\[)-?(?:[^\]-][^-]?)*-?(?=\]))\]$|\\[wdsWDS]$|^.$|^[^\\[])$/;
+        const validRegex = /^(?:\[\^?(?:\\.|[\w\s]-?[\w\s]|[^\\\]\-])+?\]$|\\[wdsWDS]$|^.$|^[^\\[\]|]+)$/;
+
 
         return parts.every(part => validRegex.test(part));
         // 🕯️🕯️🕯️ sagrado, não encoste🕯️🕯️🕯️

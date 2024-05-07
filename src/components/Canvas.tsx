@@ -8,6 +8,7 @@ import CreateTransitionPopup from "./popups/CreateTransitionPopup";
 import RenameStatePopup from "./popups/RenameStatePopup";
 import CreateNotePopup from "./popups/CreateNotePopup";
 import SaveAutomataFilePopup from "./popups/SaveAutomataFilePopup";
+import LoadAutomataPopup from "./popups/LoadAutomataPopup";
 
 // Google Material Icons
 import NextIcon from "../symbols/next_icon";
@@ -1224,6 +1225,8 @@ const Canvas: React.FC = () => {
             console.log(automataRef.current.notes)
           }
 
+          
+
           // Se o click não foi no próprio contextMenu, ocultar o menu.
           if (event.target.id && !event.target.id.includes('ContextMenu')) {
             hideContextMenu();
@@ -1285,6 +1288,8 @@ const Canvas: React.FC = () => {
               clickedNote = null;
             }
 
+            
+
             // Create new 
             if (p.mouseButton === p.LEFT && p.keyIsDown(p.SHIFT)) {
               if (!clickedState) {
@@ -1299,22 +1304,21 @@ const Canvas: React.FC = () => {
                 transitioning = false;
                 // Muda cursor para "grab" cursor
                 window.document.body.style.cursor = 'grab';
+            } else if (p.mouseButton === p.RIGHT) {
+              if (clickedState) {
+                showContextMenu(p.mouseX, p.mouseY);
+              } else {
+                hideContextMenu();              
+              }
+              return;
             }
             /* Pointer */
             else if (currentCanvasToolRef.current === CanvasTools.POINTER) {
               // Botão esquerdo: Cria transições / Cria estados
               currentCanvasActionRef.current = CanvasActions.NONE;
 
-              // Open context menu
-              if (p.mouseButton === p.RIGHT) {
-                if (clickedState) {
-                  showContextMenu(p.mouseX, p.mouseY);
-                } else {
-                  hideContextMenu();
-                }
-              }
               // Left click
-              else if (p.mouseButton === p.LEFT) {
+              if (p.mouseButton === p.LEFT) {
                 /* Shift NÃO apertado, clicou em um estado */
                 // Move estado
                 if (clickedState) {
@@ -1546,9 +1550,9 @@ const Canvas: React.FC = () => {
             if (p.key === "!") {
               automataRef.current.printInfo();
             }
-            else if (p.key === "@"){
-              automataRef.current.clearAutomata();
-            }
+            // else if (p.key === "@"){
+            //   automataRef.current.clearAutomata();
+            // }
           }
         };
 
@@ -1881,17 +1885,6 @@ const Canvas: React.FC = () => {
   };
   
   const clickSaveFile = () => {
-    // // Data to save
-    // const dataToSave = createXMLData();
-    
-    // const userInputFileName = prompt("Digite o nome do arquivo:", "myAutomaton.jff");
-    // const fileName = userInputFileName ?
-    //     (userInputFileName.endsWith(".jff") ? userInputFileName : userInputFileName + ".jff") :
-    //     "myAutomaton.jff";  // Default file name if the user presses cancel or inputs nothing
-  
-    // // Call the save function
-    // saveDataToFile(dataToSave, fileName);
-
     setOpenPopup(PopupType.SAVE_FILE)
     openPopupRef.current = PopupType.SAVE_FILE
 
@@ -1931,6 +1924,17 @@ const Canvas: React.FC = () => {
     } else {
       alert("Please select a .jff file.");
     }
+  };
+
+  const handleAutomataLoad = (fileContent: string) => {
+    console.log('fileContent')
+    console.log(fileContent)
+    const jsonObj = parser.parse(fileContent); // Assuming 'parser' is already defined and imported
+    automataRef.current.clearAutomata();
+    createStatesFromXML(jsonObj.structure.automaton.state);
+    createTransitionsFromXML(jsonObj.structure.automaton.transition, automataRef.current.states);
+    createNotesFromXML(jsonObj.structure.automaton.note);
+    handleAutomataChange(); // Assuming this updates the state or props to reflect changes
   };
 
   const createStatesFromXML = (statesXml: any) => {
@@ -2009,7 +2013,7 @@ const Canvas: React.FC = () => {
         CanvasColorsRef.current.NOTES_SECONDARY,
       );
 
-      return note;
+      return note; 
     });
   };
 
@@ -2021,10 +2025,17 @@ const Canvas: React.FC = () => {
     note.textLines = result![0];
     note.textSize = parseInt(result![1].toString());
   }
-  const clickImportFile = () => {
-    if (fileInputRef.current){
-      fileInputRef.current.click();
+  const clickImportFile = () => {    
+    setOpenPopup(PopupType.LOAD_AUTOMATA)
+    openPopupRef.current = PopupType.LOAD_AUTOMATA
+
+    const openFileExplorer = () => {
+      if (fileInputRef.current){
+        fileInputRef.current.click();
+      }
+      closePopup()
     }
+    setPopupInput({onSubmit: openFileExplorer})
   }
 
   const Undo = () => {
@@ -2213,10 +2224,17 @@ function getRandomColor() {
           onClose={closePopup}
           popupInput={popupInput}
         />
-        : openPopup === PopupType.RENAME_STATE &&
+        : openPopup === PopupType.RENAME_STATE
+        ?
         <RenameStatePopup 
           onClose={closePopup}
           popupInput={popupInput}
+        />
+        : openPopup === PopupType.LOAD_AUTOMATA &&
+        <LoadAutomataPopup 
+          onClose={closePopup}
+          popupInput={popupInput}
+          onLoadAutomata={handleAutomataLoad}
         />
       }
 
@@ -2234,7 +2252,7 @@ function getRandomColor() {
             // automataRef.current.clearAutomata()
             setSelectedColorTheme(selectedColorTheme === ColorThemes.DARK ? ColorThemes.LIGHT : ColorThemes.DARK)
             automataRef.current.findOrCreateSinkState();
-          }}
+          }}          
         />
 
         {/* Lado Direito */}
