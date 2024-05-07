@@ -1,10 +1,8 @@
 ### Links
 
-Plataforma Web: 
-[Automata Sandbox](https://igorsolerc.github.io/automata-sandbox/)
-
-Link para download JFLAP: 
-[JFLAP](https://www.jflap.org/jflaptmp/july27-18/JFLAP7.1.jar)
+- [Automata Sandbox](https://igorsolerc.github.io/automata-sandbox/)
+- [Download JFLAP](https://www.jflap.org/jflaptmp/july27-18/JFLAP7.1.jar)
+- [Pesquisa de satisfação Automata Sandbox](https://docs.google.com/forms/d/e/1FAIpQLSepKQAZrEAv5WgB0mIr3k5OwJWF5bRv6Qk2fBJacIl9gnls0w/viewform?usp=sf_link)
 
 ### `npm start`
 
