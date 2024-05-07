@@ -3,6 +3,7 @@
 - [Automata Sandbox](https://igorsolerc.github.io/automata-sandbox/)
 - [Download JFLAP](https://www.jflap.org/jflaptmp/july27-18/JFLAP7.1.jar)
 - [Pesquisa de satisfação Automata Sandbox](https://docs.google.com/forms/d/e/1FAIpQLSepKQAZrEAv5WgB0mIr3k5OwJWF5bRv6Qk2fBJacIl9gnls0w/viewform?usp=sf_link)
+- [Pesquisa de satisfação JFLAP](https://docs.google.com/forms/d/e/1FAIpQLScEzxRj_NzXvQDoMP-z-3Mwr3tsQNLg9ISCibp4HYgsZc3lUw/viewform?usp=sf_link)
 
 ### `npm start`
 
