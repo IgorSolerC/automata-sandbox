@@ -2068,6 +2068,7 @@ const Canvas: React.FC = () => {
       partitions = automataRef.current.refinePartitions(partitions);
       partitionList.push(partitions);
     }
+    partitionList.pop();
     console.log("PartitionList: ", partitionList)
   
     // let tempTransitions = JSON.parse(JSON.stringify(automataRef.current.transitions));
@@ -2131,7 +2132,7 @@ const Canvas: React.FC = () => {
     triggerFunction();
     
     // Set the interval for subsequent triggers
-    let intervalId = setInterval(triggerFunction, 1000);
+    let intervalId = setInterval(triggerFunction, 2500); //aqui
   }
 
   function displayPartition(partition: any[], smallerX: number, smallerY: number) {
@@ -2249,10 +2250,10 @@ function getRandomColor() {
           MinimizeDFA={MinimizeAutomata}
           RegexToDFA={clickRegexToDFA}
           ClearAutomata = {() => {
-            // automataRef.current.clearAutomata()
-            setSelectedColorTheme(selectedColorTheme === ColorThemes.DARK ? ColorThemes.LIGHT : ColorThemes.DARK)
-            automataRef.current.findOrCreateSinkState();
+            automataRef.current.clearAutomata()
           }}          
+          CreateSink = {() => automataRef.current.findOrCreateSinkState()}
+          ToggleTheme = {() => setSelectedColorTheme(selectedColorTheme === ColorThemes.DARK ? ColorThemes.LIGHT : ColorThemes.DARK)}
         />
 
         {/* Lado Direito */}

@@ -14,6 +14,8 @@ import RegexIcon from "../symbols/regex_icon";
 import NewNoteIcon from "../symbols/new_note_icon";
 import MinimizeAutomataIcon from "../symbols/minimize_automata_icon";
 import NewAutomataIcon from "../symbols/new_automata_icon";
+import SinkIcon from "../symbols/sink_icon";
+import PaletaColorsIcon from "../symbols/paleta_colors_icon";
 
 // Libaries
 import React, { useRef, useEffect, useState } from "react";
@@ -39,11 +41,13 @@ interface ToolboxProps {
     MinimizeDFA: () => void;
     RegexToDFA: () => void;
     ClearAutomata: () => void;
+    CreateSink: () => void;
+    ToggleTheme: () => void;
 }
 
-const Toolbox: React.FC<ToolboxProps> = ({ currentCanvasToolRef, handleImportFile, handleSaveFile, Undo, Redo, MinimizeDFA, RegexToDFA, ClearAutomata}) => {
+const Toolbox: React.FC<ToolboxProps> = ({ currentCanvasToolRef, handleImportFile, handleSaveFile, Undo, Redo, MinimizeDFA, RegexToDFA, ClearAutomata, CreateSink, ToggleTheme}) => {
     const { selectedToolState, setSelectedToolState } = useToolboxContext();
-    const [isExpanded, setIsExpanded] = useState(true)
+    const [isExpanded, setIsExpanded] = useState(false)
 
 
     const handleToolButtonClick = (tool: number) => {
@@ -151,14 +155,14 @@ const Toolbox: React.FC<ToolboxProps> = ({ currentCanvasToolRef, handleImportFil
             // >
             //   <RegexIcon/>
             // </button>
-            <button id="regex" title="Create from RegEx" disabled
+            <button id="sink" title="Create Sink"
               className={
                 "canvas-button navbar-button extra-option "
                 // + (selectedToolState === CanvasTools.POINTER ? "selected" : "")
               }
-              onClick={RegexToDFA}
+              onClick={CreateSink}
             >
-              <RegexIcon/>
+              <SinkIcon/>
             </button>
           }
         </div>
@@ -200,7 +204,17 @@ const Toolbox: React.FC<ToolboxProps> = ({ currentCanvasToolRef, handleImportFil
           >
             <MoveIcon/>
           </button>
-          
+          {isExpanded &&
+            <button id="color-theme" title="Change Color Theme"
+              className={
+                "canvas-button navbar-button extra-option "
+                // + (selectedToolState === CanvasTools.POINTER ? "selected" : "")
+              }
+              onClick={ToggleTheme}
+            >
+              <PaletaColorsIcon/>
+            </button>
+          }
         </div>
 
         <button id="undo" title="Undo"
