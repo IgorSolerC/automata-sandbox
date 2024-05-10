@@ -6,5 +6,6 @@ export enum PopupType {
     EDIT_NOTE,
     CONFIG,
     SAVE_FILE,
+    LOAD_AUTOMATA,
     RENAME_STATE,
 }

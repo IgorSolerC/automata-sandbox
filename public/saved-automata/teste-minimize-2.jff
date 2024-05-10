@@ -3,31 +3,31 @@
   <type>fa</type>
   <automaton>
     <state id="0" name="q0">
-      <x>223.75</x>
-      <y>136.25</y>
+      <x>475</x>
+      <y>337.5</y>
     </state>
     <state id="1" name="q1">
-      <x>498.75</x>
-      <y>138.125</y>
+      <x>537.5</x>
+      <y>225</y>
       <final/>
     </state>
     <state id="2" name="q2">
-      <x>752.5</x>
-      <y>148.75</y>
+      <x>475</x>
+      <y>87.5</y>
     </state>
     <state id="3" name="q3">
-      <x>223.75</x>
-      <y>353.75</y>
+      <x>362.5</x>
+      <y>337.5</y>
       <initial/>
     </state>
     <state id="4" name="q4">
-      <x>507.5</x>
-      <y>341.25</y>
+      <x>300</x>
+      <y>225</y>
       <final/>
     </state>
     <state id="5" name="q5">
-      <x>753.75</x>
-      <y>337.5</y>
+      <x>362.5</x>
+      <y>87.5</y>
       <final/>
     </state>
     <transition>
