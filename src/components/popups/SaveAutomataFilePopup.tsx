@@ -38,7 +38,7 @@ const SaveAutomataFilePopup: React.FC<SaveAutomataFilePopupProps> = ({
     }, [])
 
     return (
-        <GenericPopup onClose={onClose} title='Salvar Automato'>
+        <GenericPopup onClose={onClose} title='Salvar Autômato'>
             <input  className='generic-popup-input'
                 placeholder="Nome do arquivo .jff"
                 value={inputValue}

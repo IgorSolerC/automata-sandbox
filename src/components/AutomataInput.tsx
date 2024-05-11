@@ -54,7 +54,7 @@ interface AutomataInputProps {
     return (
       <div id="automata-input-div">
         <input
-          placeholder="Input automato" 
+          placeholder="Input autômato" 
           className={"automata-input " + (isSimulating && 'is-simulating')}
           id={"automata-input-id-"+index}
           autoComplete="off"
