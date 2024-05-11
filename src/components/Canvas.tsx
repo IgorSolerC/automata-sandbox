@@ -240,11 +240,13 @@ const Canvas: React.FC = () => {
     //   alert("A nota não pode estar vazia.");
     // }
 
+    let currentMouseX = getMouseX(p);
+    let currentMouseY = getMouseY(p);
     setOpenPopup(PopupType.CREATE_NOTE)
     openPopupRef.current = PopupType.CREATE_NOTE
 
     const onSubmit = (noteText: string) => {
-      let note = automataRef.current.addNote(getMouseX(p), getMouseY(p), noteText, 200, 100, [""], 16, CanvasColorsRef.current.NOTES, CanvasColorsRef.current.NOTES_SECONDARY);
+      let note = automataRef.current.addNote(currentMouseX, currentMouseY, noteText, 200, 100, [""], 16, CanvasColorsRef.current.NOTES, CanvasColorsRef.current.NOTES_SECONDARY);
       calculateNoteLines(note, p)
     }
     setPopupInput({onSubmit, previousText:''})
