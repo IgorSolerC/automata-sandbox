@@ -12,6 +12,7 @@ interface AutomataSnapshot {
   transitions: Transition[];
   initialState: State | null;
   finalStates: State[];
+  notes: Note[];
 }
 
 let StateIdNFA = 0;  // Global or static variable to keep track of state IDs
@@ -86,14 +87,14 @@ export class Automata {
       states: statesSnap,
       transitions: JSON.parse(JSON.stringify(this.transitions)),
       initialState: statesSnap.find((s: State) => s.isInitial) || null,
-      finalStates: statesSnap.filter((s: State) => s.isFinal)
+      finalStates: statesSnap.filter((s: State) => s.isFinal),
+      notes: JSON.parse(JSON.stringify(this.notes)),
     };
     
     //Validation to not make duped snapshots
     if (this.undoStack.length === 0 || !this.areSnapshotsEqual(this.undoStack[this.undoStack.length - 1], newSnapshot)) {
       this.undoStack.push(newSnapshot);
-    }
-  
+    }  
   }
 
   areSnapshotsEqual(snapshot1: AutomataSnapshot, snapshot2: AutomataSnapshot): boolean {
@@ -124,6 +125,7 @@ export class Automata {
     this.transitions = snapshot.transitions;
     this.initialState = snapshot.initialState;
     this.finalStates = snapshot.finalStates;
+    this.notes = snapshot.notes;
   }
 
 
@@ -271,6 +273,9 @@ export class Automata {
   }
 
   addNote(x: number, y: number, text: string, width: number, height: number, textLines: string[], textSize: number, color: string, secondaryColor: string) {
+    this.pushSnapshotToUndo();
+    this.redoStack = [];
+
     let newNoteId = 0;
     const allNotes = this.getNotes();
     const noteIds = new Set(allNotes.map(note => note.id));

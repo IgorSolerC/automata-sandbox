@@ -20,6 +20,7 @@ const LoadAutomataPopup: React.FC<LoadAutomataPopupProps> = ({
     
     const files = [
         {fileName: "BinariosPares.jff", displayName: 'Binários pares'},
+        {fileName: "teste-minimize-3.jff", displayName: 'Minimizável Básico'},
         {fileName: "teste-minimize-2.jff", displayName: 'Minimizável'},
         {fileName: "teste-transicoes-bilaterais.jff", displayName: 'Flor'},
         {fileName: "email-validator.jff", displayName: 'Validador de Email'},
@@ -37,7 +38,7 @@ const LoadAutomataPopup: React.FC<LoadAutomataPopupProps> = ({
     };
 
     return (
-        <GenericPopup onClose={onClose} title='Load Automata'>
+        <GenericPopup onClose={onClose} title='Carregar Autômato'>
             <select className="generic-popup-select"
                 onChange={(e) => {
                     let value = e.target.value
@@ -46,9 +47,8 @@ const LoadAutomataPopup: React.FC<LoadAutomataPopupProps> = ({
                     handleFileChange(value)
                 }}
                 value={selectedFile}
-                placeholder="aseasef"
             >
-                <option selected disabled hidden></option>
+                <option selected disabled hidden>Selecione exemplo</option>
                 {files.map((file, index) => (
                     <option value={file.fileName}>{file.displayName}</option>
                 ))}
